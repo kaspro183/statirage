@@ -1,0 +1,13 @@
+[build]
+  publish = "site"
+  functions = "netlify/functions"
+
+[functions]
+  # Les historiques complets vivent HORS du dossier publié : ils ne sont
+  # accessibles qu'aux fonctions serveur, jamais en accès direct.
+  included_files = ["data-private/*.json"]
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200

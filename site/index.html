@@ -1,0 +1,1747 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statirage — L'observatoire des tirages Keno, EuroMillions et Loto</title>
+<meta name="description" content="Fréquences, écarts, numéros chauds et retards des tirages Keno, EuroMillions et Loto — statistiques descriptives mises à jour après chaque tirage.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg1: #8C2246;        /* dégradé du fond — couleur du jeu actif */
+    --bg2: #4C1226;
+    --papier:   #F7F3E8;   /* bulletin */
+    --papier-2: #EFE9DA;
+    --encre:    #20261F;
+    --laiton:   #C9A227;   /* machine à boules */
+    --accent:      #A62B52;  /* couleur du jeu actif (Keno par défaut) */
+    --accent-ink:  #FFFFFF;
+    --accent-soft: #E5799B;
+    --hot:      #C8352E;
+    --cold:     #33619E;
+    --ligne:    #DDD5C2;
+    --muted:    #79806F;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: var(--bg2);
+    background-image: radial-gradient(ellipse 130% 65% at 50% -12%, var(--bg1) 0%, var(--bg2) 62%);
+    color: var(--papier);
+    font-family: 'Poppins', -apple-system, sans-serif;
+    font-size: 15.5px; line-height: 1.55;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 26px 20px 70px; }
+
+  /* ---- Barre haute ---- */
+  .topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; margin-bottom: 30px; }
+  .wordmark { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 30px; letter-spacing: .2px; color: var(--papier); }
+  .wordmark em { font-style: italic; font-weight: 700; color: var(--accent-soft); }
+  .games { display: flex; gap: 8px; flex-wrap: wrap; }
+  #accountBtn.premium { border-color: var(--accent-soft); color: var(--accent-soft); }
+  .game-tab {
+    font: 600 14px 'Poppins', sans-serif; letter-spacing: .3px;
+    border: 1px solid rgba(247,243,232,.35); background: transparent; color: var(--papier);
+    border-radius: 999px; padding: 8px 18px; cursor: pointer; transition: background .15s, border-color .15s;
+  }
+  .game-tab:hover { border-color: var(--laiton); }
+  .game-tab.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .game-tab::before {
+    content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    margin-right: 8px; vertical-align: 1px; background: var(--dot, transparent);
+  }
+  .game-tab[data-game="keno"] { --dot: #A62B52; }
+  .game-tab[data-game="euromillions"] { --dot: #4A5AE0; }
+  .game-tab[data-game="loto"] { --dot: #3FB9E5; }
+  .game-tab[data-game="eurodreams"] { --dot: #8E44C8; }
+  .game-tab.active::before { background: var(--accent-ink); opacity: .85; }
+  #accountBtn::before { display: none; }
+  .game-tab:focus-visible, .chip:focus-visible, .toggle button:focus-visible, .btn:focus-visible { outline: 3px solid var(--laiton); outline-offset: 2px; }
+
+  /* ---- Héros : rail du dernier tirage ---- */
+  #hero { margin-bottom: 26px; }
+  .kicker {
+    font: 600 12px 'Poppins', sans-serif; letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--accent-soft); margin-bottom: 6px;
+  }
+  .hero-date { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: clamp(24px, 4vw, 38px); margin-bottom: 18px; text-transform: capitalize; }
+  .rail { position: relative; padding: 14px 6px 20px; }
+  .rail::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 8px; height: 3px;
+    background: linear-gradient(90deg, transparent, var(--accent-soft) 8%, var(--accent-soft) 92%, transparent);
+    border-radius: 2px; opacity: .8;
+  }
+  .balls { display: flex; flex-wrap: wrap; gap: 10px; }
+  .orb {
+    width: 46px; height: 46px; border-radius: 50%; flex: none;
+    display: inline-flex; align-items: center; justify-content: center;
+    font: 600 17px 'IBM Plex Mono', monospace; color: var(--encre);
+    background: radial-gradient(circle at 32% 26%, #FFFFFF 0%, #F4EFE2 38%, #D8D0BA 68%, #A79E85 100%);
+    box-shadow: 0 5px 10px rgba(0,0,0,.35), inset 0 -3px 6px rgba(0,0,0,.12);
+    animation: drop .5s cubic-bezier(.2,.8,.3,1.15) backwards;
+  }
+  .orb-extra {
+    color: var(--accent-ink);
+    background: radial-gradient(circle at 32% 26%, var(--accent-soft) 0%, var(--accent) 62%, var(--accent) 100%);
+    box-shadow: 0 5px 10px rgba(0,0,0,.35), inset 0 -4px 8px rgba(0,0,0,.28);
+  }
+  @keyframes drop { from { transform: translateY(-26px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .hero-meta { margin-top: 10px; font-size: 13px; color: rgba(247,243,232,.7); }
+
+  /* ---- Chargement / erreur ---- */
+  #loader { padding: 26px 4px 12px; }
+  .loader-label { font-size: 14px; color: rgba(247,243,232,.85); margin-bottom: 10px; }
+  .bar {
+    height: 10px; border-radius: 999px; overflow: hidden;
+    background: rgba(247,243,232,.15); border: 1px solid rgba(247,243,232,.2);
+  }
+  .bar-fill {
+    height: 100%; width: 0%; border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent-soft), var(--accent));
+    transition: width .25s ease;
+  }
+  .bar-fill.indeterminate { width: 32%; animation: slide 1.1s ease-in-out infinite alternate; }
+  @keyframes slide { from { margin-left: 0; } to { margin-left: 68%; } }
+  #loadError {
+    border: 1.5px dashed rgba(247,243,232,.4); border-radius: 14px;
+    padding: 26px 20px; text-align: center; color: var(--papier);
+  }
+  #loadError .hint { color: rgba(247,243,232,.65); font-size: 13px; margin-top: 5px; }
+  .btn {
+    display: inline-block; margin-top: 12px; font: 600 14px 'Poppins', sans-serif;
+    background: var(--accent); color: var(--accent-ink); border: none; border-radius: 999px;
+    padding: 10px 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,.2);
+  }
+  #status { margin: 16px 2px 6px; font-size: 14px; color: rgba(247,243,232,.75); }
+  #status .ok { color: var(--papier); font-weight: 600; }
+  #status .warn { color: #F0A79F; }
+
+  /* ---- Contrôles ---- */
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 20px 0 16px; }
+  .controls .label { font: 600 11.5px 'Poppins', sans-serif; letter-spacing: 2px; text-transform: uppercase; color: rgba(247,243,232,.6); }
+  .chip {
+    font: 600 13px 'Poppins', sans-serif; border: 1px solid rgba(247,243,232,.35);
+    background: transparent; color: var(--papier); border-radius: 999px; padding: 6px 14px; cursor: pointer;
+  }
+  .chip.active { background: var(--papier); border-color: var(--papier); color: var(--encre); }
+  .toggle { display: inline-flex; border: 1px solid rgba(247,243,232,.35); border-radius: 10px; overflow: hidden; }
+  .toggle button { font: 600 13px 'Poppins', sans-serif; border: none; background: transparent; color: var(--papier); padding: 7px 14px; cursor: pointer; }
+  .toggle button.active { background: var(--accent); color: var(--accent-ink); }
+
+  /* ---- Cartes bulletin (papier) ---- */
+  .board-card, .panel {
+    background: var(--papier); color: var(--encre);
+    border-radius: 20px; padding: 24px;
+    box-shadow: 0 14px 34px rgba(0,0,0,.24);
+  }
+  .board-title { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 22px; margin-bottom: 3px; }
+  .board-sub { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
+  #board { display: grid; gap: 8px; }
+  .cell {
+    position: relative; aspect-ratio: 1; border-radius: 10px; border: 1px solid var(--ligne);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: default; transition: transform .08s;
+  }
+  .cell:hover { transform: scale(1.07); z-index: 2; }
+  .cell .num { font: 600 17px 'IBM Plex Mono', monospace; }
+  .cell .val { font: 400 10.5px 'IBM Plex Mono', monospace; opacity: .85; }
+  .cell .tip {
+    display: none; position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+    white-space: nowrap; z-index: 5; background: var(--encre); color: var(--papier);
+    font-size: 12px; padding: 6px 10px; border-radius: 6px; pointer-events: none;
+  }
+  .cell:hover .tip { display: block; }
+
+  .extras-strip { margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--ligne); }
+  .extras-strip .label { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 15px; margin-bottom: 8px; display: block; }
+  .extras-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .extra-ball { min-width: 46px; border-radius: 10px; border: 1px solid var(--ligne); padding: 6px; text-align: center; }
+  .extra-ball .num { font: 600 14px 'IBM Plex Mono', monospace; display: block; }
+  .extra-ball .val { font: 400 10.5px 'IBM Plex Mono', monospace; opacity: .85; }
+
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  @media (max-width: 720px) { .row { grid-template-columns: 1fr; } #board { gap: 5px; } .orb { width: 38px; height: 38px; font-size: 14px; } }
+  .panel h2 { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 19px; margin-bottom: 10px; }
+  .panel h2.hot { color: var(--hot); } .panel h2.cold { color: var(--cold); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font: 600 11px 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); padding: 4px 6px; border-bottom: 1px solid var(--ligne); }
+  td { padding: 6px; border-bottom: 1px solid var(--papier-2); font-family: 'IBM Plex Mono', monospace; font-size: 13.5px; }
+  td:first-child { font-weight: 600; }
+
+  .chart-panel { margin-top: 16px; }
+  .chart-box { position: relative; height: 240px; }
+  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 18px; }
+  @media (max-width: 720px) { .chart-grid { grid-template-columns: 1fr; } }
+  .chart-h3 { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 16px; margin-bottom: 6px; }
+  .verdict-panel { margin-top: 16px; }
+  .verdict-panel p { font-size: 14.5px; margin-bottom: 12px; }
+  .verdict-panel .ok-badge { color: #1E6B45; font-weight: 600; }
+  .verdict-panel .warn-badge { color: var(--hot); font-weight: 600; }
+  .ztags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ztag {
+    font: 600 12.5px 'IBM Plex Mono', monospace; border-radius: 999px;
+    padding: 5px 12px; border: 1px solid var(--ligne); background: var(--papier-2);
+  }
+  .ztag.pos { border-color: var(--hot); color: var(--hot); }
+  .ztag.neg { border-color: var(--cold); color: var(--cold); }
+  .atelier-panel { margin-top: 16px; }
+  .atelier-note { font-size: 13.5px; color: var(--muted); margin-bottom: 14px; max-width: 70ch; }
+  .atelier-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0; }
+  .atelier-panel .chip, .atelier-panel .label { color: var(--encre); }
+  .atelier-panel .chip { border-color: var(--ligne); }
+  .atelier-panel .chip:hover { border-color: var(--encre); }
+  .atelier-panel .label { color: var(--muted); }
+  .select {
+    font: 600 13px 'Poppins', sans-serif; color: var(--encre);
+    border: 1px solid var(--ligne); border-radius: 999px; padding: 7px 10px; background: #fff;
+  }
+  .pool-board { display: grid; gap: 5px; margin: 8px 0 4px; }
+  .pool-cell {
+    aspect-ratio: 1; border-radius: 8px; border: 1px solid var(--ligne); background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font: 600 14px 'IBM Plex Mono', monospace; color: var(--encre); cursor: pointer;
+  }
+  .pool-cell:hover { border-color: var(--encre); }
+  .pool-cell.sel { background: var(--encre); color: var(--papier); border-color: var(--encre); }
+  .wheel-grid { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--papier-2); }
+  .wheel-grid .gnum { font: 600 12px 'IBM Plex Mono', monospace; color: var(--muted); min-width: 66px; }
+  .draws-panel { margin-top: 16px; }
+  .draw-line { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--papier-2); }
+  .draw-date { font: 600 12.5px 'IBM Plex Mono', monospace; color: var(--muted); min-width: 132px; }
+  .ball {
+    width: 27px; height: 27px; border-radius: 50%; background: #fff; border: 1px solid var(--ligne);
+    display: inline-flex; align-items: center; justify-content: center; font: 600 11.5px 'IBM Plex Mono', monospace;
+  }
+  .ball.star { border-color: var(--accent); color: var(--accent); border-radius: 8px; }
+
+  footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid rgba(247,243,232,.25); color: rgba(247,243,232,.65); font-size: 12.5px; }
+  footer a { color: var(--accent-soft); }
+  .modal-back {
+    position: fixed; inset: 0; background: rgba(8, 8, 16, .72); z-index: 50;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal {
+    position: relative; background: var(--papier); color: var(--encre);
+    border-radius: 20px; padding: 28px; max-width: 440px; width: 100%;
+    box-shadow: 0 24px 60px rgba(0,0,0,.45);
+  }
+  .modal .kicker { color: var(--hot); }
+  .modal-x { position: absolute; top: 12px; right: 14px; border: none; background: none; font-size: 16px; cursor: pointer; color: var(--muted); }
+  .modal-title { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 22px; margin: 4px 0 8px; }
+  .modal-text { font-size: 14px; margin-bottom: 10px; }
+  .modal-list { margin: 0 0 14px 18px; font-size: 14px; }
+  .modal-list li { margin-bottom: 4px; }
+  .modal-fine { font-size: 12px; color: var(--muted); margin-top: 10px; }
+  .auth-tabs { display: flex; gap: 8px; margin: 10px 0 14px; }
+  .modal .chip { border-color: var(--ligne); color: var(--encre); }
+  .modal .chip.active { background: var(--encre); border-color: var(--encre); color: var(--papier); }
+  .modal-label { display: block; font: 600 12px 'Poppins', sans-serif; color: var(--muted); margin-bottom: 10px; }
+  .modal-input {
+    display: block; width: 100%; margin-top: 4px; font: 500 15px 'Poppins', sans-serif;
+    border: 1px solid var(--ligne); border-radius: 8px; padding: 9px 10px; background: #fff; color: var(--encre);
+  }
+  .modal-err { color: var(--hot); font-size: 13px; min-height: 18px; margin-bottom: 6px; }
+  .locked { position: relative; }
+  .locked > *:not(.lock-cover) { filter: blur(4px); pointer-events: none; user-select: none; }
+  .lock-cover {
+    position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 20px;
+  }
+  .lock-cover .btn { margin-top: 0; }
+  .lock-cover strong { font-family: 'Poppins', sans-serif; font-size: 18px; }
+  .chip.gated::after { content: " 🔒"; }
+  .hidden { display: none; }
+  @media (prefers-reduced-motion: reduce) { .orb { animation: none; } .cell { transition: none; } .bar-fill.indeterminate { animation: none; } .cell:hover { transform: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="wordmark">Stat<em>irage</em></div>
+    <button class="game-tab" id="accountBtn" style="order:2">Mon compte</button>
+    <div class="games" role="tablist" style="order:1; margin-left:auto">
+      <button class="game-tab active" data-game="keno" role="tab">Keno</button>
+      <button class="game-tab" data-game="euromillions" role="tab">EuroMillions</button>
+      <button class="game-tab" data-game="loto" role="tab">Loto</button>
+      <button class="game-tab" data-game="eurodreams" role="tab">EuroDreams</button>
+    </div>
+  </div>
+
+  <section id="hero" class="hidden">
+    <div class="kicker" id="heroKicker"></div>
+    <div class="hero-date" id="heroDate"></div>
+    <div class="rail"><div class="balls" id="heroBalls"></div></div>
+    <div class="hero-meta" id="heroMeta"></div>
+  </section>
+
+  <div id="loader" class="hidden" aria-live="polite">
+    <div class="loader-label" id="loaderLabel">Recherche des tirages…</div>
+    <div class="bar"><div class="bar-fill indeterminate" id="barFill"></div></div>
+  </div>
+
+  <div id="loadError" class="hidden">
+    <strong>Impossible de récupérer les tirages pour le moment.</strong>
+    <div class="hint" id="loadErrorHint">Vérifie ta connexion, puis réessaie.</div>
+    <button class="btn" type="button" id="retryBtn">Réessayer</button>
+  </div>
+
+  <div id="status"></div>
+
+  <div id="app" class="hidden">
+    <div class="controls">
+      <span class="label">Fenêtre</span>
+      <button class="chip active" data-win="30">30 tirages</button>
+      <button class="chip" data-win="50">50</button>
+      <button class="chip" data-win="100">100</button>
+      <button class="chip" data-win="0">Tout</button>
+      <span class="label" style="margin-left:12px">Couleur</span>
+      <button class="chip" id="exportBtn" style="margin-left:auto">Exporter CSV</button>
+      <div class="toggle">
+        <button data-mode="freq" class="active">Fréquence</button>
+        <button data-mode="gap">Écart</button>
+        <button data-mode="z">Z-score</button>
+      </div>
+    </div>
+
+    <div class="board-card">
+      <div class="board-title">La grille</div>
+      <div class="board-sub" id="boardSub"></div>
+      <div id="board"></div>
+      <div class="extras-strip hidden" id="extrasStrip">
+        <span class="label" id="extrasLabel"></span>
+        <div class="extras-row" id="extrasRow"></div>
+      </div>
+    </div>
+
+    <div class="panel chart-panel">
+      <h2>Les courbes</h2>
+      <div class="atelier-tools">
+        <span class="label">Suivre le numéro</span>
+        <select id="trackNum" class="select"></select>
+      </div>
+      <div class="chart-box"><canvas id="chartTrack"></canvas></div>
+      <div class="board-sub" id="trackSub"></div>
+      <div class="chart-grid">
+        <div>
+          <h3 class="chart-h3">Fréquences par numéro</h3>
+          <div class="chart-box"><canvas id="chartFreq"></canvas></div>
+        </div>
+        <div>
+          <h3 class="chart-h3">La cloche des sommes</h3>
+          <div class="chart-box"><canvas id="chartSum"></canvas></div>
+          <div class="board-sub">Chaque tirage a une somme ; leur répartition dessine une cloche centrée
+          sur la valeur théorique — le hasard en personne.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="panel">
+        <h2 class="hot">Numéros chauds</h2>
+        <table><thead><tr><th>N°</th><th>Sorties</th><th>Attendu</th><th>Écart actuel</th></tr></thead>
+        <tbody id="hotBody"></tbody></table>
+      </div>
+      <div class="panel">
+        <h2 class="cold">Plus gros retards</h2>
+        <table><thead><tr><th>N°</th><th>Écart actuel</th><th>Écart max</th><th>Sorties</th></tr></thead>
+        <tbody id="coldBody"></tbody></table>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="panel gate-panel">
+        <h2>Structure des tirages</h2>
+        <div class="board-sub" id="structSub"></div>
+        <table><thead><tr><th>Indicateur</th><th>Observé</th><th>Théorique</th></tr></thead>
+        <tbody id="structBody"></tbody></table>
+      </div>
+      <div class="panel gate-panel">
+        <h2>Paires complices</h2>
+        <div class="board-sub" id="pairsSub"></div>
+        <table><thead><tr><th>Paire</th><th>Ensemble</th><th>Attendu</th><th>Ratio</th></tr></thead>
+        <tbody id="pairsBody"></tbody></table>
+      </div>
+    </div>
+
+    <div class="panel verdict-panel gate-panel">
+      <h2>Le verdict du statisticien</h2>
+      <p id="verdictText"></p>
+      <div class="ztags" id="zTags"></div>
+    </div>
+
+    <div class="panel atelier-panel gate-panel">
+      <h2>L'atelier des grilles</h2>
+      <p class="atelier-note">Un système réducteur organise ta sélection en un minimum de grilles avec une garantie
+      de couverture. Il <strong>ne change pas les chances de gain</strong> — chaque grille reste soumise au même hasard ;
+      il structure simplement le jeu d'une sélection large.</p>
+
+      <div class="atelier-tools">
+        <span class="label">Remplir avec</span>
+        <button class="chip" data-fill="hot">Les chauds</button>
+        <button class="chip" data-fill="cold">Les retards</button>
+        <button class="chip" data-fill="mix">Équilibré</button>
+        <button class="chip" data-fill="rand">Au hasard</button>
+        <button class="chip" data-fill="clear">Effacer</button>
+      </div>
+      <div id="poolBoard" class="pool-board"></div>
+      <div class="board-sub" id="poolProfile"></div>
+
+      <div class="atelier-tools">
+        <span class="label" id="gridSizeLabel">Numéros par grille</span>
+        <select id="gridSize" class="select"></select>
+        <span class="label">Garantie</span>
+        <select id="guarantee" class="select">
+          <option value="3,4">3 si 4 sortent</option>
+          <option value="3,5" selected>3 si 5 sortent</option>
+          <option value="4,5">4 si 5 sortent</option>
+          <option value="full">Système complet</option>
+        </select>
+        <button class="btn" type="button" id="wheelBtn">Générer les grilles</button>
+      </div>
+      <div id="wheelSummary" class="board-sub"></div>
+      <div id="wheelGrids"></div>
+    </div>
+
+    <div class="panel mynums-panel">
+      <h2>Mes numéros</h2>
+      <p class="atelier-note">Enregistre tes numéros fétiches : à chaque visite, ton score sur le dernier tirage
+      et les précédents s'affiche ici. (Sauvegardé dans ce navigateur.)</p>
+      <div class="atelier-tools">
+        <input type="text" id="myNumsInput" class="modal-input" style="max-width:300px;margin:0" placeholder="Ex : 3 7 12 24 41 56">
+        <button class="btn" type="button" id="myNumsSave">Enregistrer</button>
+        <button class="chip" type="button" id="myNumsClear">Effacer</button>
+      </div>
+      <div id="myNumsScore"></div>
+    </div>
+
+    <div class="row">
+      <div class="panel">
+        <h2>Testeur de grille</h2>
+        <p class="atelier-note">Ta grille face à tout l'historique chargé : combien de fois elle aurait trouvé
+        0, 1, 2… bons numéros, comparé à ce que le hasard prévoit.</p>
+        <div class="atelier-tools">
+          <input type="text" id="btInput" class="modal-input" style="max-width:260px;margin:0" placeholder="Ex : 3 7 12 24 41">
+          <button class="btn" type="button" id="btRun">Tester</button>
+        </div>
+        <div id="btOut"></div>
+      </div>
+      <div class="panel">
+        <h2>Comparateur de numéros</h2>
+        <p class="atelier-note">Jusqu'à 8 numéros côte à côte, toutes leurs statistiques en parallèle.</p>
+        <div class="atelier-tools">
+          <input type="text" id="cmpInput" class="modal-input" style="max-width:260px;margin:0" placeholder="Ex : 7 13 41 56">
+          <button class="btn" type="button" id="cmpRun">Comparer</button>
+        </div>
+        <div id="cmpOut"></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="panel">
+        <h2>Le contexte des retards</h2>
+        <p class="atelier-note">Simulation Monte Carlo : le plus gros retard observé est-il banal ou rare ?</p>
+        <div id="gapCtx"></div>
+        <button class="chip" type="button" id="gapCtxBtn">Lancer la simulation (~1 s)</button>
+      </div>
+      <div class="panel">
+        <h2>Probabilités exactes</h2>
+        <p class="atelier-note">Loi hypergéométrique — les vraies chances, sans arrondi marketing.</p>
+        <div class="atelier-tools" id="probaTools">
+          <span class="label">Numéros joués</span>
+          <select id="probaM" class="select"></select>
+        </div>
+        <table><thead><tr><th>Bons numéros</th><th>Probabilité</th><th>Soit 1 chance sur</th></tr></thead>
+        <tbody id="probaBody"></tbody></table>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="panel">
+        <h2>Le calendrier des sorties</h2>
+        <p class="atelier-note">Les numéros les plus sortis par jour de la semaine. Aucun jour n'a de « pouvoir » —
+        c'est du hasard découpé autrement — mais la curiosité est légitime.</p>
+        <table><thead><tr><th>Jour</th><th>Tirages</th><th>Top 3</th></tr></thead>
+        <tbody id="weekdayBody"></tbody></table>
+      </div>
+      <div class="panel hidden" id="multPanel">
+        <h2>Multiplicateurs Keno</h2>
+        <p class="atelier-note">Répartition observée des multiplicateurs sur l'historique chargé.</p>
+        <table><thead><tr><th>Multiplicateur</th><th>Sorties</th><th>Part</th></tr></thead>
+        <tbody id="multBody"></tbody></table>
+      </div>
+    </div>
+
+    <div class="panel draws-panel">
+      <h2>Derniers tirages</h2>
+      <div id="drawsList"></div>
+    </div>
+  </div>
+
+  <div class="modal-back hidden" id="modalBack">
+    <div class="modal" role="dialog" aria-modal="true">
+      <button class="modal-x" id="modalClose" aria-label="Fermer">✕</button>
+      <div id="modalPaywall" class="hidden">
+        <div class="kicker">Fonctionnalité Premium</div>
+        <h3 class="modal-title">L'historique complet et les outils avancés</h3>
+        <p class="modal-text">L'accès gratuit couvre les 30 derniers tirages. L'abonnement Premium débloque
+        tout l'historique, les fenêtres 50/100/tout, les indicateurs avancés et l'atelier des grilles.</p>
+        <ul class="modal-list">
+          <li>Historique complet des trois jeux</li>
+          <li>Z-scores, structure, paires, verdict du statisticien</li>
+          <li>Systèmes réducteurs illimités</li>
+          <li>Sans publicité, résiliable à tout moment</li>
+        </ul>
+        <button class="btn" id="goPremiumBtn">S'abonner — 39 €/an</button>
+        <p class="modal-fine">Paiement sécurisé Stripe · résiliation en un clic · outil d'analyse descriptive,
+        aucune prédiction de résultats.</p>
+      </div>
+      <div id="modalAuth">
+        <div class="kicker" id="authKicker">Mon compte</div>
+        <div class="auth-tabs">
+          <button class="chip active" data-auth="login">Connexion</button>
+          <button class="chip" data-auth="signup">Créer un compte</button>
+        </div>
+        <label class="modal-label">Email<input type="email" id="authEmail" class="modal-input" autocomplete="email"></label>
+        <label class="modal-label">Mot de passe<input type="password" id="authPass" class="modal-input" autocomplete="current-password" minlength="8"></label>
+        <div class="modal-err" id="authErr"></div>
+        <button class="btn" id="authSubmit">Se connecter</button>
+      </div>
+      <div id="modalAccount" class="hidden">
+        <div class="kicker">Mon compte</div>
+        <p class="modal-text"><span id="accEmail"></span> — <strong id="accPlan"></strong></p>
+        <button class="btn" id="accUpgrade">Passer Premium — 39 €/an</button>
+        <button class="chip" id="accLogout" style="margin-left:8px">Se déconnecter</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Le Keno, l'EuroMillions et le Loto sont des jeux de hasard : chaque tirage est indépendant des précédents.
+    Ces statistiques sont descriptives — elles racontent le passé et ne prédisent rien.
+    Jouer comporte des risques : <a href="https://www.joueurs-info-service.fr">joueurs-info-service.fr</a>.
+  </footer>
+</div>
+
+<script>
+"use strict";
+/* =====================================================================
+   Tirages Lab — 3 jeux, tout en local dans le navigateur.
+   Données : 1) chargement auto de data/<jeu>.json si la page est hébergée
+             (fichiers produits par tools/update_data.py via GitHub Actions),
+             2) sinon repli sur l'import CSV manuel (archives FDJ).
+   ===================================================================== */
+
+const GAMES = {
+  keno:         { label: "Keno",         max: 56, drawSize: 16, cols: 8,  extraMax: 0,  extraLabel: "" },
+  euromillions: { label: "EuroMillions", max: 50, drawSize: 5,  cols: 10, extraMax: 12, extraLabel: "Étoiles" },
+  loto:         { label: "Loto",         max: 49, drawSize: 5,  cols: 7,  extraMax: 10, extraLabel: "Numéro chance" },
+  eurodreams:   { label: "EuroDreams",   max: 40, drawSize: 6,  cols: 8,  extraMax: 5,  extraLabel: "Numéro Dream" },
+};
+
+/* Couleurs par jeu, reprises de l'univers des cartes FDJ :
+   Keno framboise, EuroMillions bleu nuit, Loto bleu ciel, EuroDreams violet. */
+const THEMES = {
+  // accent = couleur d'action · bg1/bg2 = dégradé du fond, façon cartes FDJ
+  keno:         { accent: "#C13A66", ink: "#FFFFFF", soft: "#EC8FAD", bg1: "#8C2246", bg2: "#4C1226" },
+  euromillions: { accent: "#3D4FD8", ink: "#FFFFFF", soft: "#93A0F5", bg1: "#16249B", bg2: "#090F4E" },
+  loto:         { accent: "#2FA9DA", ink: "#0F2E3A", soft: "#A7E0F5", bg1: "#2E9AC8", bg2: "#155D80" },
+  eurodreams:   { accent: "#9C4FD6", ink: "#FFFFFF", soft: "#CDA0EE", bg1: "#7433AF", bg2: "#3A1760" },
+};
+function applyGameTheme(gameKey) {
+  const t = THEMES[gameKey];
+  const r = document.documentElement.style;
+  r.setProperty("--accent", t.accent);
+  r.setProperty("--accent-ink", t.ink);
+  r.setProperty("--accent-soft", t.soft);
+  r.setProperty("--bg1", t.bg1);
+  r.setProperty("--bg2", t.bg2);
+}
+
+/* MODE TEST : true = tout est débloqué (pas de paywall). Passer à false au lancement. */
+const FREE_MODE = true;
+
+let currentGame = "keno";
+let store = { keno: [], euromillions: [], loto: [] };  // tirages triés récent -> ancien
+let windowSize = 30, colorMode = "freq";
+
+/* ---------- Parsing CSV FDJ ---------- */
+function parseCsv(text, gameKey) {
+  const g = GAMES[gameKey];
+  const delim = (text.slice(0, 2048).split(";").length > text.slice(0, 2048).split(",").length) ? ";" : ",";
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) throw new Error("Fichier vide ou sans données.");
+  const headers = lines[0].split(delim).map(h => h.trim().toLowerCase());
+
+  const ballCols = [], extraCols = [];
+  headers.forEach((h, i) => {
+    let m = h.match(/^boule[_ ]?(\d+)$/);
+    if (m) { ballCols.push({ idx: i, n: +m[1] }); return; }
+    m = h.match(/^etoile[_ ]?(\d+)$/);
+    if (m) { extraCols.push({ idx: i, n: +m[1] }); return; }
+    if (h.includes("chance") || h.includes("dream")) extraCols.push({ idx: i, n: extraCols.length + 1 });
+  });
+  ballCols.sort((a, b) => a.n - b.n); extraCols.sort((a, b) => a.n - b.n);
+  let dateIdx = headers.findIndex(h => h === "date_de_tirage");
+  if (dateIdx === -1) dateIdx = headers.findIndex(h => h.includes("date") && !h.includes("forclusion"));
+  const timeIdx = headers.findIndex(h => h.includes("heure"));
+  const multIdx = headers.findIndex(h => h.includes("multiplicateur"));
+  if (!ballCols.length || dateIdx === -1) throw new Error("Format non reconnu : colonnes date et boule_1… attendues. En-têtes lus : " + headers.slice(0, 10).join(", "));
+  if (ballCols.length !== g.drawSize) throw new Error("Cette archive contient " + ballCols.length + " numéros par tirage alors que " + g.label + " en tire " + g.drawSize + " — ce n'est pas la bonne archive (mauvais fichier servi ou cache d'un relais).");
+  if (g.extraMax && !extraCols.length) throw new Error("Colonne " + g.extraLabel + " introuvable. En-têtes lus : " + headers.slice(0, 12).join(", "));
+
+  const out = []; let rejected = 0;
+  for (let i = 1; i < lines.length; i++) {
+    const cells = lines[i].split(delim);
+    const nums = ballCols.map(c => parseInt(cells[c.idx], 10)).filter(Number.isFinite);
+    const extras = extraCols.map(c => parseInt(cells[c.idx], 10)).filter(Number.isFinite);
+    const date = parseFrDate((cells[dateIdx] || "").trim());
+    const okNums = nums.length === g.drawSize && new Set(nums).size === nums.length && nums.every(n => n >= 1 && n <= g.max);
+    const okExtras = !g.extraMax || (extras.length && extras.every(n => n >= 1 && n <= g.extraMax));
+    if (!date || !okNums || !okExtras) { rejected++; continue; }
+    out.push({
+      date, time: timeIdx >= 0 ? (cells[timeIdx] || "").trim() : "",
+      numbers: nums.sort((a, b) => a - b), extras: extras.sort((a, b) => a - b),
+      mult: multIdx >= 0 ? (cells[multIdx] || "").trim().toLowerCase() : "",
+    });
+  }
+  if (!out.length) throw new Error("Aucune ligne valide pour " + g.label + " dans ce fichier — es-tu sur le bon onglet de jeu ?");
+  out.sort((a, b) => b.date - a.date || (b.time > a.time ? 1 : -1));
+  return { draws: out, rejected };
+}
+
+function parseFrDate(s) {
+  let m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
+  m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+  m = s.match(/^(\d{4})(\d{2})(\d{2})$/);
+  if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+  return null;
+}
+
+/* ---------- Statistiques (numéros principaux) ---------- */
+function computeStats(all, win, gameKey) {
+  const g = GAMES[gameKey];
+  const scope = win > 0 ? all.slice(0, win) : all;
+  const total = scope.length;
+  const stats = [];
+  for (let n = 1; n <= g.max; n++) stats.push({ n, freq: 0, currentGap: null, maxGap: 0, lastSeen: null });
+
+  scope.forEach((d, i) => d.numbers.forEach(n => {
+    const s = stats[n - 1]; s.freq++;
+    if (s.currentGap === null) { s.currentGap = i; s.lastSeen = d.date; }
+  }));
+
+  const chrono = [...scope].reverse();
+  const lastIdx = new Array(g.max + 1).fill(-1);
+  chrono.forEach((d, i) => d.numbers.forEach(n => {
+    const gap = lastIdx[n] === -1 ? i : i - lastIdx[n] - 1;
+    if (gap > stats[n - 1].maxGap) stats[n - 1].maxGap = gap;
+    lastIdx[n] = i;
+  }));
+  stats.forEach(s => {
+    if (s.currentGap === null) s.currentGap = total;
+    if (s.currentGap > s.maxGap) s.maxGap = s.currentGap;
+  });
+
+  return { stats, total, expected: total * g.drawSize / g.max };
+}
+
+function computeExtraStats(all, win, gameKey) {
+  const g = GAMES[gameKey];
+  if (!g.extraMax) return null;
+  const scope = win > 0 ? all.slice(0, win) : all;
+  const freq = new Array(g.extraMax + 1).fill(0);
+  let perDraw = 0;
+  scope.forEach(d => { perDraw = Math.max(perDraw, d.extras.length); d.extras.forEach(n => { if (n >= 1 && n <= g.extraMax) freq[n]++; }); });
+  return { freq, total: scope.length, expected: scope.length * perDraw / g.extraMax };
+}
+
+
+/* ---------- Héros : dernier tirage en boules sur rail ---------- */
+function renderHero() {
+  const g = GAMES[currentGame];
+  const draws = store[currentGame];
+  if (!draws || !draws.length) { $("#hero").classList.add("hidden"); return; }
+  const d = draws[0];
+  if (!d || !Array.isArray(d.numbers)) { $("#hero").classList.add("hidden"); return; }
+  const nums = d.numbers, extras = Array.isArray(d.extras) ? d.extras : [];
+  const when = d.date.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  $("#heroKicker").textContent = "Dernier tirage " + g.label;
+  $("#heroDate").textContent = when + (d.time && d.time !== "unique" ? " — " + d.time : "");
+  $("#heroBalls").innerHTML =
+    nums.map((n, i) => `<span class="orb" style="animation-delay:${i * 55}ms">${n}</span>`).join("") +
+    extras.map((n, i) => `<span class="orb orb-extra" style="animation-delay:${(nums.length + i) * 55}ms">${n}</span>`).join("");
+  const oldest = draws[draws.length - 1].date.toLocaleDateString("fr-FR");
+  $("#heroMeta").textContent = draws.length + " tirages en mémoire · depuis le " + oldest;
+  $("#hero").classList.remove("hidden");
+}
+
+
+/* ---------- Indicateurs avancés ---------- */
+function erf(x) {  // approximation d'Abramowitz & Stegun (précision ~1e-7)
+  const sign = x < 0 ? -1 : 1; x = Math.abs(x);
+  const t = 1 / (1 + 0.3275911 * x);
+  const y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x);
+  return sign * y;
+}
+const normCdf = z => 0.5 * (1 + erf(z / Math.SQRT2));
+
+function computeAdvanced(all, win, gameKey) {
+  const g = GAMES[gameKey];
+  const scope = win > 0 ? all.slice(0, win) : all;
+  const total = scope.length;
+  if (!total) return null;
+  const p = g.drawSize / g.max;                       // proba de sortie d'un numéro donné
+
+  // --- Z-scores par numéro (approx. binomiale de l'hypergéométrique) ---
+  const freq = new Array(g.max + 1).fill(0);
+  scope.forEach(d => d.numbers.forEach(n => freq[n]++));
+  const mu = total * p, sd = Math.sqrt(total * p * (1 - p));
+  const z = freq.map(f => sd > 0 ? (f - mu) / sd : 0);
+
+  // --- Chi-carré global : la distribution est-elle conforme au hasard ? ---
+  let chi2 = 0;
+  for (let n = 1; n <= g.max; n++) chi2 += (freq[n] - mu) ** 2 / mu;
+  const df = g.max - 1;
+  // p-value via approximation de Wilson-Hilferty
+  const zc = (Math.cbrt(chi2 / df) - (1 - 2 / (9 * df))) / Math.sqrt(2 / (9 * df));
+  const pValue = 1 - normCdf(zc);
+
+  // --- Structure des tirages ---
+  const half = g.max / 2;
+  let evens = 0, lows = 0, sum = 0, withConsec = 0;
+  scope.forEach(d => {
+    let e = 0, l = 0, consec = false;
+    d.numbers.forEach((n, i) => {
+      if (n % 2 === 0) e++;
+      if (n <= half) l++;
+      sum += n;
+      if (i > 0 && n === d.numbers[i - 1] + 1) consec = true;
+    });
+    evens += e; lows += l; if (consec) withConsec++;
+  });
+  const structure = {
+    avgEvens: evens / total,          expEvens: g.drawSize * Math.floor(g.max / 2) / g.max,
+    avgLows: lows / total,            expLows: g.drawSize * Math.floor(half) / g.max,
+    avgSum: sum / total,              expSum: g.drawSize * (g.max + 1) / 2,
+    pctConsec: withConsec / total * 100,
+  };
+
+  // --- Paires complices : co-occurrences vs attendu combinatoire ---
+  const pairP = g.drawSize * (g.drawSize - 1) / (g.max * (g.max - 1));
+  const expPair = total * pairP;
+  const pairCount = new Map();
+  scope.forEach(d => {
+    for (let i = 0; i < d.numbers.length; i++)
+      for (let j = i + 1; j < d.numbers.length; j++) {
+        const key = d.numbers[i] * 100 + d.numbers[j];
+        pairCount.set(key, (pairCount.get(key) || 0) + 1);
+      }
+  });
+  const pairs = [...pairCount.entries()]
+    .map(([k, c]) => ({ a: Math.floor(k / 100), b: k % 100, obs: c, exp: expPair, ratio: c / expPair }))
+    .sort((x, y) => y.obs - x.obs).slice(0, 6);
+
+  // --- Extrêmes du Z ---
+  const zRank = [];
+  for (let n = 1; n <= g.max; n++) zRank.push({ n, z: z[n], freq: freq[n] });
+  zRank.sort((a, b) => Math.abs(b.z) - Math.abs(a.z));
+
+  return { total, z, chi2, df, pValue, structure, pairs, zTop: zRank.slice(0, 6), expected: mu };
+}
+
+
+/* ---------- Atelier des grilles : combinatoire & système réducteur ---------- */
+function combinations(arr, k) {
+  const out = [];
+  const rec = (start, acc) => {
+    if (acc.length === k) { out.push(acc.slice()); return; }
+    for (let i = start; i <= arr.length - (k - acc.length); i++) { acc.push(arr[i]); rec(i + 1, acc); acc.pop(); }
+  };
+  rec(0, []);
+  return out;
+}
+function binom(n, k) { let r = 1; for (let i = 0; i < k; i++) r = r * (n - i) / (i + 1); return Math.round(r); }
+const popcount = x => { let c = 0; while (x) { x &= x - 1; c++; } return c; };
+
+/* Construit un système réducteur par couverture gloutonne.
+   Garantie : si m numéros de la sélection figurent parmi les numéros tirés,
+   au moins une grille en contient t. Retourne {grids, fullCount} ou {error}. */
+function buildWheel(pool, k, t, m) {
+  if (pool.length < k) return { error: "Sélectionne au moins " + k + " numéros." };
+  if (m > pool.length) m = pool.length;
+  if (t > Math.min(k, m)) return { error: "Garantie impossible : t > taille de grille." };
+  const idx = pool.map((_, i) => i);
+  const toMask = c => c.reduce((a, i) => a | (1 << i), 0);
+  const tickets = combinations(idx, k).map(c => ({ nums: c.map(i => pool[i]).sort((a, b) => a - b), mask: toMask(c) }));
+  const fullCount = tickets.length;
+  if (t === k && m === k) return { grids: tickets.map(tk => tk.nums), fullCount };  // système complet
+  const targets = combinations(idx, m).map(toMask);
+  const uncovered = new Set(targets.map((_, i) => i));
+  const grids = [];
+  while (uncovered.size) {
+    let best = null, bestCov = 0;
+    for (const tk of tickets) {
+      let cov = 0;
+      for (const ti of uncovered) if (popcount(tk.mask & targets[ti]) >= t) cov++;
+      if (cov > bestCov) { bestCov = cov; best = tk; }
+    }
+    if (!best) return { error: "Aucune couverture possible avec ces paramètres." };
+    grids.push(best.nums);
+    for (const ti of [...uncovered]) if (popcount(best.mask & targets[ti]) >= t) uncovered.delete(ti);
+  }
+  return { grids, fullCount };
+}
+
+/* Profil statistique d'une sélection, comparé à la théorie. */
+function poolProfile(pool, gameKey) {
+  const g = GAMES[gameKey];
+  const draws = store[gameKey];
+  if (!pool.length || !draws.length) return null;
+  const { stats, total, expected } = computeStats(draws, windowSize, gameKey);
+  const adv = computeAdvanced(draws, windowSize, gameKey);
+  let freq = 0, gap = 0, zSum = 0, evens = 0, lows = 0, sum = 0;
+  pool.forEach(n => {
+    const st = stats[n - 1];
+    freq += st.freq; gap += st.currentGap; zSum += adv ? adv.z[n] : 0;
+    if (n % 2 === 0) evens++; if (n <= g.max / 2) lows++; sum += n;
+  });
+  return {
+    n: pool.length, avgFreq: freq / pool.length, expected,
+    avgGap: gap / pool.length, avgZ: zSum / pool.length,
+    evens, lows, sum,
+  };
+}
+
+
+/* ---------- Outils : probabilités & backtests ---------- */
+function hypergeomP(k, played, gameKey) {
+  const g = GAMES[gameKey];  // P(exactement k bons | je joue `played` numéros)
+  if (k > played || k > g.drawSize || played - k > g.max - g.drawSize) return 0;
+  return binom(played, k) * binom(g.max - played, g.drawSize - k) / binom(g.max, g.drawSize);
+}
+
+function backtestGrid(nums, gameKey) {
+  const draws = store[gameKey];
+  if (!draws.length || !nums.length) return null;
+  const hist = new Array(nums.length + 1).fill(0);
+  let best = { k: -1 };
+  draws.forEach(d => {
+    const k = nums.filter(n => d.numbers.includes(n)).length;
+    hist[k]++;
+    if (k > best.k) best = { k, date: d.date, time: d.time };
+  });
+  const expected = hist.map((_, k) => hypergeomP(k, nums.length, gameKey) * draws.length);
+  return { hist, expected, best, total: draws.length };
+}
+
+/* Monte Carlo : sur `total` tirages, quelle est la proba qu'AU MOINS un numéro
+   atteigne un écart >= gap ? Retourne le nombre d'histoires où c'est arrivé.
+   Optimisé : un seul tableau réutilisé (un mélange partiel reste uniforme
+   quel que soit l'ordre de départ). */
+function gapContextHits(gap, total, gameKey, sims) {
+  const g = GAMES[gameKey];
+  const pool = Array.from({ length: g.max }, (_, i) => i + 1);
+  const last = new Array(g.max + 1);
+  let hit = 0;
+  for (let s = 0; s < sims; s++) {
+    last.fill(-1);
+    let maxGap = 0;
+    for (let t = 0; t < total; t++) {
+      for (let i = 0; i < g.drawSize; i++) {
+        const j = i + Math.floor(Math.random() * (g.max - i));
+        const tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
+        const n = pool[i];
+        const gp = last[n] === -1 ? t : t - last[n] - 1;
+        if (gp > maxGap) maxGap = gp;
+        last[n] = t;
+      }
+    }
+    if (maxGap < gap) {  // vérifier aussi les écarts encore ouverts en fin d'histoire
+      for (let n = 1; n <= g.max; n++) {
+        const gp = last[n] === -1 ? total : total - 1 - last[n];
+        if (gp > maxGap) maxGap = gp;
+      }
+    }
+    if (maxGap >= gap) hit++;
+  }
+  return hit;
+}
+function gapContext(gap, total, gameKey, sims = 800) {
+  return gapContextHits(gap, total, gameKey, sims) / sims;
+}
+
+function weekdayStats(gameKey) {
+  const draws = store[gameKey];
+  if (!draws.length) return null;
+  const days = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
+  const byDay = {};
+  draws.forEach(d => {
+    const day = d.date.getDay();
+    if (!byDay[day]) byDay[day] = { count: 0, freq: new Array(GAMES[gameKey].max + 1).fill(0) };
+    byDay[day].count++;
+    d.numbers.forEach(n => byDay[day].freq[n]++);
+  });
+  return Object.entries(byDay).map(([day, v]) => {
+    const top = v.freq.map((f, n) => ({ n, f })).slice(1).sort((a, b) => b.f - a.f).slice(0, 3);
+    return { label: days[day], count: v.count, top };
+  }).sort((a, b) => days.indexOf(a.label) - days.indexOf(b.label)).filter(d => days.indexOf(d.label) >= 0);
+}
+
+function multStats(gameKey) {
+  const draws = store[gameKey].filter(d => d.mult);
+  if (draws.length < 5) return null;
+  const counts = {};
+  draws.forEach(d => { counts[d.mult] = (counts[d.mult] || 0) + 1; });
+  return { total: draws.length, rows: Object.entries(counts).sort((a, b) => b[1] - a[1]) };
+}
+
+function exportCsv(gameKey) {
+  const g = GAMES[gameKey];
+  const draws = store[gameKey];
+  if (!draws.length) return;
+  const head = ["date", "heure", ...Array.from({ length: g.drawSize }, (_, i) => "n" + (i + 1)),
+                ...(g.extraMax ? Array.from({ length: GAMES[gameKey].extraMax ? draws[0].extras.length : 0 }, (_, i) => "extra" + (i + 1)) : []),
+                ...(gameKey === "keno" ? ["multiplicateur"] : [])];
+  const lines = draws.map(d => [
+    d.date.toISOString().slice(0, 10), d.time,
+    ...d.numbers, ...d.extras, ...(gameKey === "keno" ? [d.mult || ""] : []),
+  ].join(";"));
+  const blob = new Blob(["\ufeff" + head.join(";") + "\n" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "statirage-" + gameKey + ".csv";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+const parseNums = (txt, gameKey) => [...new Set(String(txt).split(/[^0-9]+/)
+  .map(Number).filter(n => n >= 1 && n <= GAMES[gameKey].max))].sort((a, b) => a - b);
+
+/* ---------- Rendu ---------- */
+const $ = sel => document.querySelector(sel);
+function fmtDate(d) { return d.toLocaleDateString("fr-FR"); }
+function heatColor(t) {
+  const lerp = (a, b, k) => Math.round(a + (b - a) * k);
+  const cold = [46, 95, 163], hot = [213, 35, 46], mid = [255, 255, 255];
+  const [from, to, k] = t < 0.5 ? [cold, mid, t * 2] : [mid, hot, (t - 0.5) * 2];
+  const c = from.map((v, i) => lerp(v, to[i], k));
+  return `rgb(${c[0]},${c[1]},${c[2]})`;
+}
+
+function render() {
+  renderHero();
+  const g = GAMES[currentGame];
+  const draws = store[currentGame];
+  if (!draws.length) { $("#app").classList.add("hidden"); return; }
+
+  const { stats, total, expected } = computeStats(draws, windowSize, currentGame);
+  const adv = computeAdvanced(draws, windowSize, currentGame);
+  const winLabel = windowSize > 0 ? `${Math.min(windowSize, draws.length)} derniers tirages` : `tout l'historique (${total} tirages)`;
+  $("#boardSub").textContent =
+    colorMode === "freq" ? `${g.label} · couleur = fréquence sur ${winLabel} · attendu ≈ ${expected.toFixed(1)} sorties par numéro`
+    : colorMode === "gap" ? `${g.label} · couleur = écart actuel (tirages sans sortie) sur ${winLabel}`
+    : `${g.label} · couleur = Z-score sur ${winLabel} (écart à la fréquence attendue, en écarts-types)`;
+
+  const freqs = stats.map(s => s.freq), gaps = stats.map(s => s.currentGap);
+  const fMin = Math.min(...freqs), fMax = Math.max(...freqs);
+  const gMin = Math.min(...gaps), gMax = Math.max(...gaps);
+
+  const board = $("#board");
+  board.style.gridTemplateColumns = `repeat(${g.cols}, 1fr)`;
+  board.innerHTML = "";
+  stats.forEach(s => {
+    let t = 0.5;
+    if (colorMode === "freq" && fMax > fMin) t = (s.freq - fMin) / (fMax - fMin);
+    if (colorMode === "gap" && gMax > gMin) t = (s.currentGap - gMin) / (gMax - gMin);
+    if (colorMode === "z" && adv) t = Math.max(0, Math.min(1, 0.5 + adv.z[s.n] / 6));  // ±3σ -> [0,1]
+    const cell = document.createElement("div");
+    cell.className = "cell";
+    cell.style.background = heatColor(t);
+    cell.style.color = (t < 0.25 || t > 0.78) ? "#fff" : "var(--ink)";
+    cell.innerHTML =
+      `<span class="num">${s.n}</span>` +
+      `<span class="val">${colorMode === "freq" ? s.freq + "×" : colorMode === "gap" ? "é " + s.currentGap : (adv ? (adv.z[s.n] >= 0 ? "+" : "") + adv.z[s.n].toFixed(1) + "σ" : "")}</span>` +
+      `<span class="tip">N°${s.n} — ${s.freq} sorties (attendu ${expected.toFixed(1)}) · écart ${s.currentGap} · max ${s.maxGap}${adv ? ` · Z ${(adv.z[s.n] >= 0 ? "+" : "") + adv.z[s.n].toFixed(2)}` : ""}` +
+      (s.lastSeen ? ` · vu le ${fmtDate(s.lastSeen)}` : ``) + `</span>`;
+    board.appendChild(cell);
+  });
+
+  const ex = computeExtraStats(draws, windowSize, currentGame);
+  if (ex) {
+    $("#extrasStrip").classList.remove("hidden");
+    $("#extrasLabel").textContent = g.extraLabel + " — sorties sur " + winLabel;
+    const eMin = Math.min(...ex.freq.slice(1)), eMax = Math.max(...ex.freq.slice(1));
+    $("#extrasRow").innerHTML = ex.freq.slice(1).map((f, i) => {
+      const t = eMax > eMin ? (f - eMin) / (eMax - eMin) : 0.5;
+      const dark = t < 0.25 || t > 0.78;
+      return `<div class="extra-ball" style="background:${heatColor(t)};color:${dark ? "#fff" : "var(--ink)"}">` +
+             `<span class="num">${i + 1}</span><span class="val">${f}×</span></div>`;
+    }).join("");
+  } else {
+    $("#extrasStrip").classList.add("hidden");
+  }
+
+  const byFreq = [...stats].sort((a, b) => b.freq - a.freq).slice(0, 8);
+  $("#hotBody").innerHTML = byFreq.map(s => `<tr><td>${s.n}</td><td>${s.freq}</td><td>${expected.toFixed(1)}</td><td>${s.currentGap}</td></tr>`).join("");
+  const byGap = [...stats].sort((a, b) => b.currentGap - a.currentGap).slice(0, 8);
+  $("#coldBody").innerHTML = byGap.map(s => `<tr><td>${s.n}</td><td>${s.currentGap}</td><td>${s.maxGap}</td><td>${s.freq}</td></tr>`).join("");
+
+
+  // --- Panneaux avancés ---
+  if (adv) {
+    const st = adv.structure;
+    $("#structSub").textContent = "Moyennes par tirage sur " + winLabel;
+    $("#structBody").innerHTML =
+      `<tr><td>Numéros pairs</td><td>${st.avgEvens.toFixed(2)}</td><td>${st.expEvens.toFixed(2)}</td></tr>` +
+      `<tr><td>Petits numéros (≤ ${Math.floor(g.max / 2)})</td><td>${st.avgLows.toFixed(2)}</td><td>${st.expLows.toFixed(2)}</td></tr>` +
+      `<tr><td>Somme du tirage</td><td>${st.avgSum.toFixed(0)}</td><td>${st.expSum.toFixed(0)}</td></tr>` +
+      `<tr><td>Tirages avec consécutifs</td><td>${st.pctConsec.toFixed(0)} %</td><td>—</td></tr>`;
+
+    $("#pairsSub").textContent = "Duos sortis ensemble le plus souvent sur " + winLabel;
+    $("#pairsBody").innerHTML = adv.pairs.map(pr =>
+      `<tr><td>${pr.a} & ${pr.b}</td><td>${pr.obs}×</td><td>${pr.exp.toFixed(1)}×</td><td>×${pr.ratio.toFixed(2)}</td></tr>`).join("");
+
+    const conforme = adv.pValue > 0.05;
+    $("#verdictText").innerHTML =
+      `Test du chi-carré sur ${winLabel} : χ² = ${adv.chi2.toFixed(1)} (${adv.df} degrés de liberté), p ≈ ${adv.pValue < 0.001 ? "&lt; 0,001" : adv.pValue.toFixed(3)}. ` +
+      (conforme
+        ? `<span class="ok-badge">Distribution conforme au hasard</span> — aucun numéro ne sort « anormalement », et c'est exactement ce qu'on attend d'un tirage équitable. Les écarts visibles ci-dessous restent dans la fourchette normale du hasard.`
+        : `<span class="warn-badge">Écart statistique inhabituel sur cette fenêtre</span> — cela arrive par hasard sur de petites fenêtres et ne permet aucune prédiction. Élargis la fenêtre pour voir l'écart se résorber.`);
+    $("#zTags").innerHTML = adv.zTop.map(t =>
+      `<span class="ztag ${t.z >= 0 ? "pos" : "neg"}">N°${t.n} ${t.z >= 0 ? "+" : ""}${t.z.toFixed(2)}σ</span>`).join("");
+  }
+
+  $("#drawsList").innerHTML = draws.slice(0, 10).map(d =>
+    `<div class="draw-line"><span class="draw-date">${fmtDate(d.date)}${d.time ? " · " + d.time : ""}</span>` +
+    d.numbers.map(n => `<span class="ball">${n}</span>`).join("") +
+    d.extras.map(n => `<span class="ball star">${n}</span>`).join("") + `</div>`).join("");
+
+  $("#app").classList.remove("hidden");
+  renderExtras2();
+}
+
+/* ---------- Chargement des données ---------- */
+function setStatus(html) { $("#status").innerHTML = html; }
+function showLoader(label) {
+  $("#loadError").classList.add("hidden");
+  $("#loader").classList.remove("hidden");
+  $("#loaderLabel").textContent = label;
+  setBarPct(null);
+}
+function setBarPct(pct) {
+  const fill = $("#barFill");
+  if (pct === null) { fill.classList.add("indeterminate"); fill.style.width = "32%"; }
+  else { fill.classList.remove("indeterminate"); fill.style.width = pct + "%"; }
+}
+function hideLoader() { $("#loader").classList.add("hidden"); }
+
+function normDraw(d) {
+  return { date: d.date, time: d.time || "",
+           numbers: Array.isArray(d.numbers) ? d.numbers : [],
+           extras: Array.isArray(d.extras) ? d.extras : [],
+           mult: d.mult || "" };
+}
+function adoptDraws(gameKey, parsed, sourceLabel) {
+  parsed.draws = parsed.draws.map(normDraw);
+  store[gameKey] = parsed.draws;
+  const d = parsed.draws;
+  setStatus(`<span class="ok">${d.length} tirages ${GAMES[gameKey].label} chargés</span> ${sourceLabel}` +
+    ` · du ${fmtDate(d[d.length - 1].date)} au ${fmtDate(d[0].date)}` +
+    (parsed.rejected ? ` · <span class="warn">${parsed.rejected} ligne(s) ignorée(s)</span>` : ""));
+  hideLoader();
+  try { render(); } catch (e) { console.error("Erreur de rendu :", e); setStatus('<span class="warn">Affichage partiel : ' + e.message + "</span>"); }
+  pool = [];
+  renderPoolBoard();
+  setTimeout(prefetchOthers, 800);
+}
+
+/* Chargement auto en 3 étages :
+   1. data/<jeu>.json si la page est hébergée avec le pipeline GitHub Actions.
+   2. Archive ZIP officielle FDJ via des relais CORS publics, décompressée
+      dans le navigateur (JSZip). Les relais sont des services gratuits
+      tiers : si tous sont indisponibles, on passe à l'étage 3.
+   3. Repli : import manuel d'un CSV FDJ. */
+
+// URLs d'archives officielles relevées le 17/07/2026 sur fdj.fr (pages historique).
+const FDJ_BASE = "https://www.sto.api.fdj.fr/anonymous/service-draw-info/v3/documentations";
+const FDJ_ARCHIVES = {
+  keno: FDJ_BASE + "/1a2b3c4d-9876-4562-b3fc-2c963f66bft6",
+  euromillions: FDJ_BASE + "/1a2b3c4d-9876-4562-b3fc-2c963f66afe6",
+  loto: FDJ_BASE + "/1a2b3c4d-9876-4562-b3fc-2c963f66afp6",
+  eurodreams: FDJ_BASE + "/1a2b3c4d-9876-4562-b3fc-2c963f66afa5",
+};
+// Relais CORS essayés dans l'ordre (services publics gratuits, fiabilité variable).
+const CORS_RELAYS = [
+  u => "https://corsproxy.io/?url=" + encodeURIComponent(u),
+  u => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u),
+  u => u,  // tentative directe en dernier (au cas où FDJ ouvre le CORS un jour)
+];
+
+function decodeCsvBytes(bytes) {
+  const utf8 = new TextDecoder("utf-8", { fatal: true });
+  try { return utf8.decode(bytes); }
+  catch { return new TextDecoder("iso-8859-1").decode(bytes); }
+}
+
+async function fetchWithProgress(url, signal, onPct) {
+  const resp = await fetch(url, { signal });
+  if (!resp.ok) throw new Error("HTTP " + resp.status);
+  const total = +resp.headers.get("Content-Length") || 0;
+  if (!resp.body || !total) { onPct(null); return await resp.arrayBuffer(); }  // taille inconnue
+  const reader = resp.body.getReader();
+  const chunks = []; let received = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value); received += value.length;
+    onPct(Math.min(99, Math.round(received / total * 100)));
+  }
+  const buf = new Uint8Array(received); let off = 0;
+  for (const c of chunks) { buf.set(c, off); off += c.length; }
+  return buf.buffer;
+}
+
+async function fetchFdjArchive(gameKey, onStep, onPct) {
+  const target = FDJ_ARCHIVES[gameKey];
+  if (!target || typeof JSZip === "undefined") return null;
+  for (let i = 0; i < CORS_RELAYS.length; i++) {
+    onStep(`Téléchargement des tirages officiels… (voie ${i + 1}/${CORS_RELAYS.length})`);
+    onPct(0);
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 12000);
+      const buf = await fetchWithProgress(CORS_RELAYS[i](target), ctrl.signal, onPct);
+      clearTimeout(timer);
+      if (buf.byteLength < 100) continue;
+      onStep("Décompression de l'archive…"); onPct(100);
+      const zip = await JSZip.loadAsync(buf);
+      const name = pickCsvName(Object.keys(zip.files), gameKey);
+      if (!name) continue;
+      lastArchiveFile = name;
+      const bytes = await zip.files[name].async("uint8array");
+      return decodeCsvBytes(bytes);
+    } catch { /* relais suivant */ }
+  }
+  return null;
+}
+
+async function tryAutoLoad(gameKey) {
+  // Étage 1 : JSON pré-généré (si le site est hébergé avec le pipeline).
+  // En mode test, un JSON tronqué (paywall) est ignoré au profit de l'archive complète.
+  if (location.protocol !== "file:") {
+    try {
+      const resp = await fetch(`data/${gameKey}.json`, { cache: "no-cache" });
+      if (resp.ok) {
+        const data = await resp.json();
+        if (Array.isArray(data.draws) && data.draws.length && !(FREE_MODE && data.draws.length < (data.count || 0))) {
+          const draws = data.draws.map(d => ({
+            date: parseFrDate(d.date), time: d.time || "", numbers: d.numbers, extras: d.extras || [],
+          })).filter(d => d.date);
+          draws.sort((a, b) => b.date - a.date || (b.time > a.time ? 1 : -1));
+          adoptDraws(gameKey, { draws, rejected: 0 },
+            `automatiquement (mis à jour le ${data.updated ? new Date(data.updated).toLocaleDateString("fr-FR") : "?"})`);
+          return true;
+        }
+      }
+    } catch { /* étage suivant */ }
+  }
+  // Étage 2 : archive officielle FDJ via relais CORS, dézippée ici même.
+  const csv = await fetchFdjArchive(gameKey, msg => showLoader(msg), pct => setBarPct(pct));
+  if (csv) {
+    try {
+      adoptDraws(gameKey, parseCsv(csv, gameKey), "automatiquement depuis l'archive officielle FDJ");
+      return true;
+    } catch (e) {
+      lastLoadError = "Archive reçue" + (lastArchiveFile ? " (« " + lastArchiveFile + " »)" : "") + " mais illisible — " + e.message;
+    }
+  } else {
+    lastLoadError = "Téléchargement impossible (relais indisponibles ou hors ligne).";
+  }
+  return false;
+}
+
+async function switchGame(gameKey) {
+  currentGame = gameKey;
+  applyGameTheme(gameKey);
+  document.querySelectorAll(".game-tab").forEach(t => t.classList.toggle("active", t.dataset.game === gameKey));
+  if (store[gameKey].length) {
+    hideLoader();
+    $("#loadError").classList.add("hidden");
+    setStatus("");
+    render();
+    pool = [];
+    renderPoolBoard();
+    $("#wheelSummary").textContent = ""; $("#wheelGrids").innerHTML = "";
+    return;
+  }
+  $("#app").classList.add("hidden");
+  $("#hero").classList.add("hidden");
+  showLoader("Recherche des tirages " + GAMES[gameKey].label + "…");
+  if (session.premium) { await loadPremiumData(gameKey); if (store[gameKey].length) { hideLoader(); pool = []; renderPoolBoard(); return; } }
+  const ok = await tryAutoLoad(gameKey);
+  if (!ok) {
+    hideLoader();
+    setStatus("");
+    $("#loadErrorHint").textContent = lastLoadError
+      ? "Tirages " + GAMES[gameKey].label + " : " + lastLoadError
+      : "Les tirages " + GAMES[gameKey].label + " n'ont pas pu être téléchargés. Réessaie dans un instant.";
+    lastLoadError = "";
+    $("#loadError").classList.remove("hidden");
+  }
+}
+
+
+/* Choisit le bon CSV dans une archive : celui dont le nom évoque le jeu, sinon le premier. */
+function pickCsvName(names, gameKey) {
+  const csvs = names.filter(n => n.toLowerCase().endsWith(".csv"));
+  if (!csvs.length) return null;
+  const hints = { keno: ["keno"], euromillions: ["euromillion", "million"], loto: ["loto"], eurodreams: ["dream"] };
+  for (const h of (hints[gameKey] || [])) {
+    const m = csvs.find(n => n.toLowerCase().includes(h));
+    if (m) return m;
+  }
+  return csvs[0];
+}
+
+/* Préchargement silencieux des autres jeux pour des onglets instantanés. */
+let prefetched = false;
+let lastLoadError = "";
+let lastArchiveFile = "";
+async function prefetchOthers() {
+  if (prefetched) return;
+  prefetched = true;
+  for (const gk of Object.keys(GAMES)) {
+    if (gk === currentGame || store[gk].length) continue;
+    try {
+      if (location.protocol !== "file:") {
+        const resp = await fetch(`data/${gk}.json`, { cache: "no-cache" });
+        if (resp.ok) {
+          const data = await resp.json();
+          if (Array.isArray(data.draws) && data.draws.length && !(FREE_MODE && data.draws.length < (data.count || 0))) {
+            const draws = data.draws.map(d => ({
+              date: parseFrDate(d.date), time: d.time || "", numbers: d.numbers, extras: d.extras || [], mult: d.mult || "",
+            })).filter(d => d.date);
+            draws.sort((a, b) => b.date - a.date || (b.time > a.time ? 1 : -1));
+            store[gk] = draws;
+            continue;
+          }
+        }
+      }
+      const csv = await fetchFdjArchive(gk, () => {}, () => {});
+      if (csv) { const p = parseCsv(csv, gk); store[gk] = p.draws; }
+    } catch { /* silencieux : sera retenté au clic d'onglet */ }
+  }
+}
+
+/* ---------- Événements ---------- */
+document.querySelectorAll(".game-tab").forEach(t => t.addEventListener("click", () => switchGame(t.dataset.game)));
+$("#retryBtn").addEventListener("click", () => switchGame(currentGame));
+
+/* ---------- Atelier : état & interactions ---------- */
+let pool = [];
+const MAX_POOL = 12;
+
+function gridSizeOptions(gameKey) {
+  const g = GAMES[gameKey];
+  return gameKey === "keno" ? [4, 5, 6, 7, 8, 9, 10] : [g.drawSize];  // Keno : au choix ; autres : taille fixe
+}
+
+function renderPoolBoard() {
+  const g = GAMES[currentGame];
+  const board = $("#poolBoard");
+  board.style.gridTemplateColumns = `repeat(${g.cols * 2}, 1fr)`;
+  board.innerHTML = "";
+  for (let n = 1; n <= g.max; n++) {
+    const c = document.createElement("button");
+    c.type = "button";
+    c.className = "pool-cell" + (pool.includes(n) ? " sel" : "");
+    c.textContent = n;
+    c.addEventListener("click", () => togglePool(n));
+    board.appendChild(c);
+  }
+  const sel = $("#gridSize");
+  const opts = gridSizeOptions(currentGame);
+  sel.innerHTML = opts.map(o => `<option value="${o}"${o === (opts.length === 1 ? opts[0] : 7) ? " selected" : ""}>${o}</option>`).join("");
+  sel.disabled = opts.length === 1;
+  renderPoolProfile();
+}
+
+function togglePool(n) {
+  if (pool.includes(n)) pool = pool.filter(x => x !== n);
+  else if (pool.length < MAX_POOL) pool.push(n);
+  pool.sort((a, b) => a - b);
+  renderPoolBoard();
+  $("#wheelSummary").textContent = ""; $("#wheelGrids").innerHTML = "";
+}
+
+function renderPoolProfile() {
+  const p = poolProfile(pool, currentGame);
+  const el = $("#poolProfile");
+  if (!p) { el.textContent = "Touche les numéros pour composer ta sélection (jusqu'à " + MAX_POOL + ")."; return; }
+  el.textContent = `${p.n} numéros — fréquence moyenne ${p.avgFreq.toFixed(1)} (attendu ${p.expected.toFixed(1)}) · ` +
+    `écart moyen ${p.avgGap.toFixed(1)} · Z moyen ${(p.avgZ >= 0 ? "+" : "") + p.avgZ.toFixed(2)} · ` +
+    `${p.evens} pairs / ${p.n - p.evens} impairs · ${p.lows} petits / ${p.n - p.lows} grands · somme ${p.sum}`;
+}
+
+function quickFill(kind) {
+  const g = GAMES[currentGame];
+  const draws = store[currentGame];
+  if (kind === "clear") { pool = []; renderPoolBoard(); return; }
+  if (!draws.length) return;
+  const { stats } = computeStats(draws, windowSize, currentGame);
+  const byFreq = [...stats].sort((a, b) => b.freq - a.freq);
+  const byGap = [...stats].sort((a, b) => b.currentGap - a.currentGap);
+  const N = Math.min(10, MAX_POOL);
+  if (kind === "hot") pool = byFreq.slice(0, N).map(s => s.n);
+  if (kind === "cold") pool = byGap.slice(0, N).map(s => s.n);
+  if (kind === "mix") pool = [...byFreq.slice(0, 4), ...byGap.slice(0, 3), ...byFreq.slice(-3)].map(s => s.n);
+  if (kind === "rand") {
+    const all = Array.from({ length: g.max }, (_, i) => i + 1);
+    for (let i = all.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [all[i], all[j]] = [all[j], all[i]]; }
+    pool = all.slice(0, N);
+  }
+  pool = [...new Set(pool)].sort((a, b) => a - b);
+  renderPoolBoard();
+  $("#wheelSummary").textContent = ""; $("#wheelGrids").innerHTML = "";
+}
+
+function runWheel() {
+  const k = +$("#gridSize").value;
+  const gsel = $("#guarantee").value;
+  const [t, m] = gsel === "full" ? [k, k] : gsel.split(",").map(Number);
+  const res = buildWheel(pool, k, t, m);
+  const sum = $("#wheelSummary"), out = $("#wheelGrids");
+  if (res.error) { sum.textContent = res.error; out.innerHTML = ""; return; }
+  const label = gsel === "full"
+    ? `Système complet : les ${res.grids.length} combinaisons de ${k} numéros parmi ta sélection de ${pool.length}.`
+    : `${res.grids.length} grilles au lieu de ${res.fullCount} pour le système complet — garantie : si ${m} numéros de ta sélection sortent, au moins une grille en contient ${t}.`;
+  sum.textContent = label + " L'espérance de gain par grille reste identique à une grille au hasard.";
+  const shown = res.grids.slice(0, 100);
+  out.innerHTML = shown.map((gr, i) =>
+    `<div class="wheel-grid"><span class="gnum">Grille ${String(i + 1).padStart(2, "0")}</span>` +
+    gr.map(n => `<span class="ball">${n}</span>`).join("") + `</div>`).join("") +
+    (res.grids.length > 100 ? `<div class="board-sub" style="margin-top:8px">… et ${res.grids.length - 100} autres (réduis la sélection ou change la garantie).</div>` : "");
+}
+
+document.querySelectorAll("[data-fill]").forEach(b => b.addEventListener("click", () => quickFill(b.dataset.fill)));
+$("#wheelBtn").addEventListener("click", runWheel);
+
+document.querySelectorAll(".chip[data-win]").forEach(c => c.addEventListener("click", () => {
+  const w = parseInt(c.dataset.win, 10);
+  if (!FREE_MODE && !session.premium && (w === 0 || w > 30)) { openModal(session.email ? "paywall" : "auth"); return; }
+  document.querySelectorAll(".chip[data-win]").forEach(x => x.classList.remove("active"));
+  c.classList.add("active"); windowSize = w; render();
+}));
+document.querySelectorAll(".toggle button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll(".toggle button").forEach(x => x.classList.remove("active"));
+  b.classList.add("active"); colorMode = b.dataset.mode; render();
+}));
+
+
+/* ---------- Comptes & Premium ---------- */
+let session = { token: null, email: null, premium: false };
+let authMode = "login";
+
+function readCookie(name) {
+  const m = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
+  return m ? decodeURIComponent(m[1]) : null;
+}
+function writeCookie(name, value, days) {
+  document.cookie = name + "=" + encodeURIComponent(value) +
+    "; max-age=" + (days * 86400) + "; path=/; SameSite=Lax" +
+    (location.protocol === "https:" ? "; Secure" : "");
+}
+
+async function api(path, opts = {}) {
+  const headers = { "content-type": "application/json", ...(opts.headers || {}) };
+  if (session.token) headers.authorization = "Bearer " + session.token;
+  const resp = await fetch(path, { ...opts, headers });
+  const data = await resp.json().catch(() => ({}));
+  if (!resp.ok) throw Object.assign(new Error(data.error || "Erreur serveur"), { status: resp.status });
+  return data;
+}
+
+function updateAccountUi() {
+  const btn = $("#accountBtn");
+  if (session.premium) { btn.textContent = "Premium ✓"; btn.classList.add("premium"); }
+  else if (session.email) { btn.textContent = "Mon compte"; btn.classList.remove("premium"); }
+  else { btn.textContent = "Mon compte"; btn.classList.remove("premium"); }
+  applyGates();
+}
+
+function openModal(view) {  // "auth" | "paywall" | "account"
+  $("#modalBack").classList.remove("hidden");
+  $("#modalPaywall").classList.toggle("hidden", view !== "paywall");
+  $("#modalAuth").classList.toggle("hidden", view !== "auth");
+  $("#modalAccount").classList.toggle("hidden", view !== "account");
+  if (view === "account") {
+    $("#accEmail").textContent = session.email;
+    $("#accPlan").textContent = session.premium ? "abonné Premium" : "compte gratuit";
+    $("#accUpgrade").classList.toggle("hidden", session.premium);
+  }
+}
+function closeModal() { $("#modalBack").classList.add("hidden"); }
+
+async function restoreSession() {
+  const token = readCookie("st_token");
+  if (!token) return;
+  session.token = token;
+  try {
+    const me = await api("/api/auth");
+    session.email = me.email; session.premium = me.premium;
+  } catch { session = { token: null, email: null, premium: false }; }
+  updateAccountUi();
+  if (session.premium) loadPremiumData(currentGame);
+}
+
+async function submitAuth() {
+  $("#authErr").textContent = "";
+  try {
+    const data = await api("/api/auth", {
+      method: "POST",
+      body: JSON.stringify({ action: authMode, email: $("#authEmail").value, password: $("#authPass").value }),
+    });
+    session = { token: data.token, email: data.email, premium: data.premium };
+    writeCookie("st_token", data.token, 30);
+    updateAccountUi();
+    if (session.premium) { closeModal(); loadPremiumData(currentGame); }
+    else openModal("paywall");
+  } catch (e) {
+    $("#authErr").textContent = e.status === 404 || e.message.includes("<")
+      ? "API indisponible — le site doit être déployé sur Netlify avec les fonctions."
+      : e.message;
+  }
+}
+
+async function goCheckout() {
+  if (!session.token) { openModal("auth"); return; }
+  try {
+    const { url } = await api("/api/checkout", { method: "POST", body: "{}" });
+    location.href = url;
+  } catch (e) { alert(e.message); }
+}
+
+async function loadPremiumData(gameKey) {
+  try {
+    const data = await api("/api/premium-data?game=" + gameKey);
+    if (!Array.isArray(data.draws) || !data.draws.length) return;
+    const draws = data.draws.map(d => ({
+      date: parseFrDate(d.date), time: d.time || "", numbers: d.numbers, extras: d.extras || [],
+    })).filter(d => d.date);
+    draws.sort((a, b) => b.date - a.date || (b.time > a.time ? 1 : -1));
+    store[gameKey] = draws;
+    setStatus(`<span class="ok">${draws.length} tirages ${GAMES[gameKey].label}</span> · historique complet (Premium)`);
+    render();
+  } catch { /* silencieux : le gratuit reste affiché */ }
+}
+
+/* Verrouillage visuel : fenêtres larges + panneaux avancés + atelier. */
+function applyGates() {
+  const gated = !FREE_MODE && !session.premium;
+  document.querySelectorAll(".chip[data-win]").forEach(c => {
+    const w = +c.dataset.win;
+    const lock = gated && (w === 0 || w > 30);
+    c.classList.toggle("gated", lock);
+  });
+  document.querySelectorAll(".gate-panel").forEach(p => {
+    p.classList.toggle("locked", gated);
+    let cover = p.querySelector(".lock-cover");
+    if (gated && !cover) {
+      cover = document.createElement("div");
+      cover.className = "lock-cover";
+      cover.innerHTML = "<strong>Réservé aux abonnés</strong>" +
+        "<span style='font-size:13px'>Indicateurs avancés, historique complet et atelier des grilles</span>" +
+        "<button class='btn' type='button'>Découvrir Premium</button>";
+      cover.querySelector("button").addEventListener("click", () =>
+        openModal(session.email ? "paywall" : "auth"));
+      p.appendChild(cover);
+    }
+    if (!gated && cover) cover.remove();
+  });
+}
+
+
+/* ---------- Rendu des nouveaux panneaux ---------- */
+function myNumsKey() { return "st_mynums_" + currentGame; }
+function renderMyNums() {
+  const saved = parseNums(readCookie(myNumsKey()) || "", currentGame);
+  $("#myNumsInput").value = saved.join(" ");
+  const out = $("#myNumsScore");
+  const draws = store[currentGame];
+  if (!saved.length || !draws.length) { out.innerHTML = ""; return; }
+  out.innerHTML = draws.slice(0, 7).map((d, i) => {
+    const hits = saved.filter(n => d.numbers.includes(n));
+    return `<div class="draw-line"><span class="draw-date">${fmtDate(d.date)}${d.time && d.time !== "unique" ? " · " + d.time : ""}</span>` +
+      saved.map(n => `<span class="ball" style="${hits.includes(n) ? "background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700" : "opacity:.45"}">${n}</span>`).join("") +
+      `<span class="draw-date" style="min-width:auto;margin-left:6px">${hits.length}/${saved.length}${i === 0 ? " ce tirage" : ""}</span></div>`;
+  }).join("");
+}
+
+function renderBacktest() {
+  const nums = parseNums($("#btInput").value, currentGame);
+  const res = backtestGrid(nums, currentGame);
+  const out = $("#btOut");
+  if (!res) { out.innerHTML = ""; return; }
+  out.innerHTML = `<table><thead><tr><th>Bons n°</th><th>Observé</th><th>Attendu</th></tr></thead><tbody>` +
+    res.hist.map((c, k) => (c || res.expected[k] >= 0.5)
+      ? `<tr><td>${k}</td><td>${c}×</td><td>${res.expected[k].toFixed(1)}×</td></tr>` : "").join("") +
+    `</tbody></table><div class="board-sub" style="margin-top:8px">Meilleur résultat : ${res.best.k} bons numéros le ${fmtDate(res.best.date)} · sur ${res.total} tirages. Le passé ne préjuge de rien pour le prochain tirage.</div>`;
+}
+
+function renderCompare() {
+  const nums = parseNums($("#cmpInput").value, currentGame).slice(0, 8);
+  const out = $("#cmpOut");
+  const draws = store[currentGame];
+  if (!nums.length || !draws.length) { out.innerHTML = ""; return; }
+  const { stats, expected } = computeStats(draws, windowSize, currentGame);
+  const adv = computeAdvanced(draws, windowSize, currentGame);
+  out.innerHTML = `<table><thead><tr><th>N°</th><th>Sorties</th><th>Attendu</th><th>Écart</th><th>Max</th><th>Z</th></tr></thead><tbody>` +
+    nums.map(n => { const st = stats[n - 1];
+      return `<tr><td>${n}</td><td>${st.freq}</td><td>${expected.toFixed(1)}</td><td>${st.currentGap}</td><td>${st.maxGap}</td><td>${adv ? (adv.z[n] >= 0 ? "+" : "") + adv.z[n].toFixed(2) : "—"}</td></tr>`; }).join("") +
+    `</tbody></table>`;
+}
+
+function renderGapCtx() {
+  const draws = store[currentGame];
+  if (!draws.length) return;
+  const scope = windowSize > 0 ? Math.min(windowSize, draws.length) : draws.length;
+  const { stats } = computeStats(draws, windowSize, currentGame);
+  const top = [...stats].sort((a, b) => b.currentGap - a.currentGap)[0];
+  $("#gapCtx").innerHTML = `<p class="modal-text">Plus gros retard actuel : <strong>N°${top.n}, ${top.currentGap} tirages</strong> (fenêtre : ${scope} tirages).</p><div class="board-sub" id="gapCtxRes">Clique pour estimer si c'est banal.</div>`;
+}
+function runGapCtx() {
+  const draws = store[currentGame];
+  if (!draws.length) return;
+  const scope = windowSize > 0 ? Math.min(windowSize, draws.length) : draws.length;
+  const { stats } = computeStats(draws, windowSize, currentGame);
+  const top = [...stats].sort((a, b) => b.currentGap - a.currentGap)[0];
+  const el = $("#gapCtxRes");
+  const SIMS = 800, BATCH = 100;
+  let done = 0, hits = 0;
+  el.textContent = "Simulation… 0 %";
+  const step = () => {
+    try {
+      hits += gapContextHits(top.currentGap, scope, currentGame, BATCH);
+      done += BATCH;
+      if (done < SIMS) {
+        el.textContent = "Simulation… " + Math.round(done / SIMS * 100) + " %";
+        setTimeout(step, 0);
+        return;
+      }
+      const p = hits / SIMS;
+      el.innerHTML = `Sur ${SIMS} histoires simulées de ${scope} tirages, un retard d'au moins ${top.currentGap} tirages (tous numéros confondus) apparaît dans <strong>${(p * 100).toFixed(0)} %</strong> des cas. ` +
+        (p > 0.2 ? "Autrement dit : parfaitement banal." : p > 0.05 ? "Peu fréquent, mais rien d'anormal." : "Rare — et pourtant sans aucune valeur prédictive : le hasard n'a pas de mémoire.");
+    } catch (e) {
+      el.textContent = "Simulation impossible : " + e.message;
+    }
+  };
+  setTimeout(step, 20);
+}
+
+function renderProba() {
+  const g = GAMES[currentGame];
+  const sel = $("#probaM");
+  const opts = currentGame === "keno" ? [2, 3, 4, 5, 6, 7, 8, 9, 10] : [g.drawSize];
+  if (sel.options.length !== opts.length) {
+    sel.innerHTML = opts.map(o => `<option value="${o}"${o === (opts.length === 1 ? opts[0] : 7) ? " selected" : ""}>${o}</option>`).join("");
+    sel.disabled = opts.length === 1;
+  }
+  const m = +sel.value || opts[0];
+  let rows = "";
+  for (let k = m; k >= 0; k--) {
+    const p = hypergeomP(k, m, currentGame);
+    if (p < 1e-12) continue;
+    rows += `<tr><td>${k} / ${m}</td><td>${(p * 100) < 0.01 ? (p * 100).toExponential(2) : (p * 100).toFixed(3)} %</td><td>${p > 0 ? Math.round(1 / p).toLocaleString("fr-FR") : "—"}</td></tr>`;
+  }
+  $("#probaBody").innerHTML = rows;
+}
+
+function renderWeekday() {
+  const ws = weekdayStats(currentGame);
+  $("#weekdayBody").innerHTML = ws ? ws.map(d =>
+    `<tr><td style="text-transform:capitalize">${d.label}</td><td>${d.count}</td><td>${d.top.map(t => t.n + " (" + t.f + "×)").join(" · ")}</td></tr>`).join("") : "";
+}
+
+function renderMult() {
+  const ms = multStats(currentGame);
+  $("#multPanel").classList.toggle("hidden", !ms);
+  if (!ms) return;
+  $("#multBody").innerHTML = ms.rows.map(([m, c]) =>
+    `<tr><td>${m}</td><td>${c}×</td><td>${(c / ms.total * 100).toFixed(1)} %</td></tr>`).join("");
+}
+
+
+/* ---------- Graphiques (Chart.js) ---------- */
+let charts = {};
+const INK = "#20261F", MUTED = "#79806F", LIGNE = "#DDD5C2", HOT = "#C8352E", COLD = "#33619E";
+function killChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+const chartBase = {
+  responsive: true, maintainAspectRatio: false, animation: false,
+  plugins: { legend: { display: false } },
+  scales: {
+    x: { ticks: { color: MUTED, font: { family: "'IBM Plex Mono', monospace", size: 10 }, maxTicksLimit: 12 }, grid: { color: "rgba(0,0,0,.05)" } },
+    y: { ticks: { color: MUTED, font: { family: "'IBM Plex Mono', monospace", size: 10 } }, grid: { color: "rgba(0,0,0,.07)" } },
+  },
+};
+
+let chartLibLoading = false;
+function ensureChartLib() {
+  if (typeof Chart !== "undefined" || chartLibLoading) return typeof Chart !== "undefined";
+  chartLibLoading = true;
+  const alt = document.createElement("script");
+  alt.src = "https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.min.js";
+  alt.onload = () => { chartLibLoading = false; renderCharts(); };
+  alt.onerror = () => { $("#trackSub").textContent = "Graphiques indisponibles : impossible de charger la bibliothèque (connexion ?)."; };
+  document.head.appendChild(alt);
+  return false;
+}
+
+function safeChart(id, cfg) {
+  try { killChart(id.replace("chart", "").toLowerCase()); return new Chart($("#" + id), cfg); }
+  catch (e) { console.error("Graphique " + id + " :", e); return null; }
+}
+function renderCharts() {
+  if (!ensureChartLib()) { $("#trackSub").textContent = "Chargement du module graphique…"; return; }
+  try {
+  const g = GAMES[currentGame];
+  const draws = store[currentGame];
+  if (!draws || draws.length < 2) return;
+  const scope = (windowSize > 0 ? draws.slice(0, windowSize) : draws);
+  const chrono = [...scope].reverse();               // ancien -> récent
+  if (!chrono.length) return;
+
+  // Sélecteur de numéro (rempli une fois par jeu)
+  const sel = $("#trackNum");
+  if (+sel.dataset.max !== g.max) {
+    sel.dataset.max = g.max;
+    sel.innerHTML = Array.from({ length: g.max }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("");
+  }
+  const n = +sel.value || 1;
+
+  // --- 1. Suivi d'un numéro : fréquence glissante (30) + sorties ---
+  const W = Math.min(30, chrono.length);
+  const roll = [], marks = [];
+  let inWin = 0;
+  chrono.forEach((d, i) => {
+    const hit = d.numbers.includes(n) ? 1 : 0;
+    inWin += hit;
+    if (i >= W) inWin -= chrono[i - W].numbers.includes(n) ? 1 : 0;
+    if (i >= W - 1) roll.push({ x: i, y: inWin });
+    if (hit) marks.push({ x: i, y: 0 });
+  });
+  const expectedW = W * g.drawSize / g.max;
+  killChart("track");
+  charts.track = new Chart($("#chartTrack"), {
+    type: "line",
+    data: { datasets: [
+      { data: roll, borderColor: HOT, backgroundColor: "transparent", pointRadius: 0, borderWidth: 2, tension: .25 },
+      { data: roll.map(p => ({ x: p.x, y: expectedW })), borderColor: MUTED, borderDash: [5, 4], pointRadius: 0, borderWidth: 1.5 },
+      { data: marks, type: "scatter", pointStyle: "triangle", radius: 4, backgroundColor: "#C9A227", borderColor: "#C9A227" },
+    ]},
+    options: { ...chartBase, scales: { ...chartBase.scales,
+      x: { ...chartBase.scales.x, type: "linear", title: { display: true, text: "tirages (ancien → récent)", color: MUTED, font: { size: 10 } } } } },
+  });
+  $("#trackSub").textContent = `N°${n} : sorties sur ${W} tirages glissants (rouge) vs attendu ${expectedW.toFixed(1)} (pointillés) · triangles dorés = chaque sortie.`;
+
+  // --- 2. Fréquences par numéro (barres, colorées par Z) ---
+  const { stats, expected } = computeStats(draws, windowSize, currentGame);
+  const adv = computeAdvanced(draws, windowSize, currentGame);
+  killChart("freq");
+  charts.freq = new Chart($("#chartFreq"), {
+    type: "bar",
+    data: {
+      labels: stats.map(st => st.n),
+      datasets: [{ data: stats.map(st => st.freq),
+        backgroundColor: stats.map(st => adv && adv.z[st.n] > 1 ? HOT : adv && adv.z[st.n] < -1 ? COLD : "#B9B29C") }],
+    },
+    options: { ...chartBase, plugins: { legend: { display: false } },
+      scales: { ...chartBase.scales, x: { ...chartBase.scales.x, maxTicksLimit: 20 } } },
+  });
+
+  // --- 3. Cloche des sommes : histogramme + théorie ---
+  const sums = scope.map(d => d.numbers.reduce((a, b) => a + b, 0));
+  const mu = g.drawSize * (g.max + 1) / 2;
+  const varSum = g.drawSize * (g.max + 1) * (g.max - g.drawSize) / 12;  // variance somme hypergéo
+  const sd = Math.sqrt(varSum) || 1;
+  const lo = Math.floor(mu - 3.2 * sd), hi = Math.ceil(mu + 3.2 * sd), bins = 21, step = (hi - lo) / bins;
+  const histo = new Array(bins).fill(0);
+  sums.forEach(v => { const b = Math.min(bins - 1, Math.max(0, Math.floor((v - lo) / step))); histo[b]++; });
+  const theo = histo.map((_, b) => {
+    const x = lo + (b + .5) * step;
+    return sums.length * step * Math.exp(-((x - mu) ** 2) / (2 * varSum)) / (sd * Math.sqrt(2 * Math.PI));
+  });
+  killChart("sum");
+  charts.sum = new Chart($("#chartSum"), {
+    type: "bar",
+    data: { labels: histo.map((_, b) => Math.round(lo + (b + .5) * step)),
+      datasets: [
+        { data: histo, backgroundColor: "rgba(51,97,158,.55)" },
+        { data: theo, type: "line", borderColor: INK, pointRadius: 0, borderWidth: 2, tension: .35 },
+      ]},
+    options: chartBase,
+  });
+  } catch (e) {
+    console.error("Erreur graphiques :", e);
+    $("#trackSub").textContent = "Graphiques indisponibles : " + e.message;
+  }
+}
+$("#trackNum") && $("#trackNum").addEventListener("change", renderCharts);
+
+function renderExtras2() {
+  const safe = (name, fn) => { try { fn(); } catch (e) { console.error(name + " :", e); } };
+  safe("charts", renderCharts);
+  safe("mynums", renderMyNums);
+  safe("gapctx", renderGapCtx);
+  safe("proba", renderProba);
+  safe("weekday", renderWeekday);
+  safe("mult", renderMult);
+  safe("backtest", renderBacktest);
+  safe("compare", renderCompare);
+}
+
+$("#myNumsSave").addEventListener("click", () => {
+  const nums = parseNums($("#myNumsInput").value, currentGame);
+  writeCookie(myNumsKey(), nums.join(" "), 365);
+  renderMyNums();
+});
+$("#myNumsClear").addEventListener("click", () => { writeCookie(myNumsKey(), "", 0); $("#myNumsInput").value = ""; renderMyNums(); });
+$("#btRun").addEventListener("click", renderBacktest);
+$("#cmpRun").addEventListener("click", renderCompare);
+$("#gapCtxBtn").addEventListener("click", runGapCtx);
+$("#probaM").addEventListener("change", renderProba);
+$("#exportBtn").addEventListener("click", () => exportCsv(currentGame));
+
+$("#accountBtn").addEventListener("click", () =>
+  openModal(session.email ? "account" : "auth"));
+$("#modalClose").addEventListener("click", closeModal);
+$("#modalBack").addEventListener("click", e => { if (e.target.id === "modalBack") closeModal(); });
+document.querySelectorAll("[data-auth]").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("[data-auth]").forEach(x => x.classList.remove("active"));
+  b.classList.add("active");
+  authMode = b.dataset.auth;
+  $("#authSubmit").textContent = authMode === "login" ? "Se connecter" : "Créer mon compte";
+}));
+$("#authSubmit").addEventListener("click", submitAuth);
+$("#goPremiumBtn").addEventListener("click", goCheckout);
+$("#accUpgrade").addEventListener("click", goCheckout);
+$("#accLogout").addEventListener("click", () => {
+  session = { token: null, email: null, premium: false };
+  writeCookie("st_token", "", 0);
+  updateAccountUi(); closeModal();
+  switchGame(currentGame);
+});
+if (new URLSearchParams(location.search).get("abonnement") === "merci") {
+  setTimeout(() => restoreSession(), 1500);  // laisse le webhook Stripe passer
+}
+restoreSession();
+applyGates();
+
+switchGame("keno");
+</script>
+</body>
+</html>
