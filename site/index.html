@@ -394,9 +394,18 @@
         <select id="gridSize" class="select"></select>
         <span class="label">Garantie</span>
         <select id="guarantee" class="select">
+          <option value="2,3">2 si 3 sortent (économique)</option>
+          <option value="2,4">2 si 4 sortent (très économique)</option>
+          <option value="2,5">2 si 5 sortent (minimal)</option>
+          <option value="3,3">3 si 3 sortent (serré)</option>
           <option value="3,4">3 si 4 sortent</option>
-          <option value="3,5" selected>3 si 5 sortent</option>
+          <option value="3,5" selected>3 si 5 sortent (équilibré)</option>
+          <option value="3,6">3 si 6 sortent</option>
+          <option value="4,4">4 si 4 sortent (exigeant)</option>
           <option value="4,5">4 si 5 sortent</option>
+          <option value="4,6">4 si 6 sortent</option>
+          <option value="5,5">5 si 5 sortent (quasi complet)</option>
+          <option value="5,6">5 si 6 sortent</option>
           <option value="full">Système complet</option>
         </select>
         <button class="btn" type="button" id="wheelBtn">Générer les grilles</button>
@@ -986,9 +995,9 @@ function render() {
     $("#extrasStrip").classList.add("hidden");
   }
 
-  const byFreq = [...stats].sort((a, b) => b.freq - a.freq).slice(0, 8);
+  const byFreq = [...stats].sort((a, b) => b.freq - a.freq).slice(0, 15);
   $("#hotBody").innerHTML = byFreq.map(s => `<tr><td>${s.n}</td><td>${s.freq}</td><td>${expected.toFixed(1)}</td><td>${s.currentGap}</td></tr>`).join("");
-  const byGap = [...stats].sort((a, b) => b.currentGap - a.currentGap).slice(0, 8);
+  const byGap = [...stats].sort((a, b) => b.currentGap - a.currentGap).slice(0, 15);
   $("#coldBody").innerHTML = byGap.map(s => `<tr><td>${s.n}</td><td>${s.currentGap}</td><td>${s.maxGap}</td><td>${s.freq}</td></tr>`).join("");
 
 
@@ -1246,7 +1255,7 @@ $("#retryBtn").addEventListener("click", () => switchGame(currentGame));
 
 /* ---------- Atelier : état & interactions ---------- */
 let pool = [];
-const MAX_POOL = 12;
+const MAX_POOL = 14;
 
 function gridSizeOptions(gameKey) {
   const g = GAMES[gameKey];
