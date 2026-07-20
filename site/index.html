@@ -1077,9 +1077,12 @@ const FDJ_ARCHIVES = {
 };
 // Relais CORS essayés dans l'ordre (services publics gratuits, fiabilité variable).
 const CORS_RELAYS = [
-  u => "https://corsproxy.io/?url=" + encodeURIComponent(u),
   u => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u),
-  u => u,  // tentative directe en dernier (au cas où FDJ ouvre le CORS un jour)
+  u => "https://corsproxy.io/?url=" + encodeURIComponent(u),
+  u => "https://api.codetabs.com/v1/proxy/?quest=" + encodeURIComponent(u),
+  u => "https://thingproxy.freeboard.io/fetch/" + u,
+  u => "https://proxy.cors.sh/" + u,
+  u => u,  // tentative directe en dernier
 ];
 
 function decodeCsvBytes(bytes) {
@@ -1114,7 +1117,7 @@ async function fetchFdjArchive(gameKey, onStep, onPct) {
     onPct(0);
     try {
       const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 12000);
+      const timer = setTimeout(() => ctrl.abort(), 15000);
       const buf = await fetchWithProgress(CORS_RELAYS[i](target), ctrl.signal, onPct);
       clearTimeout(timer);
       if (buf.byteLength < 100) continue;
@@ -1131,14 +1134,13 @@ async function fetchFdjArchive(gameKey, onStep, onPct) {
 }
 
 async function tryAutoLoad(gameKey) {
-  // Étage 1 : JSON pré-généré (si le site est hébergé avec le pipeline).
-  // En mode test, un JSON tronqué (paywall) est ignoré au profit de l'archive complète.
+  // Étage 1 : JSON pré-généré (uniquement si hébergé ; ignoré en fichier local).
   if (location.protocol !== "file:") {
     try {
       const resp = await fetch(`data/${gameKey}.json`, { cache: "no-cache" });
       if (resp.ok) {
         const data = await resp.json();
-        if (Array.isArray(data.draws) && data.draws.length && !(FREE_MODE && data.draws.length < (data.count || 0))) {
+        if (Array.isArray(data.draws) && data.draws.length ) {
           const draws = data.draws.map(d => ({
             date: parseFrDate(d.date), time: d.time || "", numbers: d.numbers, extras: d.extras || [],
           })).filter(d => d.date);
@@ -1222,7 +1224,7 @@ async function prefetchOthers() {
         const resp = await fetch(`data/${gk}.json`, { cache: "no-cache" });
         if (resp.ok) {
           const data = await resp.json();
-          if (Array.isArray(data.draws) && data.draws.length && !(FREE_MODE && data.draws.length < (data.count || 0))) {
+          if (Array.isArray(data.draws) && data.draws.length ) {
             const draws = data.draws.map(d => ({
               date: parseFrDate(d.date), time: d.time || "", numbers: d.numbers, extras: d.extras || [], mult: d.mult || "",
             })).filter(d => d.date);
