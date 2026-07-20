@@ -359,10 +359,17 @@
         <tbody id="structBody"></tbody></table>
       </div>
       <div class="panel gate-panel">
-        <h2>Paires complices</h2>
+        <h2>Numéros complices</h2>
         <div class="board-sub" id="pairsSub"></div>
+        <h3 class="chart-h3">Paires</h3>
         <table><thead><tr><th>Paire</th><th>Ensemble</th><th>Attendu</th><th>Ratio</th></tr></thead>
         <tbody id="pairsBody"></tbody></table>
+        <h3 class="chart-h3" style="margin-top:14px">Trios</h3>
+        <table><thead><tr><th>Trio</th><th>Ensemble</th><th>Attendu</th><th>Ratio</th></tr></thead>
+        <tbody id="triosBody"></tbody></table>
+        <h3 class="chart-h3" style="margin-top:14px">Quatuors</h3>
+        <table><thead><tr><th>Quatuor</th><th>Ensemble</th><th>Attendu</th><th>Ratio</th></tr></thead>
+        <tbody id="quadsBody"></tbody></table>
       </div>
     </div>
 
@@ -753,14 +760,45 @@ function computeAdvanced(all, win, gameKey) {
   });
   const pairs = [...pairCount.entries()]
     .map(([k, c]) => ({ a: Math.floor(k / 100), b: k % 100, obs: c, exp: expPair, ratio: c / expPair }))
-    .sort((x, y) => y.obs - x.obs).slice(0, 6);
+    .sort((x, y) => y.obs - x.obs).slice(0, 12);
+
+  // --- Trios et quatuors complices (clés numériques compactes) ---
+  const D = g.drawSize, M = g.max;
+  const trioP = D * (D - 1) * (D - 2) / (M * (M - 1) * (M - 2));
+  const quadP = D >= 4 ? D * (D - 1) * (D - 2) * (D - 3) / (M * (M - 1) * (M - 2) * (M - 3)) : 0;
+  const expTrio = total * trioP, expQuad = total * quadP;
+  const trioCount = new Map(), quadCount = new Map();
+  scope.forEach(d => {
+    const n = d.numbers, L = n.length;
+    for (let i = 0; i < L; i++)
+      for (let j = i + 1; j < L; j++)
+        for (let l = j + 1; l < L; l++) {
+          const kt = (n[i] * 100 + n[j]) * 100 + n[l];
+          trioCount.set(kt, (trioCount.get(kt) || 0) + 1);
+          for (let q = l + 1; q < L; q++) {
+            const kq = kt * 100 + n[q];
+            quadCount.set(kq, (quadCount.get(kq) || 0) + 1);
+          }
+        }
+  });
+  const unpack = (key, size) => {
+    const out = [];
+    for (let i = 0; i < size; i++) { out.unshift(key % 100); key = Math.floor(key / 100); }
+    return out;
+  };
+  const trios = [...trioCount.entries()]
+    .map(([k, c]) => ({ nums: unpack(k, 3), obs: c, exp: expTrio, ratio: expTrio > 0 ? c / expTrio : 0 }))
+    .sort((x, y) => y.obs - x.obs).slice(0, 8);
+  const quads = [...quadCount.entries()]
+    .map(([k, c]) => ({ nums: unpack(k, 4), obs: c, exp: expQuad, ratio: expQuad > 0 ? c / expQuad : 0 }))
+    .sort((x, y) => y.obs - x.obs).slice(0, 8);
 
   // --- Extrêmes du Z ---
   const zRank = [];
   for (let n = 1; n <= g.max; n++) zRank.push({ n, z: z[n], freq: freq[n] });
   zRank.sort((a, b) => Math.abs(b.z) - Math.abs(a.z));
 
-  return { total, z, chi2, df, pValue, structure, pairs, zTop: zRank.slice(0, 6), expected: mu };
+  return { total, z, chi2, df, pValue, structure, pairs, trios, quads, zTop: zRank.slice(0, 6), expected: mu };
 }
 
 
@@ -1011,9 +1049,14 @@ function render() {
       `<tr><td>Somme du tirage</td><td>${st.avgSum.toFixed(0)}</td><td>${st.expSum.toFixed(0)}</td></tr>` +
       `<tr><td>Tirages avec consécutifs</td><td>${st.pctConsec.toFixed(0)} %</td><td>—</td></tr>`;
 
-    $("#pairsSub").textContent = "Duos sortis ensemble le plus souvent sur " + winLabel;
+    $("#pairsSub").textContent = "Combinaisons sorties ensemble le plus souvent sur " + winLabel;
     $("#pairsBody").innerHTML = adv.pairs.map(pr =>
       `<tr><td>${pr.a} & ${pr.b}</td><td>${pr.obs}×</td><td>${pr.exp.toFixed(1)}×</td><td>×${pr.ratio.toFixed(2)}</td></tr>`).join("");
+    $("#triosBody").innerHTML = adv.trios.map(tr =>
+      `<tr><td>${tr.nums.join(" & ")}</td><td>${tr.obs}×</td><td>${tr.exp.toFixed(2)}×</td><td>${tr.exp > 0 ? "×" + tr.ratio.toFixed(1) : "—"}</td></tr>`).join("");
+    $("#quadsBody").innerHTML = adv.quads.length ? adv.quads.map(qd =>
+      `<tr><td>${qd.nums.join(" & ")}</td><td>${qd.obs}×</td><td>${qd.exp.toFixed(3)}×</td><td>${qd.exp > 0 ? "×" + qd.ratio.toFixed(0) : "—"}</td></tr>`).join("")
+      : '<tr><td colspan="4">Pas assez de numéros par tirage</td></tr>';
 
     const conforme = adv.pValue > 0.05;
     $("#verdictText").innerHTML =
