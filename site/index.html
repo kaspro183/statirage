@@ -217,6 +217,19 @@
   }
   .ball.star { border-color: var(--accent); color: var(--accent); border-radius: 8px; }
 
+  .matrix-wrap { overflow-x: auto; margin-top: 6px; }
+  table.matrix { border-collapse: collapse; font: 600 10px 'IBM Plex Mono', monospace; }
+  table.matrix th, table.matrix td {
+    min-width: 21px; height: 22px; text-align: center; padding: 0 1px;
+    border-bottom: 1px solid var(--papier-2);
+  }
+  table.matrix thead th { color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--ligne); }
+  table.matrix .mdate {
+    position: sticky; left: 0; background: var(--papier); z-index: 2;
+    text-align: left; padding-right: 8px; min-width: 96px; color: var(--muted); white-space: nowrap;
+  }
+  table.matrix td.hit { background: var(--accent); color: var(--accent-ink); border-radius: 5px; }
+  table.matrix td.hit-extra { background: var(--encre); color: var(--papier); border-radius: 8px; }
   footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid rgba(247,243,232,.25); color: rgba(247,243,232,.65); font-size: 12.5px; }
   footer a { color: var(--accent-soft); }
   .modal-back {
@@ -1072,10 +1085,24 @@ function render() {
       `<span class="ztag ${t.z >= 0 ? "pos" : "neg"}">N°${t.n} ${t.z >= 0 ? "+" : ""}${t.z.toFixed(2)}σ</span>`).join("");
   }
 
-  $("#drawsList").innerHTML = draws.slice(0, 10).map(d =>
-    `<div class="draw-line"><span class="draw-date">${fmtDate(d.date)}${d.time ? " · " + d.time : ""}</span>` +
-    d.numbers.map(n => `<span class="ball">${n}</span>`).join("") +
-    d.extras.map(n => `<span class="ball star">${n}</span>`).join("") + `</div>`).join("");
+  {
+    const last = draws.slice(0, 20);
+    const hasExtras = g.extraMax > 0;
+    let html = '<div class="matrix-wrap"><table class="matrix"><thead><tr><th class="mdate">Date</th>';
+    for (let n = 1; n <= g.max; n++) html += `<th>${String(n).padStart(2, "0")}</th>`;
+    if (hasExtras) html += `<th>★</th>`;
+    html += '</tr></thead><tbody>';
+    last.forEach(d => {
+      const inDraw = new Set(d.numbers);
+      html += `<tr><td class="mdate">${d.date.toLocaleDateString("fr-FR", { weekday: "short" })} ${fmtDate(d.date)}${d.time ? " · " + d.time : ""}</td>`;
+      for (let n = 1; n <= g.max; n++)
+        html += inDraw.has(n) ? `<td class="hit">${n}</td>` : "<td></td>";
+      if (hasExtras) html += `<td class="hit-extra">${d.extras.join(" ")}</td>`;
+      html += "</tr>";
+    });
+    html += "</tbody></table></div>";
+    $("#drawsList").innerHTML = html;
+  }
 
   $("#app").classList.remove("hidden");
   renderExtras2();
