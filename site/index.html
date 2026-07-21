@@ -282,6 +282,9 @@
   .lock-cover .btn { margin-top: 0; }
   .lock-cover strong { font-family: 'Poppins', sans-serif; font-size: 18px; }
   .chip.gated::after { content: " 🔒"; }
+  .learn-p { font-size: 15px; line-height: 1.65; margin-bottom: 12px; max-width: 75ch; }
+  .learn-p b { color: var(--encre); }
+  #learnTab.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   .hidden { display: none; }
   @media (prefers-reduced-motion: reduce) { .orb { animation: none; } .cell { transition: none; } .bar-fill.indeterminate { animation: none; } .cell:hover { transform: none; } }
 </style>
@@ -300,6 +303,7 @@
       <button class="game-tab" data-game="euromillions" role="tab">EuroMillions</button>
       <button class="game-tab" data-game="loto" role="tab">Loto</button>
       <button class="game-tab" data-game="eurodreams" role="tab">EuroDreams</button>
+      <button class="game-tab" id="learnTab">Comprendre</button>
     </div>
   </div>
 
@@ -592,6 +596,54 @@
         <button class="btn" id="accUpgrade">Passer Premium — 39 €/an</button>
         <button class="chip" id="accLogout" style="margin-left:8px">Se déconnecter</button>
       </div>
+    </div>
+  </div>
+
+  <div id="learnPage" class="hidden">
+    <div class="panel" style="margin-bottom:16px">
+      <h2>Comprendre les statistiques des tirages</h2>
+      <p class="learn-p">Statirage vous donne les analyses les plus poussées du marché. Mais pour bien les lire — et ne pas se raconter d'histoires — voici l'essentiel, expliqué simplement.</p>
+    </div>
+
+    <div class="panel" style="margin-bottom:16px">
+      <h2>Le hasard n'a pas de mémoire</h2>
+      <p class="learn-p">C'est le point le plus important, et le plus contre-intuitif. Chaque tirage est <b>totalement indépendant</b> des précédents. Une boule ne « sait » pas qu'elle n'est pas sortie depuis 30 tirages. Un numéro très en retard n'a <b>pas plus de chances</b> de sortir au prochain tirage qu'un numéro sorti hier.</p>
+      <p class="learn-p">Autrement dit : aucune statistique, aussi poussée soit-elle, ne peut prédire le prochain tirage. Ce que Statirage vous montre, c'est le <b>passé</b> — pas l'avenir. C'est passionnant à observer, mais ça ne donne aucun avantage pour gagner. Quiconque prétend le contraire vous ment.</p>
+    </div>
+
+    <div class="panel" style="margin-bottom:16px">
+      <h2>Fréquences et écarts : « chaud » et « froid »</h2>
+      <p class="learn-p">La <b>fréquence</b>, c'est combien de fois un numéro est sorti sur une période. L'<b>écart</b>, c'est le nombre de tirages depuis sa dernière sortie. On appelle « chauds » les numéros souvent sortis récemment, « froids » ceux en retard.</p>
+      <p class="learn-p">Sur une courte période, des écarts apparaissent forcément — c'est le hasard, pas un déséquilibre de la machine. Sur le très long terme, tous les numéros convergent vers la même fréquence. Regarder les chauds/froids est amusant ; y voir une méthode de gain serait une erreur.</p>
+    </div>
+
+    <div class="panel" style="margin-bottom:16px">
+      <h2>Le Z-score : mesurer un écart « anormal »</h2>
+      <p class="learn-p">Le <b>Z-score</b> mesure à quel point la fréquence d'un numéro s'écarte de la moyenne attendue, en « écarts-types ». Un Z proche de 0 = parfaitement normal. Un Z de +2 = le numéro est sorti nettement plus que prévu ; −2 = nettement moins.</p>
+      <p class="learn-p">Mais attention : sur des dizaines de numéros, il est <b>normal</b> que certains atteignent ±2 par pur hasard. Un Z élevé n'annonce aucun retournement. C'est un thermomètre du passé, pas une boule de cristal.</p>
+    </div>
+
+    <div class="panel" style="margin-bottom:16px">
+      <h2>La cloche des sommes</h2>
+      <p class="learn-p">Si on additionne les numéros de chaque tirage, on obtient une « somme ». Répétée sur des centaines de tirages, la distribution de ces sommes dessine une <b>courbe en cloche</b> centrée sur une valeur théorique (456 au Keno). C'est la signature du hasard : la plupart des tirages ont une somme moyenne, les sommes extrêmes (que des petits, que des grands) sont rares.</p>
+      <p class="learn-p">C'est pourquoi une grille « équilibrée » (somme proche de la moyenne) <b>ressemble</b> davantage à un tirage typique — sans pour autant avoir plus de chances de gagner. Elle a juste un profil plus « courant ».</p>
+    </div>
+
+    <div class="panel" style="margin-bottom:16px">
+      <h2>Le test du chi-carré : la machine est-elle équilibrée ?</h2>
+      <p class="learn-p">Le <b>chi-carré</b> vérifie globalement si la distribution des numéros est conforme au hasard. Une « p-value » supérieure à 0,05 signifie : rien d'anormal, la machine est équitable. C'est presque toujours le cas — et c'est plutôt rassurant : le jeu n'est pas truqué.</p>
+    </div>
+
+    <div class="panel" style="margin-bottom:16px">
+      <h2>Les systèmes réducteurs : ce qu'ils font vraiment</h2>
+      <p class="learn-p">Un système réducteur organise une sélection de numéros en un minimum de grilles avec une <b>garantie de couverture</b> (ex. « si 5 de mes numéros sortent, au moins une grille en contient 3 »). C'est de la combinatoire, pas de la magie.</p>
+      <p class="learn-p">Point crucial : un réducteur <b>ne change pas votre espérance de gain</b>. Chaque grille garde exactement les mêmes chances. Il structure simplement le jeu d'une sélection large et garantit une couverture — utile pour jouer un groupe de numéros de façon organisée, pas pour gagner plus.</p>
+    </div>
+
+    <div class="panel">
+      <h2>En résumé</h2>
+      <p class="learn-p">Statirage est un outil d'<b>exploration et de compréhension</b>, pensé pour les curieux des chiffres. Les statistiques racontent le passé avec rigueur ; elles ne prédisent jamais l'avenir. Jouez pour le plaisir, avec modération, et sans jamais miser plus que ce que vous pouvez perdre.</p>
+      <p class="learn-p" style="margin-top:10px">Jouer comporte des risques : endettement, dépendance… Appelez le 09 74 75 13 13 (appel non surtaxé) ou visitez <a href="https://www.joueurs-info-service.fr" style="color:var(--accent-soft)">joueurs-info-service.fr</a>.</p>
     </div>
   </div>
 
@@ -1373,6 +1425,8 @@ async function tryAutoLoad(gameKey) {
 async function switchGame(gameKey) {
   currentGame = gameKey;
   applyGameTheme(gameKey);
+  $("#learnPage") && $("#learnPage").classList.add("hidden");
+  $("#learnTab") && $("#learnTab").classList.remove("active");
   document.querySelectorAll(".game-tab").forEach(t => t.classList.toggle("active", t.dataset.game === gameKey));
   if (store[gameKey].length) {
     hideLoader();
@@ -1984,6 +2038,21 @@ $("#cmpRun").addEventListener("click", renderCompare);
 $("#gapCtxBtn").addEventListener("click", runGapCtx);
 $("#probaM").addEventListener("change", renderProba);
 $("#exportBtn").addEventListener("click", () => exportCsv(currentGame));
+
+
+function showLearn() {
+  document.querySelectorAll(".game-tab").forEach(t => t.classList.remove("active"));
+  $("#learnTab").classList.add("active");
+  $("#app").classList.add("hidden");
+  $("#hero").classList.add("hidden");
+  $("#factBox") && $("#factBox").classList.add("hidden");
+  $("#loader").classList.add("hidden");
+  $("#loadError").classList.add("hidden");
+  setStatus("");
+  $("#learnPage").classList.remove("hidden");
+  window.scrollTo(0, 0);
+}
+$("#learnTab") && $("#learnTab").addEventListener("click", showLearn);
 
 $("#accountBtn").addEventListener("click", () =>
   openModal(session.email ? "account" : "auth"));
