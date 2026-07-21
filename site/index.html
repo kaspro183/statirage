@@ -1086,7 +1086,7 @@ function render() {
   }
 
   {
-    const last = draws.slice(0, 20);
+    const last = draws.slice(0, 20).reverse();  // ancien en haut, récent en bas
     const hasExtras = g.extraMax > 0;
     let html = '<div class="matrix-wrap"><table class="matrix"><thead><tr><th class="mdate">Date</th>';
     for (let n = 1; n <= g.max; n++) html += `<th>${String(n).padStart(2, "0")}</th>`;
