@@ -63,6 +63,12 @@
 
   /* ---- Héros : rail du dernier tirage ---- */
   #hero { margin-bottom: 26px; }
+  .fact-box {
+    background: rgba(247,243,232,.12); border: 1px solid rgba(247,243,232,.2);
+    border-radius: 12px; padding: 12px 16px; margin-bottom: 20px;
+    font-size: 14px; color: var(--papier);
+  }
+  .fact-box b { color: var(--accent-soft); }
   .kicker {
     font: 600 12px 'Poppins', sans-serif; letter-spacing: 2.5px; text-transform: uppercase;
     color: var(--accent-soft); margin-bottom: 6px;
@@ -188,6 +194,13 @@
   .ztag.pos { border-color: var(--hot); color: var(--hot); }
   .ztag.neg { border-color: var(--cold); color: var(--cold); }
   .atelier-panel { margin-top: 16px; }
+  .decade-row { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
+  .decade-label { font: 600 12px 'IBM Plex Mono', monospace; min-width: 54px; color: var(--muted); }
+  .decade-bar-bg { flex: 1; height: 18px; background: var(--papier-2); border-radius: 5px; overflow: hidden; }
+  .decade-bar { height: 100%; background: var(--accent); border-radius: 5px; }
+  .decade-val { font: 600 12px 'IBM Plex Mono', monospace; min-width: 60px; text-align: right; }
+  .smart-grid { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 10px; }
+  .smart-grid .ball { width: 34px; height: 34px; font-size: 14px; }
   .atelier-note { font-size: 13.5px; color: var(--muted); margin-bottom: 14px; max-width: 70ch; }
   .atelier-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0; }
   .atelier-panel .chip, .atelier-panel .label { color: var(--encre); }
@@ -229,6 +242,7 @@
     text-align: left; padding-right: 8px; min-width: 96px; color: var(--muted); white-space: nowrap;
   }
   table.matrix td.hit { background: var(--accent); color: var(--accent-ink); border-radius: 5px; }
+  table.matrix td.hit.consec { box-shadow: inset 0 0 0 2px #C9A227; }
   table.matrix td.hit-extra { background: var(--encre); color: var(--papier); border-radius: 8px; }
   table.matrix .msum { font-weight: 600; color: var(--encre); padding-left: 10px; min-width: 48px; border-left: 1px solid var(--ligne); }
   table.matrix thead th.msum { color: var(--muted); }
@@ -295,6 +309,8 @@
     <div class="rail"><div class="balls" id="heroBalls"></div></div>
     <div class="hero-meta" id="heroMeta"></div>
   </section>
+
+  <div id="factBox" class="fact-box hidden"></div>
 
   <div id="loader" class="hidden" aria-live="polite">
     <div class="loader-label" id="loaderLabel">Recherche des tirages…</div>
@@ -396,6 +412,32 @@
       <h2>Le verdict du statisticien</h2>
       <p id="verdictText"></p>
       <div class="ztags" id="zTags"></div>
+    </div>
+
+    <div class="row">
+      <div class="panel gate-panel">
+        <h2>Répartition par dizaines</h2>
+        <p class="atelier-note">Comment les numéros se répartissent sur la grille (fenêtre en cours).</p>
+        <div id="decadeBody"></div>
+      </div>
+      <div class="panel gate-panel">
+        <h2>Le numéro suivant</h2>
+        <p class="atelier-note">Après ce numéro, lesquels sortent le plus souvent au tirage d'après ? Curiosité statistique — le hasard n'a pas de mémoire.</p>
+        <div class="atelier-tools">
+          <span class="label">Après le n°</span>
+          <select id="nextNum" class="select"></select>
+        </div>
+        <div id="nextBody"></div>
+      </div>
+    </div>
+
+    <div class="panel gate-panel">
+      <h2>Générateur de grille équilibrée</h2>
+      <p class="atelier-note">Une grille dont la somme, l'équilibre pairs/impairs et bas/haut collent aux moyennes historiques. Ça ne prédit rien — mais ça évite les grilles « improbables » (que des petits, que des pairs…).</p>
+      <div class="atelier-tools">
+        <button class="btn" type="button" id="smartBtn">Générer une grille</button>
+      </div>
+      <div id="smartBody"></div>
     </div>
 
     <div class="panel atelier-panel gate-panel">
@@ -988,6 +1030,72 @@ function exportCsv(gameKey) {
 const parseNums = (txt, gameKey) => [...new Set(String(txt).split(/[^0-9]+/)
   .map(Number).filter(n => n >= 1 && n <= GAMES[gameKey].max))].sort((a, b) => a - b);
 
+
+/* ---------- Analyses supplémentaires ---------- */
+function decadeStats(gameKey) {
+  const g = GAMES[gameKey];
+  const scope = windowSize > 0 ? store[gameKey].slice(0, windowSize) : store[gameKey];
+  if (!scope.length) return null;
+  const nDec = Math.ceil(g.max / 10);
+  const counts = new Array(nDec).fill(0);
+  scope.forEach(d => d.numbers.forEach(n => counts[Math.floor((n - 1) / 10)]++));
+  const total = counts.reduce((a, b) => a + b, 0);
+  return counts.map((c, i) => ({
+    label: (i * 10 + 1) + "–" + Math.min((i + 1) * 10, g.max),
+    count: c, pct: total ? c / total * 100 : 0,
+  }));
+}
+
+/* Numéro suivant : après un numéro N dans un tirage, quels numéros
+   apparaissent le plus souvent au TIRAGE suivant. */
+function nextNumberStats(target, gameKey) {
+  const all = store[gameKey];
+  if (all.length < 2) return null;
+  const chrono = [...all].reverse();  // ancien -> récent
+  const freq = new Array(GAMES[gameKey].max + 1).fill(0);
+  let occurrences = 0;
+  for (let i = 0; i < chrono.length - 1; i++) {
+    if (chrono[i].numbers.includes(target)) {
+      occurrences++;
+      chrono[i + 1].numbers.forEach(n => freq[n]++);
+    }
+  }
+  if (!occurrences) return null;
+  const top = freq.map((f, n) => ({ n, f })).slice(1)
+    .sort((a, b) => b.f - a.f).slice(0, 8);
+  return { occurrences, top };
+}
+
+/* Générateur "intelligent" : grille respectant les moyennes historiques
+   (somme proche de la théorique, équilibre pairs/impairs et bas/haut). */
+function smartGrid(gameKey) {
+  const g = GAMES[gameKey];
+  const targetSum = g.drawSize * (g.max + 1) / 2;
+  const targetEven = Math.round(g.drawSize / 2);
+  const targetLow = Math.round(g.drawSize / 2);
+  const half = g.max / 2;
+  let best = null, bestScore = Infinity;
+  for (let attempt = 0; attempt < 400; attempt++) {
+    const pool = Array.from({ length: g.max }, (_, i) => i + 1);
+    for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+    const pick = pool.slice(0, g.drawSize).sort((a, b) => a - b);
+    const sum = pick.reduce((a, b) => a + b, 0);
+    const even = pick.filter(n => n % 2 === 0).length;
+    const low = pick.filter(n => n <= half).length;
+    const score = Math.abs(sum - targetSum) / targetSum * 3
+      + Math.abs(even - targetEven) + Math.abs(low - targetLow);
+    if (score < bestScore) { bestScore = score; best = pick; }
+  }
+  const extras = [];
+  if (g.extraMax) {
+    const ep = Array.from({ length: g.extraMax }, (_, i) => i + 1);
+    for (let i = ep.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [ep[i], ep[j]] = [ep[j], ep[i]]; }
+    const cnt = gameKey === "euromillions" ? 2 : 1;
+    extras.push(...ep.slice(0, cnt).sort((a, b) => a - b));
+  }
+  return { numbers: best, extras, sum: best.reduce((a, b) => a + b, 0), targetSum };
+}
+
 /* ---------- Rendu ---------- */
 const $ = sel => document.querySelector(sel);
 function fmtDate(d) { return d.toLocaleDateString("fr-FR"); }
@@ -1090,18 +1198,26 @@ function render() {
   {
     const last = draws.slice(0, 20).reverse();  // ancien en haut, récent en bas
     const hasExtras = g.extraMax > 0;
+    const half = g.max / 2;
     let html = '<div class="matrix-wrap"><table class="matrix"><thead><tr><th class="mdate">Date</th>';
     for (let n = 1; n <= g.max; n++) html += `<th>${String(n).padStart(2, "0")}</th>`;
     if (hasExtras) html += `<th>★</th>`;
-    html += '<th class="msum">Somme</th></tr></thead><tbody>';
+    html += '<th class="msum">Somme</th><th class="msum">P/I</th><th class="msum">Bas/Haut</th></tr></thead><tbody>';
     last.forEach(d => {
       const inDraw = new Set(d.numbers);
-      const sum = d.numbers.reduce((a, b) => a + b, 0);
+      const nums = d.numbers;
+      const sum = nums.reduce((a, b) => a + b, 0);
+      const evens = nums.filter(n => n % 2 === 0).length;
+      const lows = nums.filter(n => n <= half).length;
+      // Repérer les numéros consécutifs
+      const consec = new Set();
+      for (let i = 1; i < nums.length; i++)
+        if (nums[i] === nums[i - 1] + 1) { consec.add(nums[i]); consec.add(nums[i - 1]); }
       html += `<tr><td class="mdate">${d.date.toLocaleDateString("fr-FR", { weekday: "short" })} ${fmtDate(d.date)}${d.time ? " · " + d.time : ""}</td>`;
       for (let n = 1; n <= g.max; n++)
-        html += inDraw.has(n) ? `<td class="hit">${n}</td>` : "<td></td>";
+        html += inDraw.has(n) ? `<td class="hit${consec.has(n) ? " consec" : ""}">${n}</td>` : "<td></td>";
       if (hasExtras) html += `<td class="hit-extra">${d.extras.join(" ")}</td>`;
-      html += `<td class="msum">${sum}</td>`;
+      html += `<td class="msum">${sum}</td><td class="msum">${evens}/${nums.length - evens}</td><td class="msum">${lows}/${nums.length - lows}</td>`;
       html += "</tr>";
     });
     html += "</tbody></table></div>";
@@ -1330,6 +1446,67 @@ async function prefetchOthers() {
 /* ---------- Événements ---------- */
 document.querySelectorAll(".game-tab").forEach(t => t.addEventListener("click", () => switchGame(t.dataset.game)));
 $("#retryBtn").addEventListener("click", () => switchGame(currentGame));
+
+
+/* ---------- Rendu des analyses supplémentaires ---------- */
+
+function renderFact() {
+  const draws = store[currentGame];
+  const box = $("#factBox");
+  if (!draws.length) { box.classList.add("hidden"); return; }
+  const g = GAMES[currentGame];
+  const { stats } = computeStats(draws, 0, currentGame);
+  const coldest = [...stats].sort((a, b) => b.currentGap - a.currentGap)[0];
+  const hottest = [...stats].sort((a, b) => b.freq - a.freq)[0];
+  const facts = [
+    `Le numéro le plus en retard est le <b>${coldest.n}</b>, absent depuis <b>${coldest.currentGap}</b> tirages (record : ${coldest.maxGap}).`,
+    `Sur tout l'historique, le numéro le plus sorti est le <b>${hottest.n}</b> (${hottest.freq} fois).`,
+    `${g.label} compte <b>${draws.length}</b> tirages en mémoire depuis le ${fmtDate(draws[draws.length - 1].date)}.`,
+    `Chaque numéro a exactement <b>${(100 * g.drawSize / g.max).toFixed(1)}%</b> de chance de sortir à chaque tirage — et ça ne change jamais.`,
+  ];
+  const fact = facts[new Date().getDate() % facts.length];
+  box.innerHTML = "💡 " + fact;
+  box.classList.remove("hidden");
+}
+
+function renderDecades() {
+  const ds = decadeStats(currentGame);
+  if (!ds) { $("#decadeBody").innerHTML = ""; return; }
+  const maxPct = Math.max(...ds.map(d => d.pct), 1);
+  $("#decadeBody").innerHTML = ds.map(d =>
+    `<div class="decade-row"><span class="decade-label">${d.label}</span>` +
+    `<span class="decade-bar-bg"><span class="decade-bar" style="width:${d.pct / maxPct * 100}%"></span></span>` +
+    `<span class="decade-val">${d.count}× · ${d.pct.toFixed(0)}%</span></div>`).join("");
+}
+
+function renderNext() {
+  const g = GAMES[currentGame];
+  const sel = $("#nextNum");
+  if (+sel.dataset.max !== g.max) {
+    sel.dataset.max = g.max;
+    sel.innerHTML = Array.from({ length: g.max }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("");
+  }
+  const target = +sel.value || 1;
+  const ns = nextNumberStats(target, currentGame);
+  if (!ns) { $("#nextBody").innerHTML = '<p class="board-sub">Pas assez de données.</p>'; return; }
+  $("#nextBody").innerHTML =
+    `<p class="board-sub">Le ${target} est sorti ${ns.occurrences} fois. Au tirage suivant, on a le plus vu :</p>` +
+    '<div class="smart-grid">' + ns.top.map(t =>
+      `<span class="ball" title="${t.f} fois">${t.n}</span>`).join("") + '</div>';
+}
+
+function renderSmart() {
+  const grid = smartGrid(currentGame);
+  $("#smartBody").innerHTML =
+    '<div class="smart-grid">' +
+    grid.numbers.map(n => `<span class="ball">${n}</span>`).join("") +
+    grid.extras.map(n => `<span class="ball star">${n}</span>`).join("") +
+    '</div>' +
+    `<p class="board-sub" style="margin-top:8px">Somme ${grid.sum} (cible ~${grid.targetSum.toFixed(0)}). Rappel : chaque grille a exactement les mêmes chances qu'une grille au hasard.</p>`;
+}
+
+$("#nextNum") && $("#nextNum").addEventListener("change", renderNext);
+$("#smartBtn") && $("#smartBtn").addEventListener("click", renderSmart);
 
 /* ---------- Atelier : état & interactions ---------- */
 let pool = [];
@@ -1791,6 +1968,9 @@ function renderExtras2() {
   safe("mult", renderMult);
   safe("backtest", renderBacktest);
   safe("compare", renderCompare);
+  safe("decades", renderDecades);
+  safe("next", renderNext);
+  safe("fact", renderFact);
 }
 
 $("#myNumsSave").addEventListener("click", () => {
