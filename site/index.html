@@ -1967,8 +1967,9 @@ function renderCharts() {
   }
   const n = +sel.value || 1;
 
-  // --- 1. Suivi d'un numéro : fréquence glissante (30) + sorties ---
-  const W = Math.min(30, chrono.length);
+  // --- 1. Suivi d'un numéro : fréquence glissante + sorties ---
+  // Fenêtre glissante adaptative : assez petite pour laisser >= 10 points à tracer.
+  const W = Math.max(5, Math.min(30, Math.floor(chrono.length / 3)));
   const roll = [], marks = [];
   let inWin = 0;
   chrono.forEach((d, i) => {
@@ -1990,7 +1991,7 @@ function renderCharts() {
     options: { ...chartBase, scales: { ...chartBase.scales,
       x: { ...chartBase.scales.x, type: "linear", title: { display: true, text: "tirages (ancien → récent)", color: MUTED, font: { size: 10 } } } } },
   });
-  $("#trackSub").textContent = `N°${n} : sorties sur ${W} tirages glissants (rouge) vs attendu ${expectedW.toFixed(1)} (pointillés) · triangles dorés = chaque sortie.`;
+  $("#trackSub").textContent = `N°${n} : fréquence sur ${W} tirages glissants (courbe rouge) vs attendu ${expectedW.toFixed(1)} (pointillés) · triangles dorés = chaque sortie.`;
 
   // --- 2. Fréquences par numéro (barres, colorées par Z) ---
   const { stats, expected } = computeStats(draws, windowSize, currentGame);
