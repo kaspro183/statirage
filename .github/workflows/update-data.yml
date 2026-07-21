@@ -1,25 +1,17 @@
-# Mise à jour automatique des tirages (Keno, EuroMillions, Loto).
+# Mise à jour automatique des tirages (Keno, EuroMillions, Loto, EuroDreams).
 #
-# Tourne après chaque tirage, télécharge les archives FDJ, régénère
-# site/data/*.json et committe. Si le site est branché sur ce dépôt
-# (Netlify / Vercel / GitHub Pages), le commit redéploie automatiquement.
-#
-# Les URLs d'archives FDJ sont déjà renseignées dans tools/update_data.py.
-#
-# Note : les horaires GitHub Actions peuvent dériver de 15-30 min aux heures
-# de pointe — acceptable ici, les marges sont prévues.
+# Télécharge les archives FDJ, régénère site/data/*.json et committe.
+# Si le site est branché sur ce dépôt (Netlify), le commit redéploie tout seul.
 
 name: Mise à jour des tirages
 
 on:
   schedule:
-    # Heures en UTC (France = UTC+1 hiver / UTC+2 été).
-    - cron: "35 12 * * *"    # ~14h35 FR été — après le Keno midi
-    - cron: "35 20 * * *"    # ~22h35 FR été — après le Keno soir
-    - cron: "50 21 * * 2,5"  # mar/ven ~23h50 FR été — après l'EuroMillions
-    - cron: "50 20 * * 1,3,6" # lun/mer/sam — après le Loto
-    - cron: "55 20 * * 1,4"   # lun/jeu — après l'EuroDreams (tirage 21h, publication ~22h : voir note)
-  workflow_dispatch: {}      # bouton "Run workflow" pour lancer à la main
+    # Heures en UTC (France = UTC+1 hiver / UTC+2 été). Espacées pour éviter
+    # que deux exécutions se chevauchent.
+    - cron: "40 12 * * *"     # ~14h40 FR été — après le Keno midi
+    - cron: "40 21 * * *"     # ~23h40 FR été — après les tirages du soir
+  workflow_dispatch: {}       # bouton "Run workflow" pour lancer à la main
 
 permissions:
   contents: write
@@ -50,6 +42,8 @@ jobs:
             echo "Aucun nouveau tirage."
           else
             git commit -m "data: tirages du $(date -u +%Y-%m-%d)"
+            # Récupère les changements distants avant de pousser, pour éviter
+            # le rejet "fetch first" quand plusieurs exécutions se suivent.
+            git pull --rebase --autostash origin main
             git push
           fi
-
