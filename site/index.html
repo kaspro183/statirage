@@ -230,6 +230,8 @@
   }
   table.matrix td.hit { background: var(--accent); color: var(--accent-ink); border-radius: 5px; }
   table.matrix td.hit-extra { background: var(--encre); color: var(--papier); border-radius: 8px; }
+  table.matrix .msum { font-weight: 600; color: var(--encre); padding-left: 10px; min-width: 48px; border-left: 1px solid var(--ligne); }
+  table.matrix thead th.msum { color: var(--muted); }
   footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid rgba(247,243,232,.25); color: rgba(247,243,232,.65); font-size: 12.5px; }
   footer a { color: var(--accent-soft); }
   .modal-back {
@@ -1091,13 +1093,15 @@ function render() {
     let html = '<div class="matrix-wrap"><table class="matrix"><thead><tr><th class="mdate">Date</th>';
     for (let n = 1; n <= g.max; n++) html += `<th>${String(n).padStart(2, "0")}</th>`;
     if (hasExtras) html += `<th>★</th>`;
-    html += '</tr></thead><tbody>';
+    html += '<th class="msum">Somme</th></tr></thead><tbody>';
     last.forEach(d => {
       const inDraw = new Set(d.numbers);
+      const sum = d.numbers.reduce((a, b) => a + b, 0);
       html += `<tr><td class="mdate">${d.date.toLocaleDateString("fr-FR", { weekday: "short" })} ${fmtDate(d.date)}${d.time ? " · " + d.time : ""}</td>`;
       for (let n = 1; n <= g.max; n++)
         html += inDraw.has(n) ? `<td class="hit">${n}</td>` : "<td></td>";
       if (hasExtras) html += `<td class="hit-extra">${d.extras.join(" ")}</td>`;
+      html += `<td class="msum">${sum}</td>`;
       html += "</tr>";
     });
     html += "</tbody></table></div>";
