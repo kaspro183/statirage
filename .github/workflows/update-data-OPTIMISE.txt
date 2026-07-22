@@ -1,0 +1,50 @@
+# Mise à jour automatique des tirages (Keno, EuroMillions, Loto, EuroDreams).
+#
+# OPTIMISÉ POUR LE PLAN NETLIFY GRATUIT (300 crédits/mois) :
+#  - 1 seul passage par jour (au lieu de 2) -> ~30 exécutions/mois
+#  - le commit (et donc le déploiement Netlify) n'a lieu QUE si les données
+#    ont réellement changé -> pas de déploiement inutile les jours sans tirage
+#  - budget : ~30 déploiements x 15 crédits = 450 crédits max, mais en pratique
+#    bien moins car certains jours n'apportent aucun nouveau tirage.
+
+name: Mise à jour des tirages
+
+on:
+  schedule:
+    # 21h40 UTC = ~23h40 heure française d'été : après TOUS les tirages du soir
+    # (Keno soir, Loto, EuroMillions, EuroDreams selon les jours).
+    - cron: "40 21 * * *"
+  workflow_dispatch: {}       # bouton "Run workflow" pour lancer à la main
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Régénérer les JSON de tirages
+        run: python tools/update_data.py
+
+      - name: Committer UNIQUEMENT si les données ont changé
+        run: |
+          git config user.name "tirages-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add site/data/*.json data-private/*.json
+          if git diff --cached --quiet; then
+            echo "Aucun nouveau tirage — pas de commit, pas de déploiement Netlify."
+            exit 0
+          fi
+          git commit -m "data: tirages du $(date -u +%Y-%m-%d)"
+          git pull --rebase --autostash origin main
+          git push
