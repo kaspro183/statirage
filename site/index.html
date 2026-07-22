@@ -1278,7 +1278,9 @@ function render() {
     let html = '<div class="matrix-wrap"><table class="matrix"><thead><tr><th class="mdate">Date</th>';
     for (let n = 1; n <= g.max; n++) html += `<th>${String(n).padStart(2, "0")}</th>`;
     if (hasExtras) html += `<th>★</th>`;
-    html += '<th class="msum">Somme</th><th class="msum">P/I</th><th class="msum">Bas/Haut</th></tr></thead><tbody>';
+    html += '<th class="msum">Somme</th>';
+    if (hasExtras) html += `<th class="msum">Somme ${g.extraLabel.toLowerCase()}</th>`;
+    html += '<th class="msum">P/I</th><th class="msum">Bas/Haut</th></tr></thead><tbody>';
     last.forEach(d => {
       const inDraw = new Set(d.numbers);
       const nums = d.numbers;
@@ -1293,7 +1295,9 @@ function render() {
       for (let n = 1; n <= g.max; n++)
         html += inDraw.has(n) ? `<td class="hit${consec.has(n) ? " consec" : ""}">${n}</td>` : "<td></td>";
       if (hasExtras) html += `<td class="hit-extra">${d.extras.join(" ")}</td>`;
-      html += `<td class="msum">${sum}</td><td class="msum">${evens}/${nums.length - evens}</td><td class="msum">${lows}/${nums.length - lows}</td>`;
+      html += `<td class="msum">${sum}</td>`;
+      if (hasExtras) html += `<td class="msum">${d.extras.reduce((a, b) => a + b, 0)}</td>`;
+      html += `<td class="msum">${evens}/${nums.length - evens}</td><td class="msum">${lows}/${nums.length - lows}</td>`;
       html += "</tr>";
     });
     html += "</tbody></table></div>";
