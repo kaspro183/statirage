@@ -3,7 +3,7 @@
 import { getStore } from "@netlify/blobs";
 import {
   hashPassword, verifyPassword, signToken, verifyToken,
-  bearerFrom, json, normEmail, validEmail,
+  bearerFrom, json, normEmail, validEmail, isAdmin,
 } from "./_lib.mjs";
 
 const users = () => getStore("users");
@@ -14,7 +14,7 @@ export default async (req) => {
     if (!payload) return json({ error: "non connecté" }, 401);
     const user = await users().get(payload.email, { type: "json" });
     if (!user) return json({ error: "compte introuvable" }, 401);
-    return json({ email: payload.email, premium: !!user.premium });
+    return json({ email: payload.email, premium: !!user.premium || isAdmin(payload.email), admin: isAdmin(payload.email) });
   }
   if (req.method !== "POST") return json({ error: "méthode" }, 405);
 
@@ -34,13 +34,13 @@ export default async (req) => {
       premium: false,
       createdAt: new Date().toISOString(),
     });
-    return json({ token: signToken({ email }), email, premium: false });
+    return json({ token: signToken({ email }), email, premium: isAdmin(email), admin: isAdmin(email) });
   }
 
   if (action === "login") {
     if (!existing || !verifyPassword(password, existing.password))
       return json({ error: "Email ou mot de passe incorrect." }, 401);
-    return json({ token: signToken({ email }), email, premium: !!existing.premium });
+    return json({ token: signToken({ email }), email, premium: !!existing.premium || isAdmin(email), admin: isAdmin(email) });
   }
 
   return json({ error: "action inconnue" }, 400);

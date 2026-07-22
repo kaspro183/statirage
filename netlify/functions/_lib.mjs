@@ -52,4 +52,13 @@ export const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "content-type": "application/json" } });
 
 export const normEmail = (e) => String(e || "").trim().toLowerCase();
+
+/** Emails admins (variable ADMIN_EMAILS, séparés par des virgules) :
+ *  ces comptes sont premium d'office, sans passer par Stripe. */
+export const isAdmin = (email) =>
+  String(process.env.ADMIN_EMAILS || "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean)
+    .includes(String(email || "").trim().toLowerCase());
 export const validEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
