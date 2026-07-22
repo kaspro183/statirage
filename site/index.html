@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Statirage — Analysez les tirages comme un statisticien | Stats Keno, Loto, EuroMillions, EuroDreams</title>
 <meta name="description" content="Analysez les tirages comme un statisticien : les statistiques les plus poussées du Keno, Loto, EuroMillions et EuroDreams. Fréquences, retards, Z-scores, numéros complices et systèmes réducteurs, mis à jour après chaque tirage.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -291,6 +291,56 @@
   #learnTab.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   .hidden { display: none; }
   @media (prefers-reduced-motion: reduce) { .orb { animation: none; } .cell { transition: none; } .bar-fill.indeterminate { animation: none; } .cell:hover { transform: none; } }
+
+  /* ================= OPTIMISATION MOBILE ================= */
+  html, body { max-width: 100%; overflow-x: hidden; }
+  .matrix-wrap, .chart-box { max-width: 100%; }
+
+  @media (max-width: 820px) {
+    .wrap { padding: 16px 12px 50px; }
+    .chart-explain { grid-template-columns: 1fr; gap: 14px; }
+    .chart-grid { grid-template-columns: 1fr; }
+    .row { grid-template-columns: 1fr; }
+    .chart-box { height: 220px; }
+    .board-card, .panel { padding: 16px; border-radius: 14px; }
+    .learn-p { max-width: none; }
+  }
+
+  @media (max-width: 620px) {
+    body { font-size: 14.5px; }
+    .wrap { padding: 14px 10px 46px; }
+    .topbar { gap: 10px 12px; }
+    .wordmark { font-size: 24px; }
+    .site-tagline { font-size: 11px; }
+    .games { gap: 6px; }
+    .game-tab { font-size: 12.5px; padding: 6px 12px; }
+    .hero-date { font-size: clamp(20px, 7vw, 28px); }
+    .orb { width: 34px; height: 34px; font-size: 13px; }
+    .balls { gap: 6px; }
+    .board-card, .panel { padding: 14px; }
+    .board-title, .panel h2 { font-size: 17px; }
+    #board { gap: 4px; }
+    .cell { border-radius: 7px; }
+    .cell .num { font-size: 13px; }
+    .cell .val { font-size: 9px; }
+    .cell .tip { display: none !important; }
+    .controls { gap: 6px; }
+    .chip { font-size: 12px; padding: 5px 11px; }
+    .toggle button { font-size: 12px; padding: 6px 10px; }
+    .chart-box { height: 190px; }
+    .chart-note p { font-size: 13.5px; }
+    .learn-p { font-size: 14px; }
+    th, td { font-size: 12.5px; padding: 5px 4px; }
+    .extra-ball { min-width: 40px; }
+    .pool-cell { font-size: 12px; }
+    .modal { padding: 20px; }
+    .modal-input, .select { font-size: 16px; }
+    table.matrix .mdate { min-width: 78px; font-size: 9.5px; }
+    table.matrix th, table.matrix td { min-width: 18px; height: 19px; font-size: 9px; }
+    .smart-grid .ball { width: 30px; height: 30px; font-size: 12px; }
+    .decade-label { min-width: 46px; font-size: 11px; }
+    .decade-val { min-width: 52px; font-size: 11px; }
+  }
 </style>
 </head>
 <body>
