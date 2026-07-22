@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Statirage — Analysez les tirages comme un statisticien | Stats Keno, Loto, EuroMillions, EuroDreams</title>
 <meta name="description" content="Analysez les tirages comme un statisticien : les statistiques les plus poussées du Keno, Loto, EuroMillions et EuroDreams. Fréquences, retards, Z-scores, numéros complices et systèmes réducteurs, mis à jour après chaque tirage.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='29' fill='%23F7F3E8' stroke='%23C13A66' stroke-width='5'/%3E%3Cg fill='%23C13A66'%3E%3Crect x='17' y='36' width='6.5' height='12' rx='2'/%3E%3Crect x='26' y='28' width='6.5' height='20' rx='2'/%3E%3Crect x='35' y='32' width='6.5' height='16' rx='2'/%3E%3Crect x='44' y='22' width='6.5' height='26' rx='2'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -37,6 +38,9 @@
 
   /* ---- Barre haute ---- */
   .topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; margin-bottom: 30px; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .logo { width: 46px; height: 46px; flex: none; filter: drop-shadow(0 3px 6px rgba(0,0,0,.3)); }
+  @media (max-width: 620px) { .logo { width: 36px; height: 36px; } .brand { gap: 9px; } }
   .wordmark { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 30px; letter-spacing: .2px; color: var(--papier); }
   .wordmark em { font-style: italic; font-weight: 700; color: var(--accent-soft); }
   .site-tagline { font-size: 12.5px; color: rgba(247,243,232,.7); letter-spacing: .3px; margin-top: -2px; }
@@ -350,9 +354,24 @@
 <div class="wrap">
 
   <div class="topbar">
-    <div>
-      <div class="wordmark">Stat<em>irage</em></div>
-      <div class="site-tagline">Analysez les tirages comme un statisticien</div>
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 64 64" role="img" aria-label="Statirage">
+        <!-- boule de tirage -->
+        <circle cx="32" cy="32" r="29" fill="var(--papier)" stroke="var(--accent)" stroke-width="4"/>
+        <!-- reflet -->
+        <ellipse cx="22" cy="20" rx="9" ry="6" fill="#fff" opacity=".55" transform="rotate(-28 22 20)"/>
+        <!-- barres du graphique -->
+        <g fill="var(--accent)">
+          <rect x="17" y="36" width="6.5" height="12" rx="2"/>
+          <rect x="26" y="28" width="6.5" height="20" rx="2"/>
+          <rect x="35" y="32" width="6.5" height="16" rx="2"/>
+          <rect x="44" y="22" width="6.5" height="26" rx="2"/>
+        </g>
+      </svg>
+      <div>
+        <div class="wordmark">Stat<em>irage</em></div>
+        <div class="site-tagline">Analysez les tirages comme un statisticien</div>
+      </div>
     </div>
     <button class="game-tab" id="accountBtn" style="order:2">Mon compte</button>
     <div class="games" role="tablist" style="order:1; margin-left:auto">
