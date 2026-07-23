@@ -36,11 +36,14 @@ jobs:
       - name: Régénérer les JSON de tirages
         run: python tools/update_data.py
 
+      - name: Générer les pages SEO par numéro + sitemap
+        run: python tools/generate_pages.py
+
       - name: Committer UNIQUEMENT si les données ont changé
         run: |
           git config user.name "tirages-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add site/data/*.json data-private/*.json
+          git add site/data/*.json data-private/*.json site/keno site/euromillions site/loto site/eurodreams site/sitemap.xml
           if git diff --cached --quiet; then
             echo "Aucun nouveau tirage — pas de commit, pas de déploiement Netlify."
             exit 0
