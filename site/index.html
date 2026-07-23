@@ -3043,9 +3043,15 @@ function renderProba() {
   const g = GAMES[currentGame];
   const sel = $("#probaM");
   const opts = currentGame === "keno" ? [2, 3, 4, 5, 6, 7, 8, 9, 10] : [g.drawSize];
-  if (sel.options.length !== opts.length) {
-    sel.innerHTML = opts.map(o => `<option value="${o}"${o === (opts.length === 1 ? opts[0] : 7) ? " selected" : ""}>${o}</option>`).join("");
+  // Comparer le CONTENU des options : deux jeux peuvent avoir le même nombre
+  // d'options avec des valeurs différentes (Loto 5, EuroDreams 6).
+  const optsKey = opts.join(",");
+  if (sel.dataset.opts !== optsKey) {
+    sel.dataset.opts = optsKey;
+    const def = opts.length === 1 ? opts[0] : 7;
+    sel.innerHTML = opts.map(o => `<option value="${o}"${o === def ? " selected" : ""}>${o}</option>`).join("");
     sel.disabled = opts.length === 1;
+    sel.value = String(def);
   }
   const m = +sel.value || opts[0];
   const payable = currentGame === "keno" && !!KENO_PAY[m];
