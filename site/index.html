@@ -764,6 +764,15 @@
     </div>
 
     <div class="panel" style="margin-bottom:16px">
+      <h2>La structure d'un tirage : pairs/impairs, bas/haut, consécutifs</h2>
+      <p class="learn-p">Au-delà des numéros eux-mêmes, chaque tirage a une <b>structure</b>. Trois indicateurs simples la décrivent :</p>
+      <p class="learn-p"><b>Pairs / impairs (P/I)</b> — combien de numéros pairs et combien d'impairs. Sur un tirage de 16 numéros au Keno, la répartition la plus courante est proche de 8/8.</p>
+      <p class="learn-p"><b>Bas / haut</b> — on coupe la grille en deux moitiés : les numéros « bas » sont ceux de la première moitié (1 à 28 au Keno, 1 à 25 à l'EuroMillions…), les « hauts » ceux de la seconde. Un tirage « 9/7 » signifie 9 numéros dans la moitié basse et 7 dans la haute. Là encore, l'équilibre est le cas le plus fréquent.</p>
+      <p class="learn-p"><b>Consécutifs</b> — des numéros qui se suivent (16-17-18). Contrairement à l'intuition, c'est fréquent : sur un tirage de 16 numéros parmi 56, il est plus probable d'en avoir que de ne pas en avoir.</p>
+      <p class="learn-p">Ces indicateurs servent à <b>décrire</b> un tirage, pas à en prévoir un. Un tirage très déséquilibré (13/3, que des pairs…) est plus rare, mais il arrive — et il n'est ni « anormal » ni annonciateur de quoi que ce soit.</p>
+    </div>
+
+    <div class="panel" style="margin-bottom:16px">
       <h2>Le Z-score : mesurer un écart « anormal »</h2>
       <p class="learn-p">Le <b>Z-score</b> mesure à quel point la fréquence d'un numéro s'écarte de la moyenne attendue, en « écarts-types ». Un Z proche de 0 = parfaitement normal. Un Z de +2 = le numéro est sorti nettement plus que prévu ; −2 = nettement moins.</p>
       <p class="learn-p">Mais attention : sur des dizaines de numéros, il est <b>normal</b> que certains atteignent ±2 par pur hasard. Un Z élevé n'annonce aucun retournement. C'est un thermomètre du passé, pas une boule de cristal.</p>
@@ -1476,7 +1485,8 @@ function render() {
     if (hasExtras) html += `<th>★</th>`;
     html += '<th class="msum">Somme</th>';
     if (hasExtras) html += `<th class="msum">Somme ${g.extraLabel.toLowerCase()}</th>`;
-    html += '<th class="msum">P/I</th><th class="msum">Bas/Haut</th></tr></thead><tbody>';
+    html += `<th class="msum" title="Pairs / Impairs : combien de numéros pairs et impairs dans le tirage">P/I</th>` +
+      `<th class="msum" title="Bas / Haut : combien de numéros dans la première moitié de la grille (1–${Math.floor(half)}) et dans la seconde (${Math.floor(half) + 1}–${g.max})">Bas/Haut</th></tr></thead><tbody>`;
     last.forEach(d => {
       const inDraw = new Set(d.numbers);
       const nums = d.numbers;
@@ -1497,6 +1507,11 @@ function render() {
       html += "</tr>";
     });
     html += "</tbody></table></div>";
+    html += `<p class="board-sub" style="margin-top:10px">` +
+      `<b>Somme</b> : total des numéros du tirage. ` +
+      `<b>P/I</b> : nombre de numéros pairs / impairs. ` +
+      `<b>Bas/Haut</b> : numéros de la première moitié de la grille (1–${Math.floor(half)}) / de la seconde (${Math.floor(half) + 1}–${g.max}). ` +
+      `Les numéros cerclés d'or sont consécutifs.</p>`;
     $("#drawsList").innerHTML = html;
   }
 
