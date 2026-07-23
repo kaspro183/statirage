@@ -600,8 +600,10 @@
       </div>
       <div class="atelier-tools">
         <button class="btn" type="button" id="smartBtn">Générer la grille</button>
+        <button class="chip" type="button" id="aiBtn">Analyser cette grille</button>
       </div>
       <div id="smartBody"></div>
+      <div id="aiBody"></div>
     </div>
 
     <div class="panel atelier-panel gate-panel">
@@ -2072,8 +2074,11 @@ function renderNextDraws() {
   }).join("") + '<p class="board-sub" style="margin-top:10px">Horaires indicatifs — se référer aux heures officielles.</p>';
 }
 
+let lastGrid = null;
 function renderSmart() {
   const grid = smartGrid(currentGame, activeProfile);
+  lastGrid = grid;
+  $("#aiBody").innerHTML = "";
   const m = grid.metrics;
   const p = GRID_PROFILES[activeProfile];
   const k = grid.numbers.length;
@@ -2104,6 +2109,42 @@ document.querySelectorAll("#profileTabs .chip").forEach(c => c.addEventListener(
   renderSmart();
 }));
 $("#smartBtn") && $("#smartBtn").addEventListener("click", renderSmart);
+
+/* ---------- Analyse rédigée de la grille ---------- */
+$("#aiBtn") && $("#aiBtn").addEventListener("click", async () => {
+  const out = $("#aiBody");
+  if (!lastGrid) { renderSmart(); }
+  if (!lastGrid) return;
+  if (!session.premium) { openModal(session.email ? "paywall" : "auth"); return; }
+  const btn = $("#aiBtn");
+  btn.disabled = true;
+  const label = btn.textContent;
+  btn.textContent = "Analyse en cours…";
+  out.innerHTML = `<p class="profile-note" style="opacity:.7">Rédaction de l'analyse…</p>`;
+  try {
+    const r = await api("/api/grid-analysis", {
+      method: "POST",
+      body: JSON.stringify({
+        game: currentGame,
+        profile: activeProfile,
+        numbers: lastGrid.numbers,
+      }),
+    });
+    out.innerHTML =
+      `<div style="background:#fff;border:1px solid var(--ligne);border-left:3px solid var(--accent);border-radius:12px;padding:14px 16px;margin-top:12px">` +
+      `<div style="font-weight:700;font-size:13px;color:var(--accent);margin-bottom:6px">L'analyse de la grille</div>` +
+      `<p style="font-size:14.5px;line-height:1.6;margin:0">${r.analysis.replace(/[<>]/g, "")}</p>` +
+      `<p class="board-sub" style="margin:10px 0 0;font-size:11.5px">Rédigée par un modèle de langage à partir des statistiques calculées par Statirage. ` +
+      `Les chiffres proviennent de l'historique des tirages ; le texte les met en forme. Aucune prédiction — chaque tirage reste indépendant.` +
+      (typeof r.remaining === "number" ? ` · ${r.remaining} analyse${r.remaining > 1 ? "s" : ""} restante${r.remaining > 1 ? "s" : ""} ce mois-ci.` : "") +
+      `</p></div>`;
+  } catch (e) {
+    out.innerHTML = `<p class="profile-note" style="color:var(--hot)">${e.message || "L'analyse n'a pas pu être générée."}</p>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = label;
+  }
+});
 
 /* ---------- Atelier : état & interactions ---------- */
 let pool = [];
