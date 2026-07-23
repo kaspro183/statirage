@@ -272,7 +272,7 @@
     font: 600 13px 'Poppins', sans-serif; color: var(--encre);
     border: 1px solid var(--ligne); border-radius: 999px; padding: 7px 10px; background: #fff;
   }
-  .pool-board { display: grid; gap: 5px; margin: 8px 0 4px; }
+  .pool-board { display: grid; gap: 5px; margin: 8px 0 4px; grid-template-columns: repeat(var(--pool-cols, 16), 1fr); }
   .pool-cell {
     aspect-ratio: 1; border-radius: 8px; border: 1px solid var(--ligne); background: #fff;
     display: flex; align-items: center; justify-content: center;
@@ -392,6 +392,7 @@
     .learn-p { font-size: 14px; }
     th, td { font-size: 12.5px; padding: 5px 4px; }
     .extra-ball { min-width: 40px; }
+    .pool-board { grid-template-columns: repeat(var(--pool-cols-m, 8), 1fr); gap: 4px; }
     .pool-cell { font-size: 12px; }
     .modal { padding: 20px; }
     .modal-input, .select { font-size: 16px; }
@@ -2063,7 +2064,8 @@ function gridSizeOptions(gameKey) {
 function renderPoolBoard() {
   const g = GAMES[currentGame];
   const board = $("#poolBoard");
-  board.style.gridTemplateColumns = `repeat(${g.cols * 2}, 1fr)`;
+  board.style.setProperty("--pool-cols", g.cols * 2);
+  board.style.setProperty("--pool-cols-m", g.cols);
   board.innerHTML = "";
   for (let n = 1; n <= g.max; n++) {
     const c = document.createElement("button");
