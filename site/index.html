@@ -332,6 +332,9 @@
   .cal-foot { margin-top: 11px; padding-top: 10px; border-top: 1px solid var(--ligne);
     display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
   @media (max-width: 620px) { .cal { max-width: none; } .cal-day { font-size: 12px; } }
+  .ball-count { display: inline-flex; flex-direction: column; align-items: center; gap: 3px; }
+  .ball-count .cnt { font: 600 10.5px 'IBM Plex Mono', monospace; color: var(--muted); line-height: 1; }
+  .ball-count.hot .cnt { color: var(--accent); }
   .rank-head { display: flex; align-items: center; gap: 10px; padding: 0 0 7px; border-bottom: 1px solid var(--ligne);
     font-size: 10.5px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; color: var(--muted); }
   .rank-head .rank-n-h { width: 31px; text-align: center; flex-shrink: 0; }
@@ -686,6 +689,10 @@
         <h2>Le numéro suivant</h2>
         <p class="atelier-note">Après ce numéro, lesquels sortent le plus souvent au tirage d'après ? C'est le principe des « numéros annoncés » vendus ailleurs — ici on le confronte à ce que produirait le pur hasard.</p>
         <div class="atelier-tools">
+          <button class="chip active" type="button" data-next="one">Un numéro</button>
+          <button class="chip" type="button" data-next="draw">Tout le dernier tirage</button>
+        </div>
+        <div class="atelier-tools" id="nextOneTools">
           <span class="label">Après le n°</span>
           <select id="nextNum" class="select"></select>
         </div>
@@ -2243,7 +2250,115 @@ function renderDecades() {
     `<span class="decade-val">${d.count}× · ${d.pct.toFixed(0)}%</span></div>`).join("");
 }
 
+/* Cumul des « suivants » sur tous les numéros d'un tirage donné.
+   Les occurrences se chevauchent (un même tirage suivant est compté une fois par
+   numéro cible qu'il suit) : la formule binomiale ne s'applique donc PAS ici.
+   Le calibrage se fait par simulation — voir followUpMonteCarlo. */
+function followUpCumul(gameKey, targets) {
+  const all = store[gameKey];
+  const g = GAMES[gameKey];
+  if (!all || all.length < 2) return null;
+  const chrono = [...all].reverse();
+  const score = new Array(g.max + 1).fill(0);
+  for (const t of targets) {
+    for (let i = 0; i < chrono.length - 1; i++) {
+      if (chrono[i].numbers.includes(t)) chrono[i + 1].numbers.forEach(n => score[n]++);
+    }
+  }
+  const top = score.map((f, n) => ({ n, f })).slice(1).sort((a, b) => b.f - a.f);
+  return { score, top, max: top.length ? top[0].f : 0 };
+}
+
+/* Rejoue l'historique en tirages purement aléatoires et applique le même calcul.
+   Donne la distribution du score maximum sous l'hypothèse « aucune liaison ». */
+function followUpMonteCarlo(gameKey, runs = 600) {
+  const g = GAMES[gameKey];
+  const n = store[gameKey].length;
+  if (n < 30) return null;
+  const randDraw = () => {
+    const pool = Array.from({ length: g.max }, (_, i) => i + 1);
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    return pool.slice(0, g.drawSize);
+  };
+  const maxes = [];
+  for (let r = 0; r < runs; r++) {
+    const seq = [];
+    for (let i = 0; i < n; i++) seq.push(randDraw());
+    const targets = seq[seq.length - 1];
+    const score = new Array(g.max + 1).fill(0);
+    for (const t of targets) {
+      for (let i = 0; i < seq.length - 1; i++) {
+        if (seq[i].includes(t)) for (const x of seq[i + 1]) score[x]++;
+      }
+    }
+    maxes.push(Math.max(...score.slice(1)));
+  }
+  maxes.sort((a, b) => a - b);
+  const q = p => maxes[Math.min(Math.floor(p / 100 * runs), runs - 1)];
+  return { runs, median: q(50), p95: q(95), p99: q(99), maxes };
+}
+
+let nextMode = "one";
+let mcResult = null;
+
+function renderNextDraw() {
+  const g = GAMES[currentGame];
+  const draws = store[currentGame];
+  const host = $("#nextBody");
+  if (!draws || !draws.length) { host.innerHTML = '<p class="board-sub">Pas assez de données.</p>'; return; }
+  const last = draws[0];
+  const cum = followUpCumul(currentGame, last.numbers);
+  if (!cum) { host.innerHTML = '<p class="board-sub">Pas assez de données.</p>'; return; }
+
+  const balls = cum.top.slice(0, 10).map(t =>
+    `<span class="ball-count"><span class="ball">${t.n}</span><span class="cnt">${t.f}</span></span>`).join("");
+
+  let verdict;
+  if (!mcResult) {
+    verdict = `<div class="board-sub" style="margin-top:12px;padding-top:11px;border-top:1px solid var(--ligne)">` +
+      `<strong>Ce classement ne veut rien dire tant qu'on ne l'a pas calibré.</strong> Les occurrences se chevauchent — ` +
+      `un même tirage est recompté pour chaque numéro cible qu'il suit — et les numéros les plus fréquents de l'historique ` +
+      `remontent mécaniquement en tête. La formule statistique habituelle ne s'applique pas ici.<br>` +
+      `Pour savoir si le score du n°${cum.top[0].n} est remarquable, il faut rejouer l'historique en tirages purement ` +
+      `aléatoires et refaire le même calcul, des centaines de fois.` +
+      `<div style="margin-top:10px"><button class="chip" type="button" id="mcBtn">Lancer la simulation (~2 s)</button></div></div>`;
+  } else {
+    const obs = cum.max;
+    const below = mcResult.maxes.filter(m => m < obs).length / mcResult.runs * 100;
+    const signif = below >= 95;
+    verdict = `<div class="board-sub" style="margin-top:12px;padding-top:11px;border-top:1px solid var(--ligne)">` +
+      `<strong>Le verdict de la simulation.</strong> L'historique a été rejoué ${mcResult.runs} fois en tirages ` +
+      `purement aléatoires, avec le même calcul à chaque fois. Le meilleur score atteint par le hasard seul : ` +
+      `<strong>${mcResult.median}</strong> en médiane, ${mcResult.p95} au 95ᵉ percentile, ${mcResult.p99} au 99ᵉ.<br>` +
+      `Ici, le n°${cum.top[0].n} totalise <strong>${obs}</strong> — un score qui dépasse ${below.toFixed(0)} % des simulations. ` +
+      (signif
+        ? `C'est au-delà du seuil de 95 %, ce qui mérite un second regard sans constituer une preuve.`
+        : `Autrement dit, <strong>le hasard produit couramment ce niveau</strong> : ce classement n'annonce rien du tout.`) +
+      `<div style="margin-top:10px"><button class="chip" type="button" id="mcBtn">Relancer</button></div></div>`;
+  }
+
+  host.innerHTML =
+    `<p class="board-sub">Tirage du ${fmtDate(last.date)} : ${last.numbers.join(" · ")}.<br>` +
+    `Voici ce qui est le plus souvent sorti au tirage suivant, en cumulant ces ${last.numbers.length} numéros sur tout l'historique :</p>` +
+    `<div class="smart-grid">${balls}</div>` + verdict;
+
+  const btn = $("#mcBtn");
+  btn && btn.addEventListener("click", () => {
+    btn.disabled = true;
+    btn.textContent = "Simulation en cours…";
+    setTimeout(() => {
+      mcResult = followUpMonteCarlo(currentGame);
+      renderNextDraw();
+    }, 30);
+  });
+}
+
 function renderNext() {
+  $("#nextOneTools").style.display = nextMode === "one" ? "" : "none";
+  if (nextMode === "draw") { renderNextDraw(); return; }
   const g = GAMES[currentGame];
   const sel = $("#nextNum");
   if (+sel.dataset.max !== g.max) {
@@ -2255,9 +2370,10 @@ function renderNext() {
   if (!ns) { $("#nextBody").innerHTML = '<p class="board-sub">Pas assez de données.</p>'; return; }
 
   const balls = ns.top.map(t =>
-    `<span class="ball" style="${Math.abs(t.z) >= 2 ? "border-color:var(--accent);color:var(--accent);font-weight:700" : ""}" ` +
-    `title="${t.f} fois — attendu ${ns.expected.toFixed(1)} — Z ${(t.z >= 0 ? "+" : "") + t.z.toFixed(2)}">${t.n}` +
-    `<em style="font-style:normal;font-size:9px;opacity:.75;margin-left:2px">${t.f}</em></span>`).join("");
+    `<span class="ball-count${Math.abs(t.z) >= 2 ? " hot" : ""}" ` +
+    `title="${t.f} fois — attendu ${ns.expected.toFixed(1)} — Z ${(t.z >= 0 ? "+" : "") + t.z.toFixed(2)}">` +
+    `<span class="ball"${Math.abs(t.z) >= 2 ? ' style="border-color:var(--accent);color:var(--accent);font-weight:700"' : ""}>${t.n}</span>` +
+    `<span class="cnt">${t.f}</span></span>`).join("");
 
   const audit = transitionAudit(currentGame);
   let verdict = "";
@@ -2485,6 +2601,13 @@ function renderSmart() {
 }
 
 $("#nextNum") && $("#nextNum").addEventListener("change", renderNext);
+document.querySelectorAll("[data-next]").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("[data-next]").forEach(x => x.classList.remove("active"));
+  b.classList.add("active");
+  nextMode = b.dataset.next;
+  mcResult = null;
+  renderNext();
+}));
 let activeProfile = "balanced";
 document.querySelectorAll("#profileTabs .chip").forEach(c => c.addEventListener("click", () => {
   document.querySelectorAll("#profileTabs .chip").forEach(x => x.classList.remove("active"));
@@ -3101,7 +3224,7 @@ function renderExtras2() {
   safe("backtest", renderBacktest);
   safe("compare", renderCompare);
   safe("decades", renderDecades);
-  safe("next", renderNext);
+  safe("next", () => { mcResult = null; renderNext(); });
   safe("fact", renderFact);
   safe("portrait", renderPortrait);
   safe("pickers", refreshPickers);
