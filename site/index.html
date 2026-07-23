@@ -306,6 +306,28 @@
     border: 1px solid var(--ligne); border-radius: 999px; padding: 7px 10px; background: #fff;
   }
   .pool-board { display: grid; gap: 5px; margin: 8px 0 4px; grid-template-columns: repeat(var(--pool-cols, 16), 1fr); }
+  /* ---- Calendrier de sélection d'un tirage ---- */
+  .cal { display: none; margin-top: 12px; background: var(--papier2); border-radius: 16px; padding: 14px; max-width: 420px; }
+  .cal.open { display: block; }
+  .cal-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+  .cal-month { font-weight: 700; font-size: 15px; text-transform: capitalize; }
+  .cal-nav { width: 32px; height: 32px; border-radius: 9px; border: 1px solid var(--ligne); background: #fff;
+    font: 600 14px 'Poppins', sans-serif; color: var(--encre); cursor: pointer; line-height: 1; }
+  .cal-nav:hover:not(:disabled) { border-color: var(--encre); }
+  .cal-nav:disabled { opacity: .3; cursor: default; }
+  .cal-dows { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 5px; }
+  .cal-dows span { text-align: center; font: 600 10.5px 'Poppins', sans-serif; color: var(--muted); text-transform: uppercase; }
+  .cal-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-day { aspect-ratio: 1; border-radius: 9px; border: 1px solid var(--ligne); background: #fff;
+    font: 600 13px 'IBM Plex Mono', monospace; color: var(--encre); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; padding: 0; }
+  .cal-day:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .cal-day:disabled { background: transparent; border-color: transparent; color: var(--muted); opacity: .4; cursor: default; }
+  .cal-day.sel { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .cal-day.empty { border: none; background: none; cursor: default; }
+  .cal-foot { margin-top: 11px; padding-top: 10px; border-top: 1px solid var(--ligne);
+    display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+  @media (max-width: 620px) { .cal { max-width: none; } .cal-day { font-size: 12px; } }
   .rank-head { display: flex; align-items: center; gap: 10px; padding: 0 0 7px; border-bottom: 1px solid var(--ligne);
     font-size: 10.5px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; color: var(--muted); }
   .rank-head .rank-n-h { width: 31px; text-align: center; flex-shrink: 0; }
@@ -827,9 +849,11 @@
         <span class="label">au (facultatif)</span>
         <input type="date" id="dateTo" class="select">
         <button class="btn" type="button" id="findBtn">Rechercher</button>
+        <button class="chip" type="button" id="calBtn">Choisir un tirage</button>
         <button class="chip" type="button" id="findTodayBtn">Aujourd'hui</button>
         <button class="chip" type="button" id="findWeekBtn">7 derniers jours</button>
       </div>
+      <div class="cal" id="calBox"></div>
       <div id="findBody"></div>
     </div>
 
@@ -2197,6 +2221,7 @@ function renderNext() {
 }
 
 
+let calCursor = null;   // calendrier : premier jour du mois affiché
 let rankMode = "freq";
 function renderRank() {
   const host = $("#rankBody");
@@ -3018,6 +3043,7 @@ function renderExtras2() {
   safe("portrait", renderPortrait);
   safe("pickers", refreshPickers);
   safe("rank", renderRank);
+  safe("cal", () => { calCursor = null; renderCal(); });
   safe("records", renderRecords);
   safe("compare2", renderGamesComparison);
   safe("nextdraws", renderNextDraws);
@@ -3065,6 +3091,84 @@ async function shareSite() {
   }
 }
 $("#shareBtn") && $("#shareBtn").addEventListener("click", shareSite);
+
+/* ---------- Calendrier : choisir un tirage par sa date ---------- */
+const MOIS_FR = ["janvier", "février", "mars", "avril", "mai", "juin",
+  "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+const isoDay = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+function drawDaysSet(gameKey) {
+  const set = new Map();   // clé ISO -> nombre de tirages ce jour-là
+  (store[gameKey] || []).forEach(d => {
+    const k = isoDay(d.date);
+    set.set(k, (set.get(k) || 0) + 1);
+  });
+  return set;
+}
+
+function renderCal() {
+  const box = $("#calBox");
+  if (!box || !box.classList.contains("open")) return;
+  const draws = store[currentGame];
+  if (!draws || !draws.length) {
+    box.innerHTML = `<p class="board-sub">Aucune donnée chargée.</p>`;
+    return;
+  }
+  const days = drawDaysSet(currentGame);
+  const newest = draws[0].date, oldest = draws[draws.length - 1].date;
+  if (!calCursor) calCursor = new Date(newest.getFullYear(), newest.getMonth(), 1);
+
+  const y = calCursor.getFullYear(), m = calCursor.getMonth();
+  const first = new Date(y, m, 1);
+  const nbDays = new Date(y, m + 1, 0).getDate();
+  const lead = (first.getDay() + 6) % 7;   // lundi = 0
+  const selected = $("#dateFrom").value;
+
+  const prevOk = new Date(y, m, 1) > new Date(oldest.getFullYear(), oldest.getMonth(), 1);
+  const nextOk = new Date(y, m, 1) < new Date(newest.getFullYear(), newest.getMonth(), 1);
+
+  let cells = "";
+  for (let i = 0; i < lead; i++) cells += `<span class="cal-day empty"></span>`;
+  for (let d = 1; d <= nbDays; d++) {
+    const key = `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    const n = days.get(key) || 0;
+    cells += `<button type="button" class="cal-day${key === selected ? " sel" : ""}" ` +
+      `data-day="${key}"${n ? "" : " disabled"} ` +
+      `title="${n ? n + " tirage" + (n > 1 ? "s" : "") : "aucun tirage"}">${d}</button>`;
+  }
+
+  box.innerHTML =
+    `<div class="cal-head">` +
+    `<button type="button" class="cal-nav" data-cal="prev"${prevOk ? "" : " disabled"}>‹</button>` +
+    `<span class="cal-month">${MOIS_FR[m]} ${y}</span>` +
+    `<button type="button" class="cal-nav" data-cal="next"${nextOk ? "" : " disabled"}>›</button>` +
+    `</div>` +
+    `<div class="cal-dows"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span></div>` +
+    `<div class="cal-days">${cells}</div>` +
+    `<div class="cal-foot"><span class="board-sub" style="font-size:12px">Les jours sans tirage sont grisés.</span>` +
+    `<button type="button" class="chip" data-cal="last">Aller au dernier tirage</button></div>`;
+
+  box.querySelectorAll("[data-day]").forEach(b => b.addEventListener("click", () => {
+    $("#dateFrom").value = b.dataset.day;
+    $("#dateTo").value = "";
+    renderCal();
+    renderFind();
+    $("#findBody").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }));
+  box.querySelectorAll("[data-cal]").forEach(b => b.addEventListener("click", () => {
+    if (b.dataset.cal === "prev") calCursor = new Date(y, m - 1, 1);
+    else if (b.dataset.cal === "next") calCursor = new Date(y, m + 1, 1);
+    else calCursor = new Date(newest.getFullYear(), newest.getMonth(), 1);
+    renderCal();
+  }));
+}
+
+$("#calBtn") && $("#calBtn").addEventListener("click", () => {
+  const box = $("#calBox");
+  const open = box.classList.toggle("open");
+  $("#calBtn").textContent = open ? "Masquer le calendrier" : "Choisir un tirage";
+  if (open) { calCursor = null; renderCal(); }
+});
 
 function renderFind() {
   const res = findDraws(currentGame, $("#dateFrom").value, $("#dateTo").value);
