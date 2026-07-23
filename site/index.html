@@ -192,9 +192,10 @@
   .cell {
     position: relative; aspect-ratio: 1; border-radius: 10px; border: 1px solid var(--ligne);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    cursor: default; transition: transform .08s;
+    cursor: pointer; transition: transform .08s; text-decoration: none;
   }
-  .cell:hover { transform: scale(1.07); z-index: 2; }
+  .cell:hover { transform: scale(1.07); z-index: 2; box-shadow: 0 3px 10px rgba(0,0,0,.18); }
+  .cell:focus-visible { outline: 2px solid var(--encre); outline-offset: 2px; z-index: 2; }
   .cell .num { font: 600 17px 'IBM Plex Mono', monospace; }
   .cell .val { font: 400 10.5px 'IBM Plex Mono', monospace; opacity: .85; }
   .cell .tip {
@@ -480,6 +481,7 @@
       <div class="board-title">La grille</div>
       <div class="board-sub" id="boardSub"></div>
       <div id="board"></div>
+      <div class="board-sub" style="margin:12px 0 0">Touche un numéro pour ouvrir sa fiche complète — fréquence, écarts, dernières sorties et compagnons de tirage. <a id="hubLink" href="/keno/numeros/" style="color:var(--accent);font-weight:600;text-decoration:none;white-space:nowrap">Voir tous les numéros →</a></div>
       <div class="extras-strip hidden" id="extrasStrip">
         <span class="label" id="extrasLabel"></span>
         <div class="extras-row" id="extrasRow"></div>
@@ -1636,6 +1638,8 @@ function render() {
   const gMin = Math.min(...gaps), gMax = Math.max(...gaps);
 
   const board = $("#board");
+  const hub = $("#hubLink");
+  if (hub) { hub.href = `/${currentGame}/numeros/`; hub.textContent = `Voir les ${g.max} numéros du ${g.label} →`; }
   board.style.gridTemplateColumns = `repeat(${g.cols}, 1fr)`;
   board.innerHTML = "";
   stats.forEach(s => {
@@ -1643,15 +1647,17 @@ function render() {
     if (colorMode === "freq" && fMax > fMin) t = (s.freq - fMin) / (fMax - fMin);
     if (colorMode === "gap" && gMax > gMin) t = (s.currentGap - gMin) / (gMax - gMin);
     if (colorMode === "z" && adv) t = Math.max(0, Math.min(1, 0.5 + adv.z[s.n] / 6));  // ±3σ -> [0,1]
-    const cell = document.createElement("div");
+    const cell = document.createElement("a");
     cell.className = "cell";
+    cell.href = `/${currentGame}/numero-${s.n}/`;
+    cell.setAttribute("aria-label", `Statistiques détaillées du numéro ${s.n} au ${g.label}`);
     cell.style.background = heatColor(t);
     cell.style.color = (t < 0.25 || t > 0.78) ? "#fff" : "var(--ink)";
     cell.innerHTML =
       `<span class="num">${s.n}</span>` +
       `<span class="val">${colorMode === "freq" ? s.freq + "×" : colorMode === "gap" ? "é " + s.currentGap : (adv ? (adv.z[s.n] >= 0 ? "+" : "") + adv.z[s.n].toFixed(1) + "σ" : "")}</span>` +
       `<span class="tip">N°${s.n} — ${s.freq} sorties (attendu ${expected.toFixed(1)}) · écart ${s.currentGap} · max ${s.maxGap}${adv ? ` · Z ${(adv.z[s.n] >= 0 ? "+" : "") + adv.z[s.n].toFixed(2)}` : ""}` +
-      (s.lastSeen ? ` · vu le ${fmtDate(s.lastSeen)}` : ``) + `</span>`;
+      (s.lastSeen ? ` · vu le ${fmtDate(s.lastSeen)}` : ``) + ` · <span style="opacity:.8">clique pour la fiche complète</span></span>`;
     board.appendChild(cell);
   });
 
