@@ -176,6 +176,16 @@
     background: transparent; color: var(--papier); border-radius: 999px; padding: 6px 14px; cursor: pointer;
   }
   .chip.active { background: var(--papier); border-color: var(--papier); color: var(--encre); }
+  /* Variante pour les panneaux à fond clair : la .chip de base est prévue pour le fond sombre. */
+  .panel .chip, .board-card .chip, .picker .chip, .atelier-tools .chip {
+    background: #fff; border-color: var(--ligne); color: var(--encre);
+  }
+  .panel .chip:hover, .board-card .chip:hover, .picker .chip:hover, .atelier-tools .chip:hover {
+    border-color: var(--encre);
+  }
+  .panel .chip.active, .board-card .chip.active, .atelier-tools .chip.active {
+    background: var(--encre); border-color: var(--encre); color: var(--papier);
+  }
   .toggle { display: inline-flex; border: 1px solid rgba(247,243,232,.35); border-radius: 10px; overflow: hidden; }
   .toggle button { font: 600 13px 'Poppins', sans-serif; border: none; background: transparent; color: var(--papier); padding: 7px 14px; cursor: pointer; }
   .toggle button.active { background: var(--accent); color: var(--accent-ink); }
