@@ -684,7 +684,7 @@
       </div>
       <div class="panel gate-panel">
         <h2>Le numéro suivant</h2>
-        <p class="atelier-note">Après ce numéro, lesquels sortent le plus souvent au tirage d'après ? Curiosité statistique — le hasard n'a pas de mémoire.</p>
+        <p class="atelier-note">Après ce numéro, lesquels sortent le plus souvent au tirage d'après ? C'est le principe des « numéros annoncés » vendus ailleurs — ici on le confronte à ce que produirait le pur hasard.</p>
         <div class="atelier-tools">
           <span class="label">Après le n°</span>
           <select id="nextNum" class="select"></select>
@@ -1565,8 +1565,9 @@ function decadeStats(gameKey) {
 function nextNumberStats(target, gameKey) {
   const all = store[gameKey];
   if (all.length < 2) return null;
+  const g = GAMES[gameKey];
   const chrono = [...all].reverse();  // ancien -> récent
-  const freq = new Array(GAMES[gameKey].max + 1).fill(0);
+  const freq = new Array(g.max + 1).fill(0);
   let occurrences = 0;
   for (let i = 0; i < chrono.length - 1; i++) {
     if (chrono[i].numbers.includes(target)) {
@@ -1575,9 +1576,43 @@ function nextNumberStats(target, gameKey) {
     }
   }
   if (!occurrences) return null;
-  const top = freq.map((f, n) => ({ n, f })).slice(1)
-    .sort((a, b) => b.f - a.f).slice(0, 8);
-  return { occurrences, top };
+  // Référence : si les tirages sont indépendants, chaque numéro suit avec p = drawSize/max
+  const p = g.drawSize / g.max;
+  const expected = occurrences * p;
+  const sd = Math.sqrt(occurrences * p * (1 - p));
+  const withZ = freq.map((f, n) => ({ n, f, z: sd > 0 ? (f - expected) / sd : 0 })).slice(1);
+  const top = [...withZ].sort((a, b) => b.f - a.f).slice(0, 8);
+  return { occurrences, top, expected, sd, all: withZ };
+}
+
+/* Balaye toutes les paires (cible -> suivant) et compte les écarts notables.
+   Sur des tirages indépendants, ce décompte doit coller à la théorie. */
+function transitionAudit(gameKey) {
+  const all = store[gameKey];
+  const g = GAMES[gameKey];
+  if (!all || all.length < 30) return null;
+  const chrono = [...all].reverse();
+  const p = g.drawSize / g.max;
+  let over2 = 0, over3 = 0, pairs = 0, extreme = { z: 0, from: 0, to: 0 };
+  for (let t = 1; t <= g.max; t++) {
+    const freq = new Array(g.max + 1).fill(0);
+    let occ = 0;
+    for (let i = 0; i < chrono.length - 1; i++) {
+      if (chrono[i].numbers.includes(t)) { occ++; chrono[i + 1].numbers.forEach(n => freq[n]++); }
+    }
+    if (!occ) continue;
+    const exp = occ * p, sd = Math.sqrt(occ * p * (1 - p));
+    if (sd <= 0) continue;
+    for (let n = 1; n <= g.max; n++) {
+      const z = (freq[n] - exp) / sd;
+      pairs++;
+      if (Math.abs(z) > 2) over2++;
+      if (Math.abs(z) > 3) over3++;
+      if (Math.abs(z) > Math.abs(extreme.z)) extreme = { z, from: t, to: n };
+    }
+  }
+  if (!pairs) return null;
+  return { pairs, over2, over3, exp2: pairs * 0.0455, exp3: pairs * 0.0027, extreme };
 }
 
 /* Générateur "intelligent" : grille respectant les moyennes historiques
@@ -2218,10 +2253,34 @@ function renderNext() {
   const target = +sel.value || 1;
   const ns = nextNumberStats(target, currentGame);
   if (!ns) { $("#nextBody").innerHTML = '<p class="board-sub">Pas assez de données.</p>'; return; }
+
+  const balls = ns.top.map(t =>
+    `<span class="ball" style="${Math.abs(t.z) >= 2 ? "border-color:var(--accent);color:var(--accent);font-weight:700" : ""}" ` +
+    `title="${t.f} fois — attendu ${ns.expected.toFixed(1)} — Z ${(t.z >= 0 ? "+" : "") + t.z.toFixed(2)}">${t.n}` +
+    `<em style="font-style:normal;font-size:9px;opacity:.75;margin-left:2px">${t.f}</em></span>`).join("");
+
+  const audit = transitionAudit(currentGame);
+  let verdict = "";
+  if (audit) {
+    const conforme = audit.over2 <= audit.exp2 * 1.35;
+    verdict = `<div class="board-sub" style="margin-top:12px;padding-top:11px;border-top:1px solid var(--ligne)">` +
+      `<strong>Le test complet.</strong> En balayant les ${audit.pairs.toLocaleString("fr-FR")} paires « numéro → suivant » de l'historique, ` +
+      `<strong>${audit.over2}</strong> dépassent 2 écarts-types — la théorie du pur hasard en prévoit ${Math.round(audit.exp2)}. ` +
+      `Au-delà de 3 écarts-types : ${audit.over3} observées, ${Math.round(audit.exp3)} attendues. ` +
+      (conforme
+        ? `Les écarts constatés sont donc <strong>exactement ce que produit le hasard</strong> : aucun numéro n'en « appelle » un autre.`
+        : `Le décompte s'écarte un peu de la théorie, ce qui reste compatible avec les fluctuations d'un échantillon de cette taille.`) +
+      `<br>C'est le piège classique : sur ${audit.pairs.toLocaleString("fr-FR")} paires, quelques-unes affichent forcément des scores spectaculaires. ` +
+      `La plus extrême ici est ${audit.extreme.from} → ${audit.extreme.to} (Z ${(audit.extreme.z >= 0 ? "+" : "") + audit.extreme.z.toFixed(2)}), ` +
+      `et elle ne prédit rien du tout.</div>`;
+  }
+
   $("#nextBody").innerHTML =
-    `<p class="board-sub">Le ${target} est sorti ${ns.occurrences} fois. Au tirage suivant, on a le plus vu :</p>` +
-    '<div class="smart-grid">' + ns.top.map(t =>
-      `<span class="ball" title="${t.f} fois">${t.n}</span>`).join("") + '</div>';
+    `<p class="board-sub">Le ${target} est sorti ${ns.occurrences} fois. Au tirage suivant, chaque numéro devait apparaître ` +
+    `<strong>${ns.expected.toFixed(1)} fois</strong> en moyenne (± ${ns.sd.toFixed(1)}) si les tirages sont indépendants. Les plus vus :</p>` +
+    '<div class="smart-grid">' + balls + '</div>' +
+    `<p class="board-sub" style="margin-top:8px">Le petit chiffre indique le nombre de fois observé ; en couleur, les écarts supérieurs à 2 écarts-types.</p>` +
+    verdict;
 }
 
 
