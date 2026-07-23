@@ -653,6 +653,12 @@
         <button class="btn" type="button" id="myNumsSave">Enregistrer</button>
         <button class="chip" type="button" id="myNumsClear">Effacer</button>
       </div>
+      <div class="atelier-tools kenoOnly">
+        <span class="label">Mise</span>
+        <select id="myMise" class="select"><option>1</option><option>2</option><option>3</option><option>5</option><option>10</option></select>
+        <span class="label">€</span>
+        <label class="chip" style="display:inline-flex;align-items:center;gap:7px;cursor:pointer"><input type="checkbox" id="myMult" style="accent-color:var(--accent)"> Multiplicateur (+1 €)</label>
+      </div>
       <div id="myNumsScore"></div>
     </div>
 
@@ -664,6 +670,12 @@
         <div class="atelier-tools">
           <input type="text" id="btInput" class="modal-input" style="max-width:260px;margin:0" placeholder="Ex : 3 7 12 24 41">
           <button class="btn" type="button" id="btRun">Tester</button>
+        </div>
+        <div class="atelier-tools kenoOnly">
+          <span class="label">Mise</span>
+          <select id="btMise" class="select"><option>1</option><option>2</option><option>3</option><option>5</option><option>10</option></select>
+          <span class="label">€</span>
+          <label class="chip" style="display:inline-flex;align-items:center;gap:7px;cursor:pointer"><input type="checkbox" id="btMult" style="accent-color:var(--accent)"> Multiplicateur (+1 €)</label>
         </div>
         <div id="btOut"></div>
       </div>
@@ -1195,6 +1207,41 @@ function hypergeomP(k, played, gameKey) {
   const g = GAMES[gameKey];  // P(exactement k bons | je joue `played` numéros)
   if (k > played || k > g.drawSize || played - k > g.max - g.drawSize) return 0;
   return binom(played, k) * binom(g.max - played, g.drawSize - k) / binom(g.max, g.drawSize);
+}
+
+/* ---------- Rapports Keno officiels FDJ (formule 3 nov. 2025, gains pour 1 € de mise) ---------- */
+const KENO_PAY = {
+  4:  { 2: 1, 3: 5, 4: 70 },
+  5:  { 2: 1, 3: 3, 4: 20, 5: 100 },
+  6:  { 2: 1, 3: 3, 4: 10, 5: 100, 6: 500 },
+  7:  { 2: 1, 3: 2, 4: 10, 5: 50, 6: 500, 7: 5000 },
+  8:  { 0: 2, 2: 1, 3: 2, 4: 5, 5: 30, 6: 150, 7: 2000, 8: 10000 },
+  9:  { 0: 2, 2: 1, 3: 2, 4: 4, 5: 20, 6: 100, 7: 1000, 8: 5000, 9: 30000 },
+  10: { 0: 2, 2: 1, 3: 2, 4: 3, 5: 10, 6: 40, 7: 200, 8: 2000, 9: 20000, 10: 200000 }
+};
+const fmtEuro = v => v.toLocaleString("fr-FR", { maximumFractionDigits: 0 }) + " €";
+function kenoGain(played, k, mise) {
+  const t = KENO_PAY[played];
+  return t ? (t[k] || 0) * mise : 0;
+}
+/* Rejoue une grille sur tout l'historique Keno : mises, gains, meilleur coup.
+   useMult applique le VRAI multiplicateur tiré à chaque tirage (+1 €/grille). */
+function kenoLedger(nums, mise, useMult, draws) {
+  let cost = 0, gain = 0, wins = 0, best = 0, bestDate = "";
+  draws.forEach(d => {
+    const k = nums.filter(n => d.numbers.includes(n)).length;
+    const g = kenoGain(nums.length, k, mise) * (useMult ? (parseInt(d.mult) || 1) : 1);
+    cost += mise + (useMult ? 1 : 0);
+    gain += g;
+    if (g > 0) wins++;
+    if (g > best) { best = g; bestDate = d.date; }
+  });
+  return { cost, gain, wins, best, bestDate, total: draws.length };
+}
+function euroSummaryHtml(led, mise, useMult) {
+  const solde = led.gain - led.cost;
+  return `<div class="board-sub" style="margin-top:10px"><strong>Le compte en euros</strong> — cette grille jouée à ${mise} €${useMult ? " + Multiplicateur" : ""} sur les ${led.total} tirages chargés : misé <strong>${fmtEuro(led.cost)}</strong>, gagné <strong>${fmtEuro(led.gain)}</strong> (${led.wins} tirage${led.wins > 1 ? "s" : ""} gagnant${led.wins > 1 ? "s" : ""}${led.best > 0 ? `, meilleur : ${fmtEuro(led.best)} le ${fmtDate(led.bestDate)}` : ""}). Solde : <strong style="color:${solde >= 0 ? "var(--accent)" : "var(--hot)"}">${solde >= 0 ? "+" : "−"} ${fmtEuro(Math.abs(solde))}</strong> · retour observé ${led.cost ? Math.round(led.gain / led.cost * 100) : 0} % (TRJ théorique du Keno ≈ 59,5 %).
+  <br>Rapports officiels FDJ en vigueur depuis le 3 nov. 2025 — montants indicatifs, le règlement fait foi. Le passé ne préjuge de rien.</div>`;
 }
 
 function backtestGrid(nums, gameKey) {
@@ -2284,13 +2331,25 @@ function renderMyNums() {
   $("#myNumsInput").value = saved.join(" ");
   const out = $("#myNumsScore");
   const draws = store[currentGame];
+  document.querySelectorAll(".kenoOnly").forEach(el => { el.style.display = currentGame === "keno" ? "" : "none"; });
   if (!saved.length || !draws.length) { out.innerHTML = ""; return; }
-  out.innerHTML = draws.slice(0, 7).map((d, i) => {
+  const payable = currentGame === "keno" && !!KENO_PAY[saved.length];
+  const mise = payable ? +$("#myMise").value : 0;
+  const useMult = payable && $("#myMult").checked;
+  let html = draws.slice(0, 7).map((d, i) => {
     const hits = saved.filter(n => d.numbers.includes(n));
+    let euro = "";
+    if (payable) {
+      const g = kenoGain(saved.length, hits.length, mise) * (useMult ? (parseInt(d.mult) || 1) : 1);
+      euro = `<span class="draw-date" style="min-width:auto;margin-left:4px;${g > 0 ? "color:var(--accent);font-weight:700" : "opacity:.55"}">${g > 0 ? "+ " + fmtEuro(g) : "0 €"}</span>`;
+    }
     return `<div class="draw-line"><span class="draw-date">${fmtDate(d.date)}${d.time && d.time !== "unique" ? " · " + d.time : ""}</span>` +
       saved.map(n => `<span class="ball" style="${hits.includes(n) ? "background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700" : "opacity:.45"}">${n}</span>`).join("") +
-      `<span class="draw-date" style="min-width:auto;margin-left:6px">${hits.length}/${saved.length}${i === 0 ? " ce tirage" : ""}</span></div>`;
+      `<span class="draw-date" style="min-width:auto;margin-left:6px">${hits.length}/${saved.length}${i === 0 ? " ce tirage" : ""}</span>${euro}</div>`;
   }).join("");
+  if (payable) html += euroSummaryHtml(kenoLedger(saved, mise, useMult, draws), mise, useMult);
+  else if (currentGame === "keno") html += `<div class="board-sub" style="margin-top:8px">Les gains en euros s'affichent pour une grille Keno de 4 à 10 numéros.</div>`;
+  out.innerHTML = html;
 }
 
 function renderBacktest() {
@@ -2298,10 +2357,14 @@ function renderBacktest() {
   const res = backtestGrid(nums, currentGame);
   const out = $("#btOut");
   if (!res) { out.innerHTML = ""; return; }
-  out.innerHTML = `<table><thead><tr><th>Bons n°</th><th>Observé</th><th>Attendu</th></tr></thead><tbody>` +
+  const payable = currentGame === "keno" && !!KENO_PAY[nums.length];
+  const mise = payable ? +$("#btMise").value : 0;
+  const useMult = payable && $("#btMult").checked;
+  out.innerHTML = `<table><thead><tr><th>Bons n°</th><th>Observé</th><th>Attendu</th>${payable ? `<th>Gain (${mise} €)</th>` : ""}</tr></thead><tbody>` +
     res.hist.map((c, k) => (c || res.expected[k] >= 0.5)
-      ? `<tr><td>${k}</td><td>${c}×</td><td>${res.expected[k].toFixed(1)}×</td></tr>` : "").join("") +
-    `</tbody></table><div class="board-sub" style="margin-top:8px">Meilleur résultat : ${res.best.k} bons numéros le ${fmtDate(res.best.date)} · sur ${res.total} tirages. Le passé ne préjuge de rien pour le prochain tirage.</div>`;
+      ? `<tr><td>${k}</td><td>${c}×</td><td>${res.expected[k].toFixed(1)}×</td>${payable ? `<td>${KENO_PAY[nums.length][k] ? fmtEuro(kenoGain(nums.length, k, mise)) : "—"}</td>` : ""}</tr>` : "").join("") +
+    `</tbody></table><div class="board-sub" style="margin-top:8px">Meilleur résultat : ${res.best.k} bons numéros le ${fmtDate(res.best.date)} · sur ${res.total} tirages. Le passé ne préjuge de rien pour le prochain tirage.</div>` +
+    (payable ? euroSummaryHtml(kenoLedger(nums, mise, useMult, store[currentGame]), mise, useMult) : "");
 }
 
 function renderCompare() {
@@ -2528,6 +2591,10 @@ $("#myNumsSave").addEventListener("click", () => {
   renderMyNums();
 });
 $("#myNumsClear").addEventListener("click", () => { writeCookie(myNumsKey(), "", 0); $("#myNumsInput").value = ""; renderMyNums(); });
+$("#myMise").addEventListener("change", renderMyNums);
+$("#myMult").addEventListener("change", renderMyNums);
+$("#btMise").addEventListener("change", renderBacktest);
+$("#btMult").addEventListener("change", renderBacktest);
 $("#btRun").addEventListener("click", renderBacktest);
 $("#cmpRun").addEventListener("click", renderCompare);
 $("#gapCtxBtn").addEventListener("click", runGapCtx);
