@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statistiques de chaque numéro du Loto (1 à 49) | Statirage</title>
+<meta name="description" content="Fréquence, écart et historique de sortie de chacun des 49 numéros du Loto, sur 1051 tirages. Données officielles FDJ à jour du 22 juillet 2026.">
+<link rel="canonical" href="https://statirage.fr/loto/numeros/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root { --accent:#2FA9DA; --bg1:#2E9AC8; --bg2:#155D80; --ink:#0F2E3A;
+  --papier:#F7F3E8; --papier2:#EFE9DA; --encre:#20261F; --ligne:#DDD5C2; --muted:#79806F; }
+* { box-sizing:border-box; margin:0; }
+body { font-family:'Poppins',system-ui,sans-serif; background:linear-gradient(160deg,var(--bg1),var(--bg2)); min-height:100vh; padding:18px 12px 40px; color:var(--encre); }
+.card { max-width:760px; margin:0 auto 16px; background:var(--papier); border-radius:22px; padding:24px; }
+h1 { font-size:clamp(21px,5vw,28px); line-height:1.25; margin-bottom:6px; }
+h2 { font-size:18px; margin:18px 0 8px; }
+p { font-size:14.5px; line-height:1.6; color:#3a4136; margin-bottom:10px; }
+.crumb { font-size:12.5px; margin-bottom:14px; color:var(--muted); }
+.crumb a { color:var(--accent); text-decoration:none; font-weight:600; }
+.bigball { width:64px; height:64px; border-radius:50%; background:var(--accent); color:var(--ink);
+  display:inline-flex; align-items:center; justify-content:center; font-size:26px; font-weight:700; margin-bottom:12px; }
+.stat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:14px 0; }
+.stat { background:#fff; border:1px solid var(--ligne); border-radius:14px; padding:12px 14px; }
+.stat .v { font-size:21px; font-weight:700; color:var(--accent); }
+.stat .l { font-size:12px; color:var(--muted); margin-top:2px; }
+table { width:100%; border-collapse:collapse; font-size:13.5px; margin:8px 0; }
+th,td { text-align:left; padding:7px 6px; border-bottom:1px solid var(--papier2); }
+th { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.4px; }
+.ball { display:inline-flex; width:30px; height:30px; border-radius:50%; background:#fff; border:1px solid var(--ligne);
+  align-items:center; justify-content:center; font-weight:600; font-size:12.5px; margin-right:4px; }
+.nav-nums { display:flex; justify-content:space-between; gap:10px; margin-top:6px; }
+.btn { display:inline-block; background:var(--accent); color:var(--ink); font-weight:600; font-size:13.5px;
+  padding:9px 16px; border-radius:999px; text-decoration:none; }
+.chip { display:inline-block; border:1px solid var(--ligne); background:#fff; color:var(--encre); font-weight:600;
+  font-size:13px; padding:7px 13px; border-radius:999px; text-decoration:none; margin:3px 3px 0 0; }
+.note { font-size:12.5px; color:var(--muted); border-top:1px solid var(--ligne); padding-top:12px; margin-top:16px; }
+.hub-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(52px,1fr)); gap:7px; margin:12px 0; }
+.hub-grid a { aspect-ratio:1; display:flex; align-items:center; justify-content:center; background:#fff;
+  border:1px solid var(--ligne); border-radius:10px; font-weight:600; text-decoration:none; color:var(--encre); }
+.hub-grid a:hover { border-color:var(--accent); color:var(--accent); }
+footer { max-width:760px; margin:14px auto 0; text-align:center; font-size:12px; color:rgba(255,255,255,.75); }
+footer a { color:#fff; }
+</style>
+</head>
+<body>
+<div class="card">
+<div class="crumb"><a href="https://statirage.fr/">Statirage</a> › Numéros Loto</div>
+<h1>Les 49 numéros du Loto, un par un</h1>
+<p>Le Loto : 5 numéros tirés parmi 49 (plus 1 numéro chance), les lundi, mercredi et samedi. Choisis un numéro pour consulter sa fiche complète —
+fréquence de sortie, écart actuel, record d'absence, dernières apparitions et compagnons de tirage —
+calculée sur les <strong>1051 tirages</strong> de notre historique.</p>
+<p>En ce moment : le numéro le plus sorti est le <a href="https://statirage.fr/loto/numero-31/" style="color:var(--accent);font-weight:700">31</a>
+(130 sorties) et le plus grand retard est tenu par le
+<a href="https://statirage.fr/loto/numero-42/" style="color:var(--accent);font-weight:700">42</a>
+(52 tirages d'absence).</p>
+<div class="hub-grid"><a href='https://statirage.fr/loto/numero-1/'>1</a><a href='https://statirage.fr/loto/numero-2/'>2</a><a href='https://statirage.fr/loto/numero-3/'>3</a><a href='https://statirage.fr/loto/numero-4/'>4</a><a href='https://statirage.fr/loto/numero-5/'>5</a><a href='https://statirage.fr/loto/numero-6/'>6</a><a href='https://statirage.fr/loto/numero-7/'>7</a><a href='https://statirage.fr/loto/numero-8/'>8</a><a href='https://statirage.fr/loto/numero-9/'>9</a><a href='https://statirage.fr/loto/numero-10/'>10</a><a href='https://statirage.fr/loto/numero-11/'>11</a><a href='https://statirage.fr/loto/numero-12/'>12</a><a href='https://statirage.fr/loto/numero-13/'>13</a><a href='https://statirage.fr/loto/numero-14/'>14</a><a href='https://statirage.fr/loto/numero-15/'>15</a><a href='https://statirage.fr/loto/numero-16/'>16</a><a href='https://statirage.fr/loto/numero-17/'>17</a><a href='https://statirage.fr/loto/numero-18/'>18</a><a href='https://statirage.fr/loto/numero-19/'>19</a><a href='https://statirage.fr/loto/numero-20/'>20</a><a href='https://statirage.fr/loto/numero-21/'>21</a><a href='https://statirage.fr/loto/numero-22/'>22</a><a href='https://statirage.fr/loto/numero-23/'>23</a><a href='https://statirage.fr/loto/numero-24/'>24</a><a href='https://statirage.fr/loto/numero-25/'>25</a><a href='https://statirage.fr/loto/numero-26/'>26</a><a href='https://statirage.fr/loto/numero-27/'>27</a><a href='https://statirage.fr/loto/numero-28/'>28</a><a href='https://statirage.fr/loto/numero-29/'>29</a><a href='https://statirage.fr/loto/numero-30/'>30</a><a href='https://statirage.fr/loto/numero-31/'>31</a><a href='https://statirage.fr/loto/numero-32/'>32</a><a href='https://statirage.fr/loto/numero-33/'>33</a><a href='https://statirage.fr/loto/numero-34/'>34</a><a href='https://statirage.fr/loto/numero-35/'>35</a><a href='https://statirage.fr/loto/numero-36/'>36</a><a href='https://statirage.fr/loto/numero-37/'>37</a><a href='https://statirage.fr/loto/numero-38/'>38</a><a href='https://statirage.fr/loto/numero-39/'>39</a><a href='https://statirage.fr/loto/numero-40/'>40</a><a href='https://statirage.fr/loto/numero-41/'>41</a><a href='https://statirage.fr/loto/numero-42/'>42</a><a href='https://statirage.fr/loto/numero-43/'>43</a><a href='https://statirage.fr/loto/numero-44/'>44</a><a href='https://statirage.fr/loto/numero-45/'>45</a><a href='https://statirage.fr/loto/numero-46/'>46</a><a href='https://statirage.fr/loto/numero-47/'>47</a><a href='https://statirage.fr/loto/numero-48/'>48</a><a href='https://statirage.fr/loto/numero-49/'>49</a></div>
+<div class="note">Aucun numéro n'est « dû » : chaque tirage est indépendant et chaque numéro garde
+5 chances sur 49 de sortir. Ces fiches décrivent le passé, elles ne prédisent rien.</div>
+</div>
+<footer>Données : archives officielles FDJ, à jour du dernier tirage du 22 juillet 2026 ·
+<a href="https://statirage.fr/">statirage.fr</a> — L'intelligence statistique au service du hasard.<br>
+Jouer comporte des risques. Joueurs Info Service : 09&nbsp;74&nbsp;75&nbsp;13&nbsp;13 (appel non surtaxé).</footer>
+</body>
+</html>
