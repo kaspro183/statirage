@@ -188,6 +188,28 @@
   }
   .board-title { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 22px; margin-bottom: 3px; }
   .board-sub { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
+  .portrait-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin-top: 14px; }
+  .pt-box { background: var(--papier2); border-radius: 14px; padding: 13px 15px; }
+  .pt-h { font-size: 11.5px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; color: var(--muted); margin-bottom: 9px; }
+  .pt-run { display: inline-flex; gap: 3px; background: #fff; border: 1px solid var(--ligne); border-radius: 999px; padding: 3px 8px; margin: 0 5px 5px 0; }
+  .pt-run span { font: 600 12.5px 'IBM Plex Mono', monospace; }
+  .pt-bars { display: flex; align-items: flex-end; gap: 5px; height: 62px; margin-top: 4px; }
+  .pt-bar { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; position: relative; }
+  .pt-bar i { display: block; width: 100%; background: var(--accent); border-radius: 4px 4px 0 0; min-height: 2px; opacity: .85; }
+  .pt-bar u { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--muted); opacity: .55; }
+  .pt-bar b { font: 600 10px 'IBM Plex Mono', monospace; margin-bottom: 2px; }
+  .pt-bar em { font-style: normal; font-size: 9.5px; color: var(--muted); margin-top: 3px; white-space: nowrap; }
+  .pt-line { display: flex; align-items: baseline; gap: 8px; font-size: 13px; padding: 5px 0; border-bottom: 1px solid var(--ligne); }
+  .pt-line:last-child { border-bottom: none; }
+  .pt-line b { font: 600 13px 'IBM Plex Mono', monospace; }
+  .pt-line span { color: var(--muted); font-size: 12px; }
+  .pt-gauge { height: 6px; background: var(--ligne); border-radius: 999px; margin: 7px 0 4px; position: relative; }
+  .pt-gauge i { position: absolute; top: -3px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); transform: translateX(-50%); }
+  .pt-mini { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 5px; }
+  .pt-mini span { width: 25px; height: 25px; border-radius: 50%; background: #fff; border: 1px solid var(--ligne);
+    display: flex; align-items: center; justify-content: center; font: 600 11px 'IBM Plex Mono', monospace; }
+  .pt-mini span.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  @media (max-width: 620px) { .portrait-grid { grid-template-columns: 1fr; gap: 9px; } }
   #board { display: grid; gap: 8px; }
   .cell {
     position: relative; aspect-ratio: 1; border-radius: 10px; border: 1px solid var(--ligne);
@@ -274,6 +296,18 @@
     border: 1px solid var(--ligne); border-radius: 999px; padding: 7px 10px; background: #fff;
   }
   .pool-board { display: grid; gap: 5px; margin: 8px 0 4px; grid-template-columns: repeat(var(--pool-cols, 16), 1fr); }
+  .picker { display: none; margin-top: 10px; background: var(--papier2); border-radius: 14px; padding: 13px; }
+  .picker.open { display: block; }
+  .picker-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 9px; flex-wrap: wrap; }
+  .picker-count { font: 600 12.5px 'IBM Plex Mono', monospace; color: var(--muted); }
+  .picker-count.full { color: var(--accent); }
+  .picker-board { display: grid; gap: 5px; grid-template-columns: repeat(var(--pk-cols, 16), 1fr); }
+  .picker-acts { display: flex; gap: 6px; flex-wrap: wrap; }
+  .picker-acts .chip { padding: 5px 11px; font-size: 12px; }
+  @media (max-width: 620px) {
+    .picker-board { grid-template-columns: repeat(var(--pk-cols-m, 8), 1fr); gap: 4px; }
+    .picker-board .pool-cell { font-size: 12px; }
+  }
   .pool-cell {
     aspect-ratio: 1; border-radius: 8px; border: 1px solid var(--ligne); background: #fff;
     display: flex; align-items: center; justify-content: center;
@@ -488,6 +522,12 @@
       </div>
     </div>
 
+    <div class="panel" id="portraitPanel">
+      <h2>Le portrait du tirage</h2>
+      <p class="atelier-note">Cinq lectures descriptives du dernier tirage, comparées à l'ensemble de l'historique. Ce sont des constats sur ce qui vient de se produire — ils ne disent rien du tirage suivant.</p>
+      <div id="portraitBody"></div>
+    </div>
+
     <div class="panel chart-panel">
       <h2>Les courbes</h2>
 
@@ -654,14 +694,16 @@
       et les précédents s'affiche ici. (Sauvegardé dans ce navigateur.)</p>
       <div class="atelier-tools">
         <input type="text" id="myNumsInput" class="modal-input" style="max-width:300px;margin:0" placeholder="Ex : 3 7 12 24 41 56">
+        <button class="chip" type="button" id="myNumsPick">Choisir sur la grille</button>
         <button class="btn" type="button" id="myNumsSave">Enregistrer</button>
         <button class="chip" type="button" id="myNumsClear">Effacer</button>
       </div>
+      <div class="picker" id="myNumsPicker"></div>
       <div class="atelier-tools kenoOnly">
         <span class="label">Mise</span>
         <select id="myMise" class="select"><option>1</option><option>2</option><option>3</option><option>5</option><option>10</option></select>
         <span class="label">€</span>
-        <label class="chip" style="display:inline-flex;align-items:center;gap:7px;cursor:pointer"><input type="checkbox" id="myMult" style="accent-color:var(--accent)"> Multiplicateur (+1 €)</label>
+        <label class="chip" style="display:inline-flex;align-items:center;gap:7px;cursor:pointer"><input type="checkbox" id="myMult" style="accent-color:var(--accent)"> <span>Multiplicateur (+1 €)</span></label>
       </div>
       <div id="myNumsScore"></div>
     </div>
@@ -673,13 +715,15 @@
         0, 1, 2… bons numéros, comparé à ce que le hasard prévoit.</p>
         <div class="atelier-tools">
           <input type="text" id="btInput" class="modal-input" style="max-width:260px;margin:0" placeholder="Ex : 3 7 12 24 41">
+          <button class="chip" type="button" id="btPick">Choisir sur la grille</button>
           <button class="btn" type="button" id="btRun">Tester</button>
         </div>
+        <div class="picker" id="btPicker"></div>
         <div class="atelier-tools kenoOnly">
           <span class="label">Mise</span>
           <select id="btMise" class="select"><option>1</option><option>2</option><option>3</option><option>5</option><option>10</option></select>
           <span class="label">€</span>
-          <label class="chip" style="display:inline-flex;align-items:center;gap:7px;cursor:pointer"><input type="checkbox" id="btMult" style="accent-color:var(--accent)"> Multiplicateur (+1 €)</label>
+          <label class="chip" style="display:inline-flex;align-items:center;gap:7px;cursor:pointer"><input type="checkbox" id="btMult" style="accent-color:var(--accent)"> <span>Multiplicateur (+1 €)</span></label>
         </div>
         <div id="btOut"></div>
       </div>
@@ -688,8 +732,10 @@
         <p class="atelier-note">Jusqu'à 8 numéros côte à côte, toutes leurs statistiques en parallèle.</p>
         <div class="atelier-tools">
           <input type="text" id="cmpInput" class="modal-input" style="max-width:260px;margin:0" placeholder="Ex : 7 13 41 56">
+          <button class="chip" type="button" id="cmpPick">Choisir sur la grille</button>
           <button class="btn" type="button" id="cmpRun">Comparer</button>
         </div>
+        <div class="picker" id="cmpPicker"></div>
         <div id="cmpOut"></div>
       </div>
     </div>
@@ -1038,7 +1084,62 @@ function renderHero() {
 }
 
 
-/* ---------- Indicateurs avancés ---------- */
+/* ---------- Portrait du tirage : cinq lectures descriptives ---------- */
+function drawPortrait(gameKey, index = 0) {
+  const g = GAMES[gameKey];
+  const draws = store[gameKey];
+  if (!draws || draws.length <= index) return null;
+  const d = draws[index];
+  if (!d || !Array.isArray(d.numbers) || !d.numbers.length) return null;
+  const nums = [...d.numbers].sort((a, b) => a - b);
+  const k = nums.length;
+
+  // 1. Suites consécutives
+  const runs = [];
+  let run = [nums[0]];
+  for (let i = 1; i < k; i++) {
+    if (nums[i] === nums[i - 1] + 1) run.push(nums[i]);
+    else { if (run.length > 1) runs.push(run); run = [nums[i]]; }
+  }
+  if (run.length > 1) runs.push(run);
+
+  // 2. Répartition par dizaine et par dernier chiffre
+  const nbDec = Math.ceil(g.max / 10);
+  const decades = Array.from({ length: nbDec }, (_, i) => {
+    const lo = i * 10 + 1, hi = Math.min((i + 1) * 10, g.max);
+    return { label: `${lo}–${hi}`, size: hi - lo + 1, count: nums.filter(n => n >= lo && n <= hi).length };
+  });
+  decades.forEach(dec => { dec.expected = k * dec.size / g.max; });
+  const lastDigits = Array.from({ length: 10 }, (_, i) => ({
+    digit: i, count: nums.filter(n => n % 10 === i).length,
+  }));
+
+  // 3. Rangs percentiles parmi tout l'historique
+  const sum = nums.reduce((a, b) => a + b, 0);
+  const evens = nums.filter(n => n % 2 === 0).length;
+  const allSums = draws.map(x => x.numbers.reduce((a, b) => a + b, 0));
+  const allEvens = draws.map(x => x.numbers.filter(n => n % 2 === 0).length);
+  const pct = (arr, v) => Math.round(arr.filter(x => x <= v).length / arr.length * 100);
+  const avgSum = allSums.reduce((a, b) => a + b, 0) / allSums.length;
+
+  // 4. Tirages les plus ressemblants
+  const similar = draws.map((x, i) => ({ i, date: x.date, numbers: x.numbers,
+      shared: i === index ? -1 : x.numbers.filter(n => nums.includes(n)).length }))
+    .filter(x => x.shared >= 0)
+    .sort((a, b) => b.shared - a.shared || a.i - b.i)
+    .slice(0, 5);
+
+  // 5. Répétitions depuis les tirages précédents
+  const rep = [];
+  for (let lag = 1; lag <= 3 && index + lag < draws.length; lag++) {
+    const prev = draws[index + lag].numbers;
+    rep.push({ lag, numbers: nums.filter(n => prev.includes(n)), date: draws[index + lag].date });
+  }
+
+  return { draw: d, numbers: nums, runs, decades, lastDigits, sum, avgSum: +avgSum.toFixed(1),
+    sumPct: pct(allSums, sum), evens, odds: k - evens, evensPct: pct(allEvens, evens),
+    lows: nums.filter(n => n <= g.max / 2).length, similar, rep, total: draws.length };
+}
 function erf(x) {  // approximation d'Abramowitz & Stegun (précision ~1e-7)
   const sign = x < 0 ? -1 : 1; x = Math.abs(x);
   const t = 1 / (1 + 0.3275911 * x);
@@ -2075,6 +2176,59 @@ function renderNextDraws() {
 }
 
 let lastGrid = null;
+function renderPortrait() {
+  const host = $("#portraitBody");
+  if (!host) return;
+  const p = drawPortrait(currentGame);
+  const g = GAMES[currentGame];
+  if (!p) { host.innerHTML = ""; $("#portraitPanel").classList.add("hidden"); return; }
+  $("#portraitPanel").classList.remove("hidden");
+  const k = p.numbers.length;
+
+  const runsHtml = p.runs.length
+    ? p.runs.map(r => `<span class="pt-run">${r.map(n => `<span>${n}</span>`).join("")}</span>`).join("") +
+      `<div class="board-sub" style="margin-top:6px">${p.runs.length} suite${p.runs.length > 1 ? "s" : ""} — la plus longue compte ${Math.max(...p.runs.map(r => r.length))} numéros.</div>`
+    : `<div class="board-sub">Aucune suite consécutive dans ce tirage.</div>`;
+
+  const maxDec = Math.max(...p.decades.map(d => d.count), 1);
+  const decHtml = `<div class="pt-bars">` + p.decades.map(d =>
+    `<div class="pt-bar"><b>${d.count}</b><i style="height:${Math.max(d.count / maxDec * 100, 3)}%"></i>` +
+    `<u style="bottom:${(d.expected / maxDec * 100 * 0.72) + 14}%"></u><em>${d.label}</em></div>`).join("") +
+    `</div><div class="board-sub" style="margin-top:8px">Pointillés : la répartition attendue si les numéros se distribuaient uniformément.</div>`;
+
+  const maxDig = Math.max(...p.lastDigits.map(x => x.count), 1);
+  const digHtml = `<div class="pt-bars">` + p.lastDigits.map(x =>
+    `<div class="pt-bar"><b>${x.count || ""}</b><i style="height:${Math.max(x.count / maxDig * 100, 2)}%;${x.count ? "" : "opacity:.25"}"></i><em>${x.digit}</em></div>`).join("") +
+    `</div><div class="board-sub" style="margin-top:8px">Chiffre des unités des 16 numéros tirés.</div>`;
+
+  const rankHtml =
+    `<div class="pt-line"><b>${p.sum}</b><span>somme du tirage · moyenne historique ${p.avgSum}</span></div>` +
+    `<div class="pt-gauge"><i style="left:${p.sumPct}%"></i></div>` +
+    `<div class="board-sub" style="margin-bottom:12px">${p.sumPct}ᵉ percentile — ${p.sumPct >= 75 ? "parmi les tirages à somme élevée" : p.sumPct <= 25 ? "parmi les tirages à somme basse" : "dans la zone centrale"}.</div>` +
+    `<div class="pt-line"><b>${p.evens} / ${p.odds}</b><span>pairs / impairs</span></div>` +
+    `<div class="pt-gauge"><i style="left:${p.evensPct}%"></i></div>` +
+    `<div class="board-sub">${p.evensPct}ᵉ percentile · ${p.lows} numéros dans la moitié basse (1–${g.max / 2}).</div>`;
+
+  const simHtml = p.similar.map(s =>
+    `<div class="pt-line"><b>${s.shared}/${k}</b><span>${fmtDate(s.date)}</span></div>` +
+    `<div class="pt-mini">${s.numbers.map(n => `<span class="${p.numbers.includes(n) ? "on" : ""}">${n}</span>`).join("")}</div>`
+  ).join("") + `<div class="board-sub" style="margin-top:8px">Les tirages passés partageant le plus de numéros avec celui-ci. En couleur : les numéros communs.</div>`;
+
+  const repHtml = p.rep.map(r =>
+    `<div class="pt-line"><b>${r.numbers.length}/${k}</b><span>revenus depuis le tirage du ${fmtDate(r.date)} (J-${r.lag})</span></div>` +
+    (r.numbers.length ? `<div class="pt-mini">${r.numbers.map(n => `<span class="on">${n}</span>`).join("")}</div>` : "")
+  ).join("") + `<div class="board-sub" style="margin-top:8px">En moyenne, ${(k * g.drawSize / g.max).toFixed(1)} numéros se répètent d'un tirage à l'autre par le seul effet du hasard.</div>`;
+
+  host.innerHTML = `<div class="portrait-grid">` +
+    `<div class="pt-box"><div class="pt-h">Suites consécutives</div>${runsHtml}</div>` +
+    `<div class="pt-box"><div class="pt-h">Répartition par dizaine</div>${decHtml}</div>` +
+    `<div class="pt-box"><div class="pt-h">Dernier chiffre</div>${digHtml}</div>` +
+    `<div class="pt-box"><div class="pt-h">Rang parmi ${p.total} tirages</div>${rankHtml}</div>` +
+    `<div class="pt-box"><div class="pt-h">Tirages les plus ressemblants</div>${simHtml}</div>` +
+    `<div class="pt-box"><div class="pt-h">Numéros revenus</div>${repHtml}</div>` +
+    `</div>`;
+}
+
 function renderSmart() {
   const grid = smartGrid(currentGame, activeProfile);
   lastGrid = grid;
@@ -2109,6 +2263,74 @@ document.querySelectorAll("#profileTabs .chip").forEach(c => c.addEventListener(
   renderSmart();
 }));
 $("#smartBtn") && $("#smartBtn").addEventListener("click", renderSmart);
+
+/* ---------- Sélecteur de numéros dépliable (grille cliquable) ---------- */
+const PICKERS = [
+  { btn: "#myNumsPick", box: "#myNumsPicker", input: "#myNumsInput", max: () => GAMES[currentGame].drawSize,
+    after: () => { writeCookie(myNumsKey(), $("#myNumsInput").value.trim(), 365); renderMyNums(); } },
+  { btn: "#btPick",     box: "#btPicker",     input: "#btInput",     max: () => GAMES[currentGame].drawSize,
+    after: () => { if ($("#btOut").innerHTML) renderBacktest(); } },
+  { btn: "#cmpPick",    box: "#cmpPicker",    input: "#cmpInput",    max: () => 8,
+    after: () => { if ($("#cmpOut").innerHTML) renderCompare(); } },
+];
+
+function pickerSelection(input) {
+  return parseNums($(input).value, currentGame);
+}
+
+function renderPicker(p) {
+  const box = $(p.box);
+  if (!box || !box.classList.contains("open")) return;
+  const g = GAMES[currentGame];
+  const max = p.max();
+  const sel = pickerSelection(p.input);
+  box.style.setProperty("--pk-cols", g.cols * 2);
+  box.style.setProperty("--pk-cols-m", g.cols);
+  box.innerHTML =
+    `<div class="picker-head">` +
+    `<span class="picker-count${sel.length >= max ? " full" : ""}">${sel.length} / ${max} sélectionné${sel.length > 1 ? "s" : ""}</span>` +
+    `<span class="picker-acts">` +
+    `<button class="chip" type="button" data-act="clear">Tout effacer</button>` +
+    `<button class="chip" type="button" data-act="close">Terminé</button>` +
+    `</span></div><div class="picker-board"></div>`;
+  const board = box.querySelector(".picker-board");
+  for (let n = 1; n <= g.max; n++) {
+    const c = document.createElement("button");
+    c.type = "button";
+    c.className = "pool-cell" + (sel.includes(n) ? " sel" : "");
+    c.textContent = n;
+    if (!sel.includes(n) && sel.length >= max) c.style.opacity = ".4";
+    c.addEventListener("click", () => {
+      let cur = pickerSelection(p.input);
+      if (cur.includes(n)) cur = cur.filter(x => x !== n);
+      else if (cur.length < max) cur.push(n);
+      else return;
+      cur.sort((a, b) => a - b);
+      $(p.input).value = cur.join(" ");
+      renderPicker(p);
+      p.after();
+    });
+    board.appendChild(c);
+  }
+  box.querySelectorAll("[data-act]").forEach(b => b.addEventListener("click", () => {
+    if (b.dataset.act === "clear") { $(p.input).value = ""; renderPicker(p); p.after(); }
+    else { box.classList.remove("open"); $(p.btn).textContent = "Choisir sur la grille"; }
+  }));
+}
+
+PICKERS.forEach(p => {
+  const btn = $(p.btn);
+  if (!btn) return;
+  btn.addEventListener("click", () => {
+    const box = $(p.box);
+    const open = box.classList.toggle("open");
+    btn.textContent = open ? "Masquer la grille" : "Choisir sur la grille";
+    if (open) renderPicker(p);
+  });
+  $(p.input) && $(p.input).addEventListener("input", () => renderPicker(p));
+});
+
+function refreshPickers() { PICKERS.forEach(renderPicker); }
 
 /* ---------- Analyse rédigée de la grille ---------- */
 $("#aiBtn") && $("#aiBtn").addEventListener("click", async () => {
@@ -2627,6 +2849,8 @@ function renderExtras2() {
   safe("decades", renderDecades);
   safe("next", renderNext);
   safe("fact", renderFact);
+  safe("portrait", renderPortrait);
+  safe("pickers", refreshPickers);
   safe("records", renderRecords);
   safe("compare2", renderGamesComparison);
   safe("nextdraws", renderNextDraws);
