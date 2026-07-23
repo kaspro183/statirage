@@ -306,6 +306,15 @@
     border: 1px solid var(--ligne); border-radius: 999px; padding: 7px 10px; background: #fff;
   }
   .pool-board { display: grid; gap: 5px; margin: 8px 0 4px; grid-template-columns: repeat(var(--pool-cols, 16), 1fr); }
+  .rank-head { display: flex; align-items: center; gap: 10px; padding: 0 0 7px; border-bottom: 1px solid var(--ligne);
+    font-size: 10.5px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; color: var(--muted); }
+  .rank-head .rank-n-h { width: 31px; text-align: center; flex-shrink: 0; }
+  .rank-head .rank-bar-h { flex: 1; min-width: 40px; }
+  .rank-cols { display: flex; gap: 8px; flex-shrink: 0; }
+  .rank-cols b { font: 600 12px 'IBM Plex Mono', monospace; min-width: 32px; text-align: right; font-weight: 600; }
+  .rank-head .rank-cols { font: inherit; }
+  .rank-cols b.near { color: var(--hot); }
+  .rank-cols b.far { color: var(--accent); }
   .rank-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--papier2); }
   .rank-row:last-child { border-bottom: none; }
   .rank-pos { font: 600 11px 'IBM Plex Mono', monospace; color: var(--muted); min-width: 26px; }
@@ -318,7 +327,14 @@
   .rank-bar u { position: absolute; top: -2px; bottom: -2px; width: 1px; background: var(--muted); opacity: .65; }
   .rank-val { font: 600 12.5px 'IBM Plex Mono', monospace; min-width: 74px; text-align: right; }
   .rank-val em { font-style: normal; font-weight: 400; font-size: 11px; color: var(--muted); }
-  @media (max-width: 620px) { .rank-val { min-width: 62px; font-size: 11.5px; } .rank-pos { min-width: 20px; } }
+  @media (max-width: 620px) {
+    .rank-pos { min-width: 18px; font-size: 10px; }
+    .rank-row, .rank-head { gap: 7px; }
+    .rank-cols { gap: 5px; }
+    .rank-cols b { min-width: 26px; font-size: 11px; }
+    .rank-bar { min-width: 24px; }
+    .rank-head { font-size: 9.5px; }
+  }
   .picker { display: none; margin-top: 10px; background: var(--papier2); border-radius: 14px; padding: 13px; }
   .picker.open { display: block; }
   .picker-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 9px; flex-wrap: wrap; }
@@ -823,6 +839,8 @@
       <div class="atelier-tools">
         <button class="chip active" type="button" data-rank="freq">Par fréquence</button>
         <button class="chip" type="button" data-rank="gap">Par écart actuel</button>
+        <button class="chip" type="button" data-rank="maxgap">Par écart max</button>
+        <button class="chip" type="button" data-rank="z">Par Z-score</button>
         <button class="chip" type="button" data-rank="num">Par numéro</button>
       </div>
       <div id="rankBody"></div>
@@ -2188,33 +2206,60 @@ function renderRank() {
   if (!draws || !draws.length) { host.innerHTML = ""; return; }
   const cs = computeStats(draws, windowSize, currentGame);
   if (!cs) { host.innerHTML = ""; return; }
+  const adv = computeAdvanced(draws, windowSize, currentGame);
   const stats = [...cs.stats];
   const total = cs.total;
   const expected = cs.expected;
   const expGap = g.max / g.drawSize;
 
-  if (rankMode === "freq") stats.sort((a, b) => b.freq - a.freq || a.n - b.n);
-  else if (rankMode === "gap") stats.sort((a, b) => b.currentGap - a.currentGap || a.n - b.n);
-  else stats.sort((a, b) => a.n - b.n);
+  const zOf = s => adv && adv.z ? adv.z[s.n] : 0;
+  const sorters = {
+    freq:   (a, b) => b.freq - a.freq || a.n - b.n,
+    gap:    (a, b) => b.currentGap - a.currentGap || a.n - b.n,
+    maxgap: (a, b) => b.maxGap - a.maxGap || a.n - b.n,
+    z:      (a, b) => zOf(b) - zOf(a) || a.n - b.n,
+    num:    (a, b) => a.n - b.n,
+  };
+  stats.sort(sorters[rankMode] || sorters.freq);
 
   const maxFreq = Math.max(...stats.map(s => s.freq), 1);
-  const maxGap = Math.max(...stats.map(s => s.currentGap), 1);
+  const maxCur = Math.max(...stats.map(s => s.currentGap), 1);
+  const maxMax = Math.max(...stats.map(s => s.maxGap), 1);
 
-  host.innerHTML = stats.map((s, i) => {
-    const byGap = rankMode === "gap";
-    const val = byGap ? s.currentGap : s.freq;
-    const ref = byGap ? expGap : expected;
-    const scale = byGap ? maxGap : maxFreq;
-    return `<div class="rank-row">` +
-      `<span class="rank-pos">${rankMode === "num" ? "" : (i + 1) + "."}</span>` +
-      `<a class="rank-n" href="/${currentGame}/numero-${s.n}/">${s.n}</a>` +
-      `<span class="rank-bar"><i style="width:${Math.max(val / scale * 100, 1.5)}%"></i>` +
-      `<u style="left:${Math.min(ref / scale * 100, 100)}%"></u></span>` +
-      `<span class="rank-val">${byGap ? val + " <em>tir.</em>" : val + "× <em>/ " + expected.toFixed(0) + "</em>"}</span>` +
-      `</div>`;
-  }).join("") +
-    `<div class="board-sub" style="margin-top:10px">Le trait vertical marque ${rankMode === "gap" ? `l'écart moyen attendu (${expGap.toFixed(1)} tirages)` : `la fréquence attendue (${expected.toFixed(1)} sorties sur ${total} tirages)`}. ` +
-    `Sur ${total} tirages, un écart de quelques sorties entre le premier et le dernier est le comportement normal du hasard, pas le signe qu'un numéro serait « meilleur ». Touche un numéro pour ouvrir sa fiche.</div>`;
+  // La barre illustre le critère de tri courant
+  const barOf = s => {
+    if (rankMode === "gap")    return { v: s.currentGap, scale: maxCur, ref: expGap };
+    if (rankMode === "maxgap") return { v: s.maxGap, scale: maxMax, ref: expGap };
+    return { v: s.freq, scale: maxFreq, ref: expected };
+  };
+
+  host.innerHTML = `<div class="rank-head">` +
+    `<span class="rank-pos"></span><span class="rank-n-h">N°</span><span class="rank-bar-h">` +
+    (rankMode === "gap" ? "Écart actuel" : rankMode === "maxgap" ? "Record d'absence" : "Fréquence") +
+    `</span><span class="rank-cols">Sorties · Écart · Max · Z</span></div>` +
+    stats.map((s, i) => {
+      const b = barOf(s);
+      const z = zOf(s);
+      const tension = s.maxGap > 0 ? s.currentGap / s.maxGap : 0;
+      return `<div class="rank-row">` +
+        `<span class="rank-pos">${rankMode === "num" ? "" : (i + 1) + "."}</span>` +
+        `<a class="rank-n" href="/${currentGame}/numero-${s.n}/">${s.n}</a>` +
+        `<span class="rank-bar"><i style="width:${Math.max(b.v / b.scale * 100, 1.5)}%"></i>` +
+        `<u style="left:${Math.min(b.ref / b.scale * 100, 100)}%"></u></span>` +
+        `<span class="rank-cols">` +
+        `<b>${s.freq}×</b>` +
+        `<b class="${tension >= 0.85 ? "near" : ""}" title="Écart actuel">${s.currentGap}</b>` +
+        `<b title="Plus longue absence observée">${s.maxGap}</b>` +
+        `<b class="${Math.abs(z) >= 2 ? "far" : ""}" title="Z-score">${(z >= 0 ? "+" : "") + z.toFixed(1)}</b>` +
+        `</span></div>`;
+    }).join("") +
+    `<div class="board-sub" style="margin-top:12px">` +
+    `<strong>Comment lire :</strong> <b>Sorties</b> = nombre d'apparitions sur ${total} tirages (attendu ${expected.toFixed(1)}). ` +
+    `<b>Écart</b> = tirages depuis la dernière sortie. <b>Max</b> = plus longue absence jamais observée ; ` +
+    `un écart actuel proche de ce record apparaît en couleur, mais cela n'annonce rien — un numéro absent n'est jamais « dû ». ` +
+    `<b>Z</b> = distance à la moyenne en écarts-types : au-delà de ±2, l'écart est notable ; au-delà de ±3, il devient rare. ` +
+    `Sur ${total} tirages, des Z entre −2 et +2 sont le comportement normal du hasard. Le trait vertical marque la valeur attendue.` +
+    `</div>`;
 }
 
 document.querySelectorAll("[data-rank]").forEach(b => b.addEventListener("click", () => {
