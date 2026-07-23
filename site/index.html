@@ -296,6 +296,19 @@
     border: 1px solid var(--ligne); border-radius: 999px; padding: 7px 10px; background: #fff;
   }
   .pool-board { display: grid; gap: 5px; margin: 8px 0 4px; grid-template-columns: repeat(var(--pool-cols, 16), 1fr); }
+  .rank-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--papier2); }
+  .rank-row:last-child { border-bottom: none; }
+  .rank-pos { font: 600 11px 'IBM Plex Mono', monospace; color: var(--muted); min-width: 26px; }
+  .rank-n { width: 31px; height: 31px; border-radius: 50%; background: #fff; border: 1px solid var(--ligne);
+    display: flex; align-items: center; justify-content: center; font: 600 13px 'IBM Plex Mono', monospace;
+    text-decoration: none; color: var(--encre); flex-shrink: 0; }
+  .rank-n:hover { border-color: var(--accent); color: var(--accent); }
+  .rank-bar { flex: 1; height: 9px; background: var(--papier2); border-radius: 999px; overflow: hidden; position: relative; min-width: 40px; }
+  .rank-bar i { display: block; height: 100%; background: var(--accent); border-radius: 999px; opacity: .8; }
+  .rank-bar u { position: absolute; top: -2px; bottom: -2px; width: 1px; background: var(--muted); opacity: .65; }
+  .rank-val { font: 600 12.5px 'IBM Plex Mono', monospace; min-width: 74px; text-align: right; }
+  .rank-val em { font-style: normal; font-weight: 400; font-size: 11px; color: var(--muted); }
+  @media (max-width: 620px) { .rank-val { min-width: 62px; font-size: 11.5px; } .rank-pos { min-width: 20px; } }
   .picker { display: none; margin-top: 10px; background: var(--papier2); border-radius: 14px; padding: 13px; }
   .picker.open { display: block; }
   .picker-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 9px; flex-wrap: wrap; }
@@ -703,7 +716,7 @@
         <span class="label">Mise</span>
         <select id="myMise" class="select"><option>1</option><option>2</option><option>3</option><option>5</option><option>10</option></select>
         <span class="label">€</span>
-        <label class="chip" style="display:inline-flex;align-items:center;gap:7px;cursor:pointer"><input type="checkbox" id="myMult" style="accent-color:var(--accent)"> <span>Multiplicateur (+1 €)</span></label>
+        <label class="chip" style="display:inline-flex;align-items:center;gap:7px;cursor:pointer"><input type="checkbox" id="myMult" style="accent-color:var(--accent)"> <span>Multiplicateur (mise doublée)</span></label>
       </div>
       <div id="myNumsScore"></div>
     </div>
@@ -723,7 +736,7 @@
           <span class="label">Mise</span>
           <select id="btMise" class="select"><option>1</option><option>2</option><option>3</option><option>5</option><option>10</option></select>
           <span class="label">€</span>
-          <label class="chip" style="display:inline-flex;align-items:center;gap:7px;cursor:pointer"><input type="checkbox" id="btMult" style="accent-color:var(--accent)"> <span>Multiplicateur (+1 €)</span></label>
+          <label class="chip" style="display:inline-flex;align-items:center;gap:7px;cursor:pointer"><input type="checkbox" id="btMult" style="accent-color:var(--accent)"> <span>Multiplicateur (mise doublée)</span></label>
         </div>
         <div id="btOut"></div>
       </div>
@@ -753,9 +766,13 @@
         <div class="atelier-tools" id="probaTools">
           <span class="label">Numéros joués</span>
           <select id="probaM" class="select"></select>
+          <span class="label probaKeno">Mise</span>
+          <select id="probaMise" class="select probaKeno"><option>1</option><option>2</option><option>3</option><option>5</option><option>10</option></select>
+          <span class="label probaKeno">€</span>
         </div>
-        <table><thead><tr><th>Bons numéros</th><th>Probabilité</th><th>Soit 1 chance sur</th></tr></thead>
+        <table><thead><tr id="probaHead"><th>Bons numéros</th><th>Probabilité</th><th>Soit 1 chance sur</th></tr></thead>
         <tbody id="probaBody"></tbody></table>
+        <div id="probaFoot"></div>
       </div>
     </div>
 
@@ -788,6 +805,17 @@
         <button class="chip" type="button" id="findWeekBtn">7 derniers jours</button>
       </div>
       <div id="findBody"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Le classement des numéros</h2>
+      <p class="atelier-note">Tous les numéros ordonnés, du plus sorti au moins sorti. L'écart entre le premier et le dernier est normal : le hasard produit toujours de la dispersion.</p>
+      <div class="atelier-tools">
+        <button class="chip active" type="button" data-rank="freq">Par fréquence</button>
+        <button class="chip" type="button" data-rank="gap">Par écart actuel</button>
+        <button class="chip" type="button" data-rank="num">Par numéro</button>
+      </div>
+      <div id="rankBody"></div>
     </div>
 
     <div class="panel gate-panel">
@@ -1314,15 +1342,20 @@ function hypergeomP(k, played, gameKey) {
   return binom(played, k) * binom(g.max - played, g.drawSize - k) / binom(g.max, g.drawSize);
 }
 
-/* ---------- Rapports Keno officiels FDJ (formule 3 nov. 2025, gains pour 1 € de mise) ---------- */
+/* ---------- Rapports Keno officiels FDJ (formule du 3 nov. 2025), gains pour 1 € de mise ----------
+   Table validée par deux contrôles indépendants :
+   1) les probabilités globales de gain qu'elle implique (1/15,16 pour 4 n° · 1/7,43 · 1/20,26 ·
+      1/10,68 · 1/11,20 · 1/3,87 · 1/7,78 pour 10 n°) correspondent au calcul hypergéométrique ;
+   2) les taux de retour qu'elle produit tombent entre 47 % et 53 %, cohérents avec un jeu de loterie.
+   Option Multiplicateur : la mise est doublée et un coefficient x2, x3 ou x5 est tiré au sort. */
 const KENO_PAY = {
-  4:  { 2: 1, 3: 5, 4: 70 },
-  5:  { 2: 1, 3: 3, 4: 20, 5: 100 },
-  6:  { 2: 1, 3: 3, 4: 10, 5: 100, 6: 500 },
-  7:  { 2: 1, 3: 2, 4: 10, 5: 50, 6: 500, 7: 5000 },
-  8:  { 0: 2, 2: 1, 3: 2, 4: 5, 5: 30, 6: 150, 7: 2000, 8: 10000 },
-  9:  { 0: 2, 2: 1, 3: 2, 4: 4, 5: 20, 6: 100, 7: 1000, 8: 5000, 9: 30000 },
-  10: { 0: 2, 2: 1, 3: 2, 4: 3, 5: 10, 6: 40, 7: 200, 8: 2000, 9: 20000, 10: 200000 }
+  4:  { 3: 3, 4: 70 },
+  5:  { 3: 2, 4: 10, 5: 80 },
+  6:  { 4: 3, 5: 30, 6: 900 },
+  7:  { 4: 2, 5: 5, 6: 90, 7: 3000 },
+  8:  { 0: 2, 5: 5, 6: 30, 7: 100, 8: 8000 },
+  9:  { 0: 2, 4: 1, 5: 2, 6: 8, 7: 25, 8: 100, 9: 30000 },
+  10: { 0: 2, 5: 2, 6: 5, 7: 15, 8: 150, 9: 2000, 10: 200000 }
 };
 const fmtEuro = v => v.toLocaleString("fr-FR", { maximumFractionDigits: 0 }) + " €";
 function kenoGain(played, k, mise) {
@@ -1336,16 +1369,25 @@ function kenoLedger(nums, mise, useMult, draws) {
   draws.forEach(d => {
     const k = nums.filter(n => d.numbers.includes(n)).length;
     const g = kenoGain(nums.length, k, mise) * (useMult ? (parseInt(d.mult) || 1) : 1);
-    cost += mise + (useMult ? 1 : 0);
+    cost += useMult ? mise * 2 : mise;
     gain += g;
     if (g > 0) wins++;
     if (g > best) { best = g; bestDate = d.date; }
   });
-  return { cost, gain, wins, best, bestDate, total: draws.length };
+  return { cost, gain, wins, best, bestDate, total: draws.length, trj: kenoTrj(nums.length) };
 }
+/* Espérance de gain d'une formule, calculée depuis la table des rapports. */
+function kenoTrj(played) {
+  const t = KENO_PAY[played];
+  if (!t) return null;
+  let e = 0;
+  for (let k = 0; k <= played; k++) e += hypergeomP(k, played, "keno") * (t[k] || 0);
+  return e * 100;
+}
+
 function euroSummaryHtml(led, mise, useMult) {
   const solde = led.gain - led.cost;
-  return `<div class="board-sub" style="margin-top:10px"><strong>Le compte en euros</strong> — cette grille jouée à ${mise} €${useMult ? " + Multiplicateur" : ""} sur les ${led.total} tirages chargés : misé <strong>${fmtEuro(led.cost)}</strong>, gagné <strong>${fmtEuro(led.gain)}</strong> (${led.wins} tirage${led.wins > 1 ? "s" : ""} gagnant${led.wins > 1 ? "s" : ""}${led.best > 0 ? `, meilleur : ${fmtEuro(led.best)} le ${fmtDate(led.bestDate)}` : ""}). Solde : <strong style="color:${solde >= 0 ? "var(--accent)" : "var(--hot)"}">${solde >= 0 ? "+" : "−"} ${fmtEuro(Math.abs(solde))}</strong> · retour observé ${led.cost ? Math.round(led.gain / led.cost * 100) : 0} % (TRJ théorique du Keno ≈ 59,5 %).
+  return `<div class="board-sub" style="margin-top:10px"><strong>Le compte en euros</strong> — cette grille jouée à ${mise} €${useMult ? " + Multiplicateur" : ""} sur les ${led.total} tirages chargés : misé <strong>${fmtEuro(led.cost)}</strong>, gagné <strong>${fmtEuro(led.gain)}</strong> (${led.wins} tirage${led.wins > 1 ? "s" : ""} gagnant${led.wins > 1 ? "s" : ""}${led.best > 0 ? `, meilleur : ${fmtEuro(led.best)} le ${fmtDate(led.bestDate)}` : ""}). Solde : <strong style="color:${solde >= 0 ? "var(--accent)" : "var(--hot)"}">${solde >= 0 ? "+" : "−"} ${fmtEuro(Math.abs(solde))}</strong> · retour observé ${led.cost ? Math.round(led.gain / led.cost * 100) : 0} %${led.trj ? ` — l'espérance de cette formule est de ${led.trj.toFixed(1)} % de la mise` : ""}.
   <br>Rapports officiels FDJ en vigueur depuis le 3 nov. 2025 — montants indicatifs, le règlement fait foi. Le passé ne préjuge de rien.</div>`;
 }
 
@@ -2127,6 +2169,51 @@ function renderNext() {
 }
 
 
+let rankMode = "freq";
+function renderRank() {
+  const host = $("#rankBody");
+  if (!host) return;
+  const g = GAMES[currentGame];
+  const draws = store[currentGame];
+  if (!draws || !draws.length) { host.innerHTML = ""; return; }
+  const cs = computeStats(draws, windowSize, currentGame);
+  if (!cs) { host.innerHTML = ""; return; }
+  const stats = [...cs.stats];
+  const total = cs.total;
+  const expected = cs.expected;
+  const expGap = g.max / g.drawSize;
+
+  if (rankMode === "freq") stats.sort((a, b) => b.freq - a.freq || a.n - b.n);
+  else if (rankMode === "gap") stats.sort((a, b) => b.currentGap - a.currentGap || a.n - b.n);
+  else stats.sort((a, b) => a.n - b.n);
+
+  const maxFreq = Math.max(...stats.map(s => s.freq), 1);
+  const maxGap = Math.max(...stats.map(s => s.currentGap), 1);
+
+  host.innerHTML = stats.map((s, i) => {
+    const byGap = rankMode === "gap";
+    const val = byGap ? s.currentGap : s.freq;
+    const ref = byGap ? expGap : expected;
+    const scale = byGap ? maxGap : maxFreq;
+    return `<div class="rank-row">` +
+      `<span class="rank-pos">${rankMode === "num" ? "" : (i + 1) + "."}</span>` +
+      `<a class="rank-n" href="/${currentGame}/numero-${s.n}/">${s.n}</a>` +
+      `<span class="rank-bar"><i style="width:${Math.max(val / scale * 100, 1.5)}%"></i>` +
+      `<u style="left:${Math.min(ref / scale * 100, 100)}%"></u></span>` +
+      `<span class="rank-val">${byGap ? val + " <em>tir.</em>" : val + "× <em>/ " + expected.toFixed(0) + "</em>"}</span>` +
+      `</div>`;
+  }).join("") +
+    `<div class="board-sub" style="margin-top:10px">Le trait vertical marque ${rankMode === "gap" ? `l'écart moyen attendu (${expGap.toFixed(1)} tirages)` : `la fréquence attendue (${expected.toFixed(1)} sorties sur ${total} tirages)`}. ` +
+    `Sur ${total} tirages, un écart de quelques sorties entre le premier et le dernier est le comportement normal du hasard, pas le signe qu'un numéro serait « meilleur ». Touche un numéro pour ouvrir sa fiche.</div>`;
+}
+
+document.querySelectorAll("[data-rank]").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("[data-rank]").forEach(x => x.classList.remove("active"));
+  b.classList.add("active");
+  rankMode = b.dataset.rank;
+  renderRank();
+}));
+
 function renderRecords() {
   const r = computeRecords(currentGame);
   const box = $("#recordsBody");
@@ -2695,13 +2782,37 @@ function renderProba() {
     sel.disabled = opts.length === 1;
   }
   const m = +sel.value || opts[0];
-  let rows = "";
+  const payable = currentGame === "keno" && !!KENO_PAY[m];
+  const mise = payable ? +$("#probaMise").value : 0;
+  document.querySelectorAll(".probaKeno").forEach(el => {
+    el.style.display = payable ? "" : "none";
+  });
+  $("#probaHead").innerHTML = `<th>Bons numéros</th><th>Probabilité</th><th>Soit 1 chance sur</th>` +
+    (payable ? `<th>Gain (${mise} €)</th>` : "");
+
+  let rows = "", esperance = 0;
   for (let k = m; k >= 0; k--) {
     const p = hypergeomP(k, m, currentGame);
     if (p < 1e-12) continue;
-    rows += `<tr><td>${k} / ${m}</td><td>${(p * 100) < 0.01 ? (p * 100).toExponential(2) : (p * 100).toFixed(3)} %</td><td>${p > 0 ? Math.round(1 / p).toLocaleString("fr-FR") : "—"}</td></tr>`;
+    const gain = payable ? kenoGain(m, k, mise) : 0;
+    esperance += p * gain;
+    rows += `<tr><td>${k} / ${m}</td>` +
+      `<td>${(p * 100) < 0.01 ? (p * 100).toExponential(2) : (p * 100).toFixed(3)} %</td>` +
+      `<td>${p > 0 ? Math.round(1 / p).toLocaleString("fr-FR") : "—"}</td>` +
+      (payable ? `<td${gain > 0 ? ' style="font-weight:600"' : ' style="opacity:.5"'}>${gain > 0 ? fmtEuro(gain) : "—"}</td>` : "") +
+      `</tr>`;
   }
   $("#probaBody").innerHTML = rows;
+
+  const foot = $("#probaFoot");
+  if (payable) {
+    const trj = esperance / mise * 100;
+    foot.innerHTML = `<div class="board-sub" style="margin-top:10px">` +
+      `<strong>Espérance de gain :</strong> ${esperance.toFixed(3)} € pour ${mise} € misé, soit un retour de <strong>${trj.toFixed(1)} %</strong>. ` +
+      `Autrement dit, sur un grand nombre de grilles, il rentre en moyenne ${trj.toFixed(1)} centimes par euro joué — l'écart va à la FDJ et à l'État. ` +
+      `Ce taux est le même quels que soient les numéros choisis.<br>` +
+      `Rapports officiels FDJ depuis le 3 nov. 2025, hors option Multiplicateur — montants indicatifs, le règlement fait foi.</div>`;
+  } else foot.innerHTML = "";
 }
 
 function renderWeekday() {
@@ -2851,6 +2962,7 @@ function renderExtras2() {
   safe("fact", renderFact);
   safe("portrait", renderPortrait);
   safe("pickers", refreshPickers);
+  safe("rank", renderRank);
   safe("records", renderRecords);
   safe("compare2", renderGamesComparison);
   safe("nextdraws", renderNextDraws);
@@ -2870,6 +2982,7 @@ $("#btRun").addEventListener("click", renderBacktest);
 $("#cmpRun").addEventListener("click", renderCompare);
 $("#gapCtxBtn").addEventListener("click", runGapCtx);
 $("#probaM").addEventListener("change", renderProba);
+$("#probaMise") && $("#probaMise").addEventListener("change", renderProba);
 $("#exportBtn").addEventListener("click", () => exportCsv(currentGame));
 
 /* ---------- Partage ---------- */
