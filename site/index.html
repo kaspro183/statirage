@@ -712,6 +712,21 @@
       </div>
     </div>
 
+    <div class="panel">
+      <h2>Retrouver un tirage</h2>
+      <p class="atelier-note">Consultez les tirages d'une date précise, ou d'une période complète.</p>
+      <div class="atelier-tools">
+        <span class="label">Du</span>
+        <input type="date" id="dateFrom" class="select">
+        <span class="label">au (facultatif)</span>
+        <input type="date" id="dateTo" class="select">
+        <button class="btn" type="button" id="findBtn">Rechercher</button>
+        <button class="chip" type="button" id="findTodayBtn">Aujourd'hui</button>
+        <button class="chip" type="button" id="findWeekBtn">7 derniers jours</button>
+      </div>
+      <div id="findBody"></div>
+    </div>
+
     <div class="panel gate-panel">
       <h2>Les records</h2>
       <p class="atelier-note">Les extrêmes observés depuis le début de l'historique. Des curiosités, pas des présages.</p>
@@ -1521,6 +1536,26 @@ function nextDraws() {
     out.push({ key, label: GAMES[key].label, when: best, freq: sc.label });
   }
   return out.sort((a, b) => (a.when || 0) - (b.when || 0));
+}
+
+
+/* ---------- Recherche de tirages par date ---------- */
+function findDraws(gameKey, fromStr, toStr) {
+  const draws = store[gameKey];
+  if (!draws.length) return { list: [], error: "Aucune donnée chargée." };
+  const parse = (v) => {
+    if (!v) return null;
+    const d = new Date(v + "T12:00:00");
+    return isNaN(d) ? null : d;
+  };
+  const from = parse(fromStr), to = parse(toStr) || parse(fromStr);
+  if (!from) return { list: [], error: "Choisis au moins une date de début." };
+  if (to && to < from) return { list: [], error: "La date de fin est antérieure à la date de début." };
+  const start = new Date(from); start.setHours(0, 0, 0, 0);
+  const end = new Date(to); end.setHours(23, 59, 59, 999);
+  const list = draws.filter(d => d.date >= start && d.date <= end)
+    .sort((a, b) => a.date - b.date || (a.time > b.time ? 1 : -1));
+  return { list, error: null, from: start, to: end };
 }
 
 /* ---------- Rendu ---------- */
@@ -2522,6 +2557,50 @@ async function shareSite() {
   }
 }
 $("#shareBtn") && $("#shareBtn").addEventListener("click", shareSite);
+
+function renderFind() {
+  const res = findDraws(currentGame, $("#dateFrom").value, $("#dateTo").value);
+  const box = $("#findBody");
+  if (res.error) { box.innerHTML = `<p class="board-sub" style="margin-top:10px">${res.error}</p>`; return; }
+  if (!res.list.length) {
+    box.innerHTML = '<p class="board-sub" style="margin-top:10px">Aucun tirage sur cette période. Vérifie que la date est couverte par l\'historique chargé.</p>';
+    return;
+  }
+  const g = GAMES[currentGame];
+  const period = res.from.toDateString() === res.to.toDateString()
+    ? fmtDate(res.from)
+    : `du ${fmtDate(res.from)} au ${fmtDate(res.to)}`;
+  box.innerHTML =
+    `<p class="board-sub" style="margin-top:10px">${res.list.length} tirage${res.list.length > 1 ? "s" : ""} — ${period}</p>` +
+    res.list.map(d => {
+      const sum = d.numbers.reduce((a, b) => a + b, 0);
+      const evens = d.numbers.filter(n => n % 2 === 0).length;
+      return `<div class="draw-line"><span class="draw-date">${d.date.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}${d.time && d.time !== "unique" ? " · " + d.time : ""}</span>` +
+        d.numbers.map(n => `<span class="ball">${n}</span>`).join("") +
+        d.extras.map(n => `<span class="ball star">${n}</span>`).join("") +
+        `<span class="draw-date" style="min-width:auto;margin-left:8px">somme ${sum} · ${evens}P/${d.numbers.length - evens}I</span></div>`;
+    }).join("");
+}
+
+function setFindRange(days) {
+  const iso = (d) => d.toISOString().slice(0, 10);
+  const last = store[currentGame].length ? store[currentGame][0].date : new Date();
+  if (days === 0) {
+    $("#dateFrom").value = iso(last);
+    $("#dateTo").value = "";
+  } else {
+    const from = new Date(last); from.setDate(last.getDate() - days + 1);
+    $("#dateFrom").value = iso(from);
+    $("#dateTo").value = iso(last);
+  }
+  renderFind();
+}
+$("#findBtn") && $("#findBtn").addEventListener("click", renderFind);
+$("#findTodayBtn") && $("#findTodayBtn").addEventListener("click", () => setFindRange(0));
+$("#findWeekBtn") && $("#findWeekBtn").addEventListener("click", () => setFindRange(7));
+$("#dateFrom") && $("#dateFrom").addEventListener("change", renderFind);
+$("#dateTo") && $("#dateTo").addEventListener("change", renderFind);
+
 
 
 
