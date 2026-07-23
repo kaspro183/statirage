@@ -247,6 +247,11 @@
   .decade-bar { height: 100%; background: var(--accent); border-radius: 5px; }
   .decade-val { font: 600 12px 'IBM Plex Mono', monospace; min-width: 60px; text-align: right; }
   .smart-grid { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 10px; }
+  .metrics-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin-top: 14px; }
+  .metric-box { background: var(--papier-2); border-radius: 8px; padding: 8px 10px; }
+  .metric-box .m-label { font-size: 11px; color: var(--muted); }
+  .metric-box .m-val { font: 600 15px 'IBM Plex Mono', monospace; }
+  .profile-note { font-size: 12.5px; color: var(--muted); margin-top: 12px; line-height: 1.55; max-width: 75ch; }
   .smart-grid .ball { width: 34px; height: 34px; font-size: 14px; }
   .atelier-note { font-size: 13.5px; color: var(--muted); margin-bottom: 14px; max-width: 70ch; }
   .atelier-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0; }
@@ -571,10 +576,17 @@
     </div>
 
     <div class="panel gate-panel">
-      <h2>Générateur de grille équilibrée</h2>
-      <p class="atelier-note">Une grille dont la somme, l'équilibre pairs/impairs et bas/haut collent aux moyennes historiques. Ça ne prédit rien — mais ça évite les grilles « improbables » (que des petits, que des pairs…).</p>
+      <h2>Le générateur statistique</h2>
+      <p class="atelier-note">Cinq profils, cinq façons de composer une grille à partir de critères explicites. Aucun ne modifie vos chances — ils structurent le choix.</p>
+      <div class="atelier-tools" id="profileTabs">
+        <button class="chip active" data-profile="balanced">Équilibrée</button>
+        <button class="chip" data-profile="cold">Les retardataires</button>
+        <button class="chip" data-profile="hot">Les habituées</button>
+        <button class="chip" data-profile="contrarian">Anti-consensus</button>
+        <button class="chip" data-profile="random">Au hasard pur</button>
+      </div>
       <div class="atelier-tools">
-        <button class="btn" type="button" id="smartBtn">Générer une grille</button>
+        <button class="btn" type="button" id="smartBtn">Générer la grille</button>
       </div>
       <div id="smartBody"></div>
     </div>
@@ -1264,32 +1276,96 @@ function nextNumberStats(target, gameKey) {
 
 /* Générateur "intelligent" : grille respectant les moyennes historiques
    (somme proche de la théorique, équilibre pairs/impairs et bas/haut). */
-function smartGrid(gameKey) {
+/* Générateur statistique : 5 profils, chacun avec ses critères explicites.
+   Aucun ne modifie l'espérance de gain — ils structurent la sélection. */
+const GRID_PROFILES = {
+  balanced: {
+    label: "Équilibrée",
+    note: "Somme, équilibre pairs/impairs et bas/haut au plus près des moyennes historiques. Le profil le plus « typique » d'un tirage réel.",
+  },
+  cold: {
+    label: "Les retardataires",
+    note: "Les numéros aux plus gros écarts actuels. Un retard n'augmente en rien la probabilité de sortie — le hasard n'a pas de mémoire.",
+  },
+  hot: {
+    label: "Les habituées",
+    note: "Les numéros les plus sortis sur la fenêtre choisie. Une fréquence passée élevée ne prédit rien pour le prochain tirage.",
+  },
+  contrarian: {
+    label: "Anti-consensus",
+    note: "Écarte les numéros que tout le monde joue (1–31, les dates de naissance). Ne change pas vos chances de gagner — mais réduit le risque de partager le gain.",
+  },
+  random: {
+    label: "Au hasard pur",
+    note: "Un tirage aléatoire sans aucun critère. La référence pour comparer les autres profils.",
+  },
+};
+
+function gridMetrics(nums, gameKey) {
   const g = GAMES[gameKey];
-  const targetSum = g.drawSize * (g.max + 1) / 2;
-  const targetEven = Math.round(g.drawSize / 2);
-  const targetLow = Math.round(g.drawSize / 2);
   const half = g.max / 2;
-  let best = null, bestScore = Infinity;
-  for (let attempt = 0; attempt < 400; attempt++) {
-    const pool = Array.from({ length: g.max }, (_, i) => i + 1);
-    for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
-    const pick = pool.slice(0, g.drawSize).sort((a, b) => a - b);
-    const sum = pick.reduce((a, b) => a + b, 0);
-    const even = pick.filter(n => n % 2 === 0).length;
-    const low = pick.filter(n => n <= half).length;
-    const score = Math.abs(sum - targetSum) / targetSum * 3
-      + Math.abs(even - targetEven) + Math.abs(low - targetLow);
-    if (score < bestScore) { bestScore = score; best = pick; }
+  const stats = store[gameKey].length ? computeStats(store[gameKey], windowSize, gameKey).stats : null;
+  let consec = 0;
+  for (let i = 1; i < nums.length; i++) if (nums[i] === nums[i - 1] + 1) consec++;
+  const gaps = stats ? nums.map(n => stats[n - 1].currentGap) : [];
+  return {
+    sum: nums.reduce((a, b) => a + b, 0),
+    targetSum: g.drawSize * (g.max + 1) / 2,
+    evens: nums.filter(n => n % 2 === 0).length,
+    lows: nums.filter(n => n <= half).length,
+    consec,
+    avgGap: gaps.length ? gaps.reduce((a, b) => a + b, 0) / gaps.length : null,
+  };
+}
+
+function smartGrid(gameKey, profile = "balanced") {
+  const g = GAMES[gameKey];
+  const k = g.drawSize;
+  const half = g.max / 2;
+  const draws = store[gameKey];
+  const stats = draws.length ? computeStats(draws, windowSize, gameKey).stats : null;
+  const shuffle = (arr) => {
+    for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; }
+    return arr;
+  };
+  let numbers;
+
+  if (profile === "cold" && stats) {
+    // Les plus gros écarts, avec un peu d'aléa parmi les 2k premiers
+    const pool = [...stats].sort((a, b) => b.currentGap - a.currentGap).slice(0, Math.min(2 * k, g.max)).map(s => s.n);
+    numbers = shuffle(pool).slice(0, k);
+  } else if (profile === "hot" && stats) {
+    const pool = [...stats].sort((a, b) => b.freq - a.freq).slice(0, Math.min(2 * k, g.max)).map(s => s.n);
+    numbers = shuffle(pool).slice(0, k);
+  } else if (profile === "contrarian") {
+    // Écarte 1–31 (dates) tant qu'il reste assez de numéros au-dessus
+    const above = Array.from({ length: g.max }, (_, i) => i + 1).filter(n => n > 31);
+    const pool = above.length >= k ? above : Array.from({ length: g.max }, (_, i) => i + 1).filter(n => n > Math.floor(g.max / 3));
+    numbers = shuffle([...pool]).slice(0, k);
+  } else if (profile === "random") {
+    numbers = shuffle(Array.from({ length: g.max }, (_, i) => i + 1)).slice(0, k);
+  } else {
+    // Équilibrée : meilleure grille sur 400 tirages selon somme + équilibres
+    const targetSum = k * (g.max + 1) / 2, targetEven = Math.round(k / 2), targetLow = Math.round(k / 2);
+    let best = null, bestScore = Infinity;
+    for (let a = 0; a < 400; a++) {
+      const pick = shuffle(Array.from({ length: g.max }, (_, i) => i + 1)).slice(0, k).sort((x, y) => x - y);
+      const sum = pick.reduce((p, q) => p + q, 0);
+      const even = pick.filter(n => n % 2 === 0).length;
+      const low = pick.filter(n => n <= half).length;
+      const score = Math.abs(sum - targetSum) / targetSum * 3 + Math.abs(even - targetEven) + Math.abs(low - targetLow);
+      if (score < bestScore) { bestScore = score; best = pick; }
+    }
+    numbers = best;
   }
+  numbers = [...new Set(numbers)].sort((a, b) => a - b);
+
   const extras = [];
   if (g.extraMax) {
-    const ep = Array.from({ length: g.extraMax }, (_, i) => i + 1);
-    for (let i = ep.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [ep[i], ep[j]] = [ep[j], ep[i]]; }
     const cnt = gameKey === "euromillions" ? 2 : 1;
-    extras.push(...ep.slice(0, cnt).sort((a, b) => a - b));
+    extras.push(...shuffle(Array.from({ length: g.extraMax }, (_, i) => i + 1)).slice(0, cnt).sort((a, b) => a - b));
   }
-  return { numbers: best, extras, sum: best.reduce((a, b) => a + b, 0), targetSum };
+  return { numbers, extras, profile, metrics: gridMetrics(numbers, gameKey) };
 }
 
 /* ---------- Rendu ---------- */
@@ -1698,16 +1774,36 @@ function renderNext() {
 }
 
 function renderSmart() {
-  const grid = smartGrid(currentGame);
+  const grid = smartGrid(currentGame, activeProfile);
+  const m = grid.metrics;
+  const p = GRID_PROFILES[activeProfile];
+  const k = grid.numbers.length;
   $("#smartBody").innerHTML =
+    `<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:12px">` +
+    `<span style="font-weight:600">${p.label}</span>` +
+    `<span class="board-sub">somme ${m.sum} · cible ${m.targetSum.toFixed(0)}</span></div>` +
     '<div class="smart-grid">' +
     grid.numbers.map(n => `<span class="ball">${n}</span>`).join("") +
     grid.extras.map(n => `<span class="ball star">${n}</span>`).join("") +
     '</div>' +
-    `<p class="board-sub" style="margin-top:8px">Somme ${grid.sum} (cible ~${grid.targetSum.toFixed(0)}). Rappel : chaque grille a exactement les mêmes chances qu'une grille au hasard.</p>`;
+    '<div class="metrics-row">' +
+    `<div class="metric-box"><div class="m-label">Pairs / impairs</div><div class="m-val">${m.evens} / ${k - m.evens}</div></div>` +
+    `<div class="metric-box"><div class="m-label">Bas / haut</div><div class="m-val">${m.lows} / ${k - m.lows}</div></div>` +
+    `<div class="metric-box"><div class="m-label">Consécutifs</div><div class="m-val">${m.consec}</div></div>` +
+    (m.avgGap !== null ? `<div class="metric-box"><div class="m-label">Écart moyen</div><div class="m-val">${m.avgGap.toFixed(1)}</div></div>` : "") +
+    '</div>' +
+    `<p class="profile-note"><b>Critère :</b> ${p.note}</p>` +
+    `<p class="profile-note">Cette grille a exactement les mêmes chances qu'une grille prise au hasard.</p>`;
 }
 
 $("#nextNum") && $("#nextNum").addEventListener("change", renderNext);
+let activeProfile = "balanced";
+document.querySelectorAll("#profileTabs .chip").forEach(c => c.addEventListener("click", () => {
+  document.querySelectorAll("#profileTabs .chip").forEach(x => x.classList.remove("active"));
+  c.classList.add("active");
+  activeProfile = c.dataset.profile;
+  renderSmart();
+}));
 $("#smartBtn") && $("#smartBtn").addEventListener("click", renderSmart);
 
 /* ---------- Atelier : état & interactions ---------- */
