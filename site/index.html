@@ -196,6 +196,10 @@
     border-radius: 20px; padding: 24px;
     box-shadow: 0 14px 34px rgba(0,0,0,.24);
   }
+  /* Espacement vertical uniforme entre blocs de premier niveau.
+     Les panneaux à l'intérieur d'une .row sont espacés par le gap de la grille. */
+  #app > .panel, #app > .board-card, #app > .row { margin-top: 16px; }
+  .row > .panel, .row > .board-card { margin-top: 0; }
   .board-title { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 22px; margin-bottom: 3px; }
   .board-sub { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
   .portrait-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin-top: 14px; }
@@ -244,7 +248,7 @@
   .extra-ball .num { font: 600 14px 'IBM Plex Mono', monospace; display: block; }
   .extra-ball .val { font: 400 10.5px 'IBM Plex Mono', monospace; opacity: .85; }
 
-  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   @media (max-width: 720px) { .row { grid-template-columns: 1fr; } #board { gap: 5px; } .orb { width: 38px; height: 38px; font-size: 14px; } }
   .panel h2 { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 19px; margin-bottom: 10px; }
   .panel h2.hot { color: var(--hot); } .panel h2.cold { color: var(--cold); }
