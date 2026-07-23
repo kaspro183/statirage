@@ -1029,10 +1029,10 @@
    ===================================================================== */
 
 const GAMES = {
-  keno:         { label: "Keno",         max: 56, drawSize: 16, cols: 8,  extraMax: 0,  extraLabel: "" },
-  euromillions: { label: "EuroMillions", max: 50, drawSize: 5,  cols: 10, extraMax: 12, extraLabel: "Étoiles" },
-  loto:         { label: "Loto",         max: 49, drawSize: 5,  cols: 7,  extraMax: 10, extraLabel: "Numéro chance" },
-  eurodreams:   { label: "EuroDreams",   max: 40, drawSize: 6,  cols: 8,  extraMax: 5,  extraLabel: "Numéro Dream" },
+  keno:         { label: "Keno",         max: 56, drawSize: 16, cols: 8,  extraMax: 0,  extraDraw: 0, extraLabel: "" },
+  euromillions: { label: "EuroMillions", max: 50, drawSize: 5,  cols: 10, extraMax: 12, extraDraw: 2, extraLabel: "Étoiles" },
+  loto:         { label: "Loto",         max: 49, drawSize: 5,  cols: 7,  extraMax: 10, extraDraw: 1, extraLabel: "Numéro chance" },
+  eurodreams:   { label: "EuroDreams",   max: 40, drawSize: 6,  cols: 8,  extraMax: 5,  extraDraw: 1, extraLabel: "Numéro Dream" },
 };
 
 /* Couleurs par jeu, reprises de l'univers des cartes FDJ :
@@ -3057,6 +3057,34 @@ function renderProba() {
     (payable ? `<th>Gain (${mise} €)</th>` : "");
 
   let rows = "", esperance = 0;
+  if (g.extraMax) {
+    // Jeux à complémentaires : les deux tirages sont indépendants, les probabilités se multiplient.
+    const e = g.extraDraw;
+    const pExtra = k => (k > e ? 0 : binom(e, k) * binom(g.extraMax - e, e - k) / binom(g.extraMax, e));
+    const label = g.extraLabel.toLowerCase();
+    for (let kn = m; kn >= 0; kn--) {
+      const pn = hypergeomP(kn, m, currentGame);
+      if (pn < 1e-12) continue;
+      for (let ke = e; ke >= 0; ke--) {
+        const p = pn * pExtra(ke);
+        if (p < 1e-11) continue;
+        rows += `<tr><td>${kn} / ${m}</td><td>${ke} / ${e}</td>` +
+          `<td>${(p * 100) < 0.01 ? (p * 100).toExponential(2) : (p * 100).toFixed(4)} %</td>` +
+          `<td>${Math.round(1 / p).toLocaleString("fr-FR")}</td></tr>`;
+      }
+    }
+    $("#probaHead").innerHTML = `<th>Bons numéros</th><th>${g.extraLabel}</th><th>Probabilité</th><th>Soit 1 chance sur</th>`;
+    $("#probaBody").innerHTML = rows;
+    const pAll = hypergeomP(m, m, currentGame) * pExtra(e);
+    const pNumsOnly = hypergeomP(m, m, currentGame);
+    $("#probaFoot").innerHTML = `<div class="board-sub" style="margin-top:10px">` +
+      `${g.extraLabel} : ${e} tiré${e > 1 ? "s" : ""} parmi ${g.extraMax}, séparément des numéros — les deux probabilités se multiplient. ` +
+      `Le rang maximum (${m} numéros + ${e} ${label}) vaut <strong>1 chance sur ${Math.round(1 / pAll).toLocaleString("fr-FR")}</strong>, ` +
+      `contre 1 sur ${Math.round(1 / pNumsOnly).toLocaleString("fr-FR")} pour les numéros seuls : ` +
+      `le second tirage divise encore vos chances par ${Math.round(pNumsOnly / pAll).toLocaleString("fr-FR")}.</div>`;
+    return;
+  }
+
   for (let k = m; k >= 0; k--) {
     const p = hypergeomP(k, m, currentGame);
     if (p < 1e-12) continue;
