@@ -247,6 +247,15 @@
   .decade-bar { height: 100%; background: var(--accent); border-radius: 5px; }
   .decade-val { font: 600 12px 'IBM Plex Mono', monospace; min-width: 60px; text-align: right; }
   .smart-grid { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 10px; }
+  .record-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin-top: 12px; }
+  .record-card { background: var(--papier-2); border-radius: 10px; padding: 12px 14px; }
+  .record-card .r-title { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
+  .record-card .r-val { font: 800 22px 'Poppins', sans-serif; color: var(--accent); margin: 3px 0; }
+  .record-card .r-sub { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .next-row { display: flex; align-items: baseline; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--papier-2); }
+  .next-row .n-game { font-weight: 600; min-width: 100px; }
+  .next-row .n-when { font: 600 13px 'IBM Plex Mono', monospace; }
+  .next-row .n-freq { font-size: 12px; color: var(--muted); }
   .metrics-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin-top: 14px; }
   .metric-box { background: var(--papier-2); border-radius: 8px; padding: 8px 10px; }
   .metric-box .m-label { font-size: 11px; color: var(--muted); }
@@ -457,7 +466,8 @@
       <button class="chip" data-win="100">100</button>
       <button class="chip" data-win="0">Tout</button>
       <span class="label" style="margin-left:12px">Couleur</span>
-      <button class="chip" id="exportBtn" style="margin-left:auto">Exporter CSV</button>
+      <button class="chip" id="shareBtn" style="margin-left:auto">Partager</button>
+      <button class="chip" id="exportBtn">Exporter CSV</button>
       <div class="toggle">
         <button data-mode="freq" class="active">Fréquence</button>
         <button data-mode="gap">Écart</button>
@@ -699,6 +709,27 @@
         <p class="atelier-note">Répartition observée des multiplicateurs sur l'historique chargé.</p>
         <table><thead><tr><th>Multiplicateur</th><th>Sorties</th><th>Part</th></tr></thead>
         <tbody id="multBody"></tbody></table>
+      </div>
+    </div>
+
+    <div class="panel gate-panel">
+      <h2>Les records</h2>
+      <p class="atelier-note">Les extrêmes observés depuis le début de l'historique. Des curiosités, pas des présages.</p>
+      <div id="recordsBody"></div>
+    </div>
+
+    <div class="row">
+      <div class="panel">
+        <h2>Prochains tirages</h2>
+        <p class="atelier-note">Les rendez-vous à venir.</p>
+        <div id="nextBody2"></div>
+      </div>
+      <div class="panel gate-panel">
+        <h2>Les quatre jeux comparés</h2>
+        <p class="atelier-note">Même méthode, quatre jeux : lequel a la structure la plus régulière ?</p>
+        <div style="overflow-x:auto"><table><thead><tr><th>Jeu</th><th>Formule</th><th>Tirages</th><th>Chi² (p)</th><th>|Z| max</th></tr></thead>
+        <tbody id="compareBody"></tbody></table></div>
+        <p class="board-sub" style="margin-top:10px">Une p-value au-dessus de 0,05 signifie « conforme au hasard ». C'est le cas partout — et c'est rassurant.</p>
       </div>
     </div>
 
@@ -1377,6 +1408,121 @@ function smartGrid(gameKey, profile = "balanced") {
   return { numbers, extras, profile, metrics: gridMetrics(numbers, gameKey) };
 }
 
+
+/* ---------- Records historiques ---------- */
+function computeRecords(gameKey) {
+  const g = GAMES[gameKey];
+  const draws = store[gameKey];
+  if (draws.length < 10) return null;
+  const chrono = [...draws].reverse();          // ancien -> récent
+  const N = chrono.length;
+
+  // Plus gros écart jamais observé + écart actuel record
+  const lastIdx = new Array(g.max + 1).fill(-1);
+  let maxGap = { gap: -1, n: 0, date: null };
+  chrono.forEach((d, i) => {
+    d.numbers.forEach(n => {
+      const gap = lastIdx[n] === -1 ? i : i - lastIdx[n] - 1;
+      if (gap > maxGap.gap) maxGap = { gap, n, date: d.date };
+      lastIdx[n] = i;
+    });
+  });
+
+  // Plus longue série (numéro sorti N tirages d'affilée)
+  let streak = { len: 0, n: 0, date: null };
+  const run = new Array(g.max + 1).fill(0);
+  chrono.forEach(d => {
+    const inDraw = new Set(d.numbers);
+    for (let n = 1; n <= g.max; n++) {
+      if (inDraw.has(n)) {
+        run[n]++;
+        if (run[n] > streak.len) streak = { len: run[n], n, date: d.date };
+      } else run[n] = 0;
+    }
+  });
+
+  // Sommes extrêmes
+  let minSum = { v: Infinity, date: null, nums: [] }, maxSum = { v: -1, date: null, nums: [] };
+  chrono.forEach(d => {
+    const v = d.numbers.reduce((a, b) => a + b, 0);
+    if (v < minSum.v) minSum = { v, date: d.date, nums: d.numbers };
+    if (v > maxSum.v) maxSum = { v, date: d.date, nums: d.numbers };
+  });
+
+  // Plus longue suite de consécutifs dans un même tirage
+  let bestConsec = { len: 0, date: null, from: 0 };
+  chrono.forEach(d => {
+    let len = 1, start = d.numbers[0];
+    for (let i = 1; i < d.numbers.length; i++) {
+      if (d.numbers[i] === d.numbers[i - 1] + 1) {
+        len++;
+        if (len > bestConsec.len) bestConsec = { len, date: d.date, from: start };
+      } else { len = 1; start = d.numbers[i]; }
+    }
+  });
+
+  // Tirage le plus déséquilibré (pairs/impairs)
+  let skew = { diff: -1, date: null, evens: 0 };
+  chrono.forEach(d => {
+    const e = d.numbers.filter(n => n % 2 === 0).length;
+    const diff = Math.abs(e - (d.numbers.length - e));
+    if (diff > skew.diff) skew = { diff, date: d.date, evens: e, total: d.numbers.length };
+  });
+
+  return { total: N, maxGap, streak, minSum, maxSum, bestConsec, skew,
+           targetSum: g.drawSize * (g.max + 1) / 2 };
+}
+
+
+/* ---------- Comparaison entre jeux ---------- */
+function compareGames() {
+  const rows = [];
+  for (const [key, g] of Object.entries(GAMES)) {
+    const draws = store[key];
+    if (!draws.length) { rows.push({ key, label: g.label, empty: true }); continue; }
+    const adv = computeAdvanced(draws, 0, key);
+    const { stats } = computeStats(draws, 0, key);
+    const gaps = stats.map(s => s.currentGap);
+    rows.push({
+      key, label: g.label, empty: false,
+      draws: draws.length,
+      formula: `${g.drawSize}/${g.max}` + (g.extraMax ? ` + 1–${g.extraMax}` : ""),
+      pValue: adv ? adv.pValue : null,
+      maxZ: adv ? Math.max(...adv.z.slice(1).map(Math.abs)) : null,
+      maxGap: Math.max(...gaps),
+      avgSum: adv ? adv.structure.avgSum : null,
+      expSum: adv ? adv.structure.expSum : null,
+    });
+  }
+  return rows;
+}
+
+/* ---------- Prochains tirages ---------- */
+function nextDraws() {
+  // Jours de tirage : 0=dimanche … 6=samedi
+  const schedule = {
+    keno: { days: [0,1,2,3,4,5,6], hours: [13, 21], label: "tous les jours, midi et soir" },
+    loto: { days: [1,3,6], hours: [20], label: "lundi, mercredi, samedi" },
+    euromillions: { days: [2,5], hours: [21], label: "mardi et vendredi" },
+    eurodreams: { days: [1,4], hours: [21], label: "lundi et jeudi" },
+  };
+  const now = new Date();
+  const out = [];
+  for (const [key, sc] of Object.entries(schedule)) {
+    let best = null;
+    for (let d = 0; d <= 7 && !best; d++) {
+      const day = new Date(now); day.setDate(now.getDate() + d);
+      if (!sc.days.includes(day.getDay())) continue;
+      for (const h of sc.hours) {
+        const t = new Date(day); t.setHours(h, 0, 0, 0);
+        if (t > now) { best = t; break; }
+      }
+    }
+    out.push({ key, label: GAMES[key].label, when: best, freq: sc.label });
+  }
+  return out.sort((a, b) => (a.when || 0) - (b.when || 0));
+}
+
 /* ---------- Rendu ---------- */
 const $ = sel => document.querySelector(sel);
 function fmtDate(d) { return d.toLocaleDateString("fr-FR"); }
@@ -1786,6 +1932,55 @@ function renderNext() {
     `<p class="board-sub">Le ${target} est sorti ${ns.occurrences} fois. Au tirage suivant, on a le plus vu :</p>` +
     '<div class="smart-grid">' + ns.top.map(t =>
       `<span class="ball" title="${t.f} fois">${t.n}</span>`).join("") + '</div>';
+}
+
+
+function renderRecords() {
+  const r = computeRecords(currentGame);
+  const box = $("#recordsBody");
+  if (!r) { box.innerHTML = '<p class="board-sub">Pas assez de tirages.</p>'; return; }
+  const g = GAMES[currentGame];
+  box.innerHTML = '<div class="record-grid">' +
+    `<div class="record-card"><div class="r-title">Plus gros retard</div><div class="r-val">${r.maxGap.gap} tirages</div>` +
+    `<div class="r-sub">Le n°${r.maxGap.n} est resté absent ${r.maxGap.gap} tirages d'affilée avant de ressortir le ${fmtDate(r.maxGap.date)}.</div></div>` +
+
+    `<div class="record-card"><div class="r-title">Plus longue série</div><div class="r-val">${r.streak.len} fois de suite</div>` +
+    `<div class="r-sub">Le n°${r.streak.n} est sorti ${r.streak.len} tirages consécutifs, jusqu'au ${fmtDate(r.streak.date)}.</div></div>` +
+
+    `<div class="record-card"><div class="r-title">Somme la plus basse</div><div class="r-val">${r.minSum.v}</div>` +
+    `<div class="r-sub">Le ${fmtDate(r.minSum.date)} — pour une moyenne théorique de ${r.targetSum.toFixed(0)}.</div></div>` +
+
+    `<div class="record-card"><div class="r-title">Somme la plus haute</div><div class="r-val">${r.maxSum.v}</div>` +
+    `<div class="r-sub">Le ${fmtDate(r.maxSum.date)} — soit ${(r.maxSum.v - r.targetSum).toFixed(0)} au-dessus de la moyenne.</div></div>` +
+
+    (r.bestConsec.len > 1 ? `<div class="record-card"><div class="r-title">Plus longue suite</div><div class="r-val">${r.bestConsec.len} numéros</div>` +
+      `<div class="r-sub">Une suite à partir du ${r.bestConsec.from}, le ${fmtDate(r.bestConsec.date)}.</div></div>` : "") +
+
+    `<div class="record-card"><div class="r-title">Tirage le plus déséquilibré</div><div class="r-val">${r.skew.evens} / ${r.skew.total - r.skew.evens}</div>` +
+    `<div class="r-sub">Pairs / impairs, le ${fmtDate(r.skew.date)}. L'équilibre habituel est proche de ${Math.round(g.drawSize / 2)}/${Math.round(g.drawSize / 2)}.</div></div>` +
+    '</div>' +
+    `<p class="board-sub" style="margin-top:10px">Sur ${r.total} tirages. Ces extrêmes sont normaux : plus l'historique est long, plus il en contient.</p>`;
+}
+
+function renderGamesComparison() {
+  const rows = compareGames();
+  $("#compareBody").innerHTML = rows.map(r => r.empty
+    ? `<tr><td>${r.label}</td><td colspan="4" style="color:var(--muted)">données non chargées</td></tr>`
+    : `<tr><td>${r.label}</td><td>${r.formula}</td><td>${r.draws}</td>` +
+      `<td>${r.pValue === null ? "—" : (r.pValue < 0.001 ? "&lt;0,001" : r.pValue.toFixed(3))}</td>` +
+      `<td>${r.maxZ === null ? "—" : r.maxZ.toFixed(2)}</td></tr>`).join("");
+}
+
+function renderNextDraws() {
+  const list = nextDraws();
+  $("#nextBody2").innerHTML = list.map(d => {
+    const when = d.when
+      ? d.when.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }) +
+        " · " + d.when.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
+      : "—";
+    return `<div class="next-row"><span class="n-game">${d.label}</span>` +
+      `<span class="n-when">${when}</span><span class="n-freq">${d.freq}</span></div>`;
+  }).join("") + '<p class="board-sub" style="margin-top:10px">Horaires indicatifs — se référer aux heures officielles.</p>';
 }
 
 function renderSmart() {
@@ -2285,6 +2480,9 @@ function renderExtras2() {
   safe("decades", renderDecades);
   safe("next", renderNext);
   safe("fact", renderFact);
+  safe("records", renderRecords);
+  safe("compare2", renderGamesComparison);
+  safe("nextdraws", renderNextDraws);
 }
 
 $("#myNumsSave").addEventListener("click", () => {
@@ -2298,6 +2496,33 @@ $("#cmpRun").addEventListener("click", renderCompare);
 $("#gapCtxBtn").addEventListener("click", runGapCtx);
 $("#probaM").addEventListener("change", renderProba);
 $("#exportBtn").addEventListener("click", () => exportCsv(currentGame));
+
+/* ---------- Partage ---------- */
+async function shareSite() {
+  const g = GAMES[currentGame];
+  const draws = store[currentGame];
+  let text = "Statirage — l'intelligence statistique au service du hasard";
+  if (draws.length) {
+    const { stats } = computeStats(draws, 0, currentGame);
+    const cold = [...stats].sort((a, b) => b.currentGap - a.currentGap)[0];
+    text = `${g.label} : le n°${cold.n} n'est pas sorti depuis ${cold.currentGap} tirages. Toutes les stats sur Statirage`;
+  }
+  const url = "https://statirage.fr";
+  if (navigator.share) {
+    try { await navigator.share({ title: "Statirage", text, url }); return; } catch { /* annulé */ }
+  }
+  try {
+    await navigator.clipboard.writeText(text + " — " + url);
+    const btn = $("#shareBtn");
+    const old = btn.textContent;
+    btn.textContent = "Lien copié ✓";
+    setTimeout(() => { btn.textContent = old; }, 2000);
+  } catch {
+    window.open("https://twitter.com/intent/tweet?text=" + encodeURIComponent(text) + "&url=" + encodeURIComponent(url), "_blank");
+  }
+}
+$("#shareBtn") && $("#shareBtn").addEventListener("click", shareSite);
+
 
 
 function showLearn() {
