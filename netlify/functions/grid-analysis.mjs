@@ -12,6 +12,20 @@ const GAMES = {
   eurodreams:   { label: "EuroDreams",   max: 40, drawSize: 6  },
 };
 
+/* Rapports Keno officiels FDJ (formule du 3 nov. 2025), gains pour 1 € de mise.
+   Validés par deux contrôles : les probabilités globales de gain reconstituées
+   (1/15,16 · 1/7,43 · 1/20,26 · 1/10,68 · 1/11,20 · 1/3,87 · 1/7,78) correspondent
+   au calcul hypergéométrique, et les TRJ tombent entre 47 % et 53 %. */
+const KENO_PAY = {
+  4:  { 3: 3, 4: 70 },
+  5:  { 3: 2, 4: 10, 5: 80 },
+  6:  { 4: 3, 5: 30, 6: 900 },
+  7:  { 4: 2, 5: 5, 6: 90, 7: 3000 },
+  8:  { 0: 2, 5: 5, 6: 30, 7: 100, 8: 8000 },
+  9:  { 0: 2, 4: 1, 5: 2, 6: 8, 7: 25, 8: 100, 9: 30000 },
+  10: { 0: 2, 5: 2, 6: 5, 7: 15, 8: 150, 9: 2000, 10: 200000 },
+};
+
 const PROFILE_LABEL = {
   balanced:   "Équilibrée (somme et équilibres au plus près des moyennes historiques)",
   cold:       "Les retardataires (numéros aux plus gros écarts actuels)",
@@ -21,13 +35,18 @@ const PROFILE_LABEL = {
 };
 
 async function loadDraws(game) {
+  const tried = [];
   for (const p of [`../../site/data/${game}.json`, `../../data-private/${game}-full.json`]) {
     try {
       const raw = await readFile(new URL(p, import.meta.url), "utf8");
       const data = JSON.parse(raw);
       if (data?.draws?.length) return data.draws;
-    } catch { /* essaie la source suivante */ }
+      tried.push(`${p} (vide)`);
+    } catch (e) {
+      tried.push(`${p} (${e.code || e.message})`);
+    }
   }
+  console.error("[grid-analysis] données introuvables :", tried.join(" · "));
   return null;
 }
 
@@ -80,6 +99,39 @@ function computeFacts(numbers, game, draws) {
     if (k > best) { best = k; bestDate = d.date; }
   }
 
+  // Suites consécutives
+  const runs = [];
+  let run = [sorted[0]];
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i] === sorted[i - 1] + 1) run.push(sorted[i]);
+    else { if (run.length > 1) runs.push(run); run = [sorted[i]]; }
+  }
+  if (run.length > 1) runs.push(run);
+
+  // Répartition par dizaine et dernier chiffre
+  const nbDec = Math.ceil(g.max / 10);
+  const decades = {};
+  for (let i = 0; i < nbDec; i++) {
+    const lo = i * 10 + 1, hi = Math.min((i + 1) * 10, g.max);
+    decades[`${lo}-${hi}`] = numbers.filter(n => n >= lo && n <= hi).length;
+  }
+  const lastDigits = {};
+  for (let i = 0; i < 10; i++) {
+    const c = numbers.filter(n => n % 10 === i).length;
+    if (c) lastDigits[i] = c;
+  }
+
+  // Percentile du nombre de pairs
+  const allEvens = draws.map(d => d.numbers.filter(n => n % 2 === 0).length);
+  const evensCount = numbers.filter(n => n % 2 === 0).length;
+  const evensPct = Math.round(allEvens.filter(x => x <= evensCount).length / total * 100);
+
+  // Tirages les plus ressemblants
+  const similar5 = draws
+    .map(d => ({ date: d.date, shared: numbers.filter(n => d.numbers.includes(n)).length }))
+    .sort((a, b) => b.shared - a.shared)
+    .slice(0, 3);
+
   return {
     jeu: g.label,
     tiragesAnalyses: total,
@@ -87,11 +139,16 @@ function computeFacts(numbers, game, draws) {
     somme: sum,
     sommeMoyenneHistorique: +avgSum.toFixed(1),
     sommePercentile: Math.round(sumRank * 100),
-    pairs: numbers.filter(n => n % 2 === 0).length,
-    impairs: numbers.filter(n => n % 2 !== 0).length,
+    pairs: evensCount,
+    impairs: numbers.length - evensCount,
+    pairsPercentile: evensPct,
     basses: numbers.filter(n => n <= half).length,
     hautes: numbers.filter(n => n > half).length,
     suitesConsecutives: consec,
+    detailDesSuites: runs.map(r => r.join("-")),
+    repartitionParDizaine: decades,
+    repartitionAttendueParDizaine: +(numbers.length * 10 / g.max).toFixed(1),
+    repartitionParDernierChiffre: lastDigits,
     ecartsParNumero: gapOf,
     ecartMoyen: +avgGap.toFixed(1),
     ecartTheoriqueMoyen: +expectedGap.toFixed(1),
@@ -99,6 +156,7 @@ function computeFacts(numbers, game, draws) {
     sorties50DerniersTirages: freq50,
     attendu50DerniersTirages: +exp50.toFixed(1),
     tiragesAuProfilComparable: similar,
+    tiragesLesPlusRessemblants: similar5,
     meilleurScoreHistorique: best,
     dateMeilleurScore: bestDate,
     probaParNumeroProchainTirage: `${g.drawSize} sur ${g.max}`,
@@ -127,6 +185,9 @@ export default async (req) => {
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return json({ error: "Analyse indisponible (clé API non configurée)." }, 503);
+  // Modèle surchargeable via la variable d'environnement ANTHROPIC_MODEL.
+  // claude-sonnet-4-6 est l'ID canonique de la génération Sonnet 4.6.
+  const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
 
   const { game, profile, numbers } = await req.json().catch(() => ({}));
   const g = GAMES[game];
@@ -138,7 +199,8 @@ export default async (req) => {
   }
 
   const draws = await loadDraws(game);
-  if (!draws) return json({ error: "données indisponibles" }, 503);
+  if (!draws) return json({ error: "Données de tirages indisponibles côté serveur." }, 503);
+  console.log(`[grid-analysis] ${game} · ${numbers.length} n° · ${draws.length} tirages · modèle ${MODEL}`);
 
   const facts = computeFacts(numbers, game, draws);
 
@@ -158,7 +220,7 @@ export default async (req) => {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-6",
+        model: MODEL,
         max_tokens: 400,
         system: SYSTEM,
         messages: [{
@@ -167,12 +229,26 @@ export default async (req) => {
         }],
       }),
     });
-    if (!resp.ok) throw new Error(`API ${resp.status}`);
+    if (!resp.ok) {
+      const detail = await resp.text().catch(() => "");
+      console.error(`[grid-analysis] API ${resp.status} — ${detail.slice(0, 400)}`);
+      const hint =
+        resp.status === 401 ? "clé API refusée"
+        : resp.status === 404 ? `modèle « ${MODEL} » introuvable`
+        : resp.status === 400 ? "requête rejetée par l'API"
+        : resp.status === 429 ? "quota API dépassé"
+        : `erreur ${resp.status}`;
+      return json({ error: `L'analyse a échoué : ${hint}.` }, 502);
+    }
     const data = await resp.json();
     text = (data.content || []).filter(c => c.type === "text").map(c => c.text).join("").trim();
-    if (!text) throw new Error("réponse vide");
+    if (!text) {
+      console.error("[grid-analysis] réponse sans texte :", JSON.stringify(data).slice(0, 400));
+      return json({ error: "L'analyse est revenue vide. Réessaie dans un instant." }, 502);
+    }
   } catch (e) {
-    return json({ error: "L'analyse n'a pas pu être générée. Réessaie dans un instant." }, 502);
+    console.error("[grid-analysis] exception :", e && e.message, e && e.stack);
+    return json({ error: `L'analyse n'a pas pu être générée (${e && e.message ? e.message : "erreur réseau"}).` }, 502);
   }
 
   await quotas.setJSON(quotaKey, { n: used + 1 });
