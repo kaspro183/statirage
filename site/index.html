@@ -224,6 +224,11 @@
   .pt-mini span { width: 25px; height: 25px; border-radius: 50%; background: #fff; border: 1px solid var(--ligne);
     display: flex; align-items: center; justify-content: center; font: 600 11px 'IBM Plex Mono', monospace; }
   .pt-mini span.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .pt-big { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+  .pt-big b { font: 700 30px 'IBM Plex Mono', monospace; color: var(--accent); line-height: 1; }
+  .pt-big span { color: var(--muted); font-size: 12px; }
+  .pt-hist { gap: 2px; height: 48px; }
+  .pt-hist .pt-bar i { border-radius: 2px 2px 0 0; opacity: .8; }
   @media (max-width: 620px) { .portrait-grid { grid-template-columns: 1fr; gap: 9px; } }
   #board { display: grid; gap: 8px; }
   .cell {
@@ -249,7 +254,7 @@
   .extra-ball .num { font: 600 14px 'IBM Plex Mono', monospace; display: block; }
   .extra-ball .val { font: 400 10.5px 'IBM Plex Mono', monospace; opacity: .85; }
 
-  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
   @media (max-width: 720px) { .row { grid-template-columns: 1fr; gap: 26px; } #board { gap: 5px; } .orb { width: 38px; height: 38px; font-size: 14px; } }
   .panel h2 { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 19px; margin-bottom: 10px; }
   .panel h2.hot { color: var(--hot); } .panel h2.cold { color: var(--cold); }
@@ -1226,9 +1231,24 @@ function drawPortrait(gameKey, index = 0) {
     rep.push({ lag, numbers: nums.filter(n => prev.includes(n)), date: draws[index + lag].date });
   }
 
+  // 5 bis. Chevauchement avec le tirage précédent + historique des communs consécutifs
+  const expectedShared = k * g.drawSize / g.max;   // espérance hypergéométrique
+  const sharedPrev = (index + 1 < draws.length)
+    ? nums.filter(n => draws[index + 1].numbers.includes(n))
+    : null;
+  const prevDate = (index + 1 < draws.length) ? draws[index + 1].date : null;
+  const sharedHist = [];                            // du plus ancien au plus récent
+  for (let i = Math.min(draws.length - 2, index + 29); i >= index; i--) {
+    const cur = draws[i].numbers, prev = draws[i + 1].numbers;
+    sharedHist.push({ date: draws[i].date, count: cur.filter(n => prev.includes(n)).length });
+  }
+  const histAvg = sharedHist.length
+    ? sharedHist.reduce((a, b) => a + b.count, 0) / sharedHist.length : null;
+
   return { draw: d, numbers: nums, runs, decades, lastDigits, sum, avgSum: +avgSum.toFixed(1),
     sumPct: pct(allSums, sum), evens, odds: k - evens, evensPct: pct(allEvens, evens),
-    lows: nums.filter(n => n <= g.max / 2).length, similar, rep, total: draws.length };
+    lows: nums.filter(n => n <= g.max / 2).length, similar, rep, total: draws.length,
+    expectedShared, sharedPrev, prevDate, sharedHist, histAvg };
 }
 function erf(x) {  // approximation d'Abramowitz & Stegun (précision ~1e-7)
   const sign = x < 0 ? -1 : 1; x = Math.abs(x);
@@ -2560,10 +2580,27 @@ function renderPortrait() {
     `<div class="pt-mini">${s.numbers.map(n => `<span class="${p.numbers.includes(n) ? "on" : ""}">${n}</span>`).join("")}</div>`
   ).join("") + `<div class="board-sub" style="margin-top:8px">Les tirages passés partageant le plus de numéros avec celui-ci. En couleur : les numéros communs.</div>`;
 
-  const repHtml = p.rep.map(r =>
-    `<div class="pt-line"><b>${r.numbers.length}/${k}</b><span>revenus depuis le tirage du ${fmtDate(r.date)} (J-${r.lag})</span></div>` +
-    (r.numbers.length ? `<div class="pt-mini">${r.numbers.map(n => `<span class="on">${n}</span>`).join("")}</div>` : "")
-  ).join("") + `<div class="board-sub" style="margin-top:8px">En moyenne, ${(k * g.drawSize / g.max).toFixed(1)} numéros se répètent d'un tirage à l'autre par le seul effet du hasard.</div>`;
+  let commonHtml;
+  if (p.sharedPrev === null) {
+    commonHtml = `<div class="board-sub">Aucun tirage précédent dans l'historique chargé.</div>`;
+  } else {
+    const nb = p.sharedPrev.length;
+    const ecart = nb - p.expectedShared;
+    const tendance = Math.abs(ecart) < 0.75 ? "dans la moyenne"
+      : ecart > 0 ? "au-dessus de la moyenne" : "en dessous de la moyenne";
+    // mini-graphique d'historique : barres, avec la moyenne théorique en pointillés
+    const maxH = Math.max(...p.sharedHist.map(h => h.count), Math.ceil(p.expectedShared), 1);
+    const barsHtml = `<div class="pt-bars pt-hist">` + p.sharedHist.map(h =>
+      `<div class="pt-bar" title="${fmtDate(h.date)} : ${h.count} commun${h.count > 1 ? "s" : ""}">` +
+      `<i style="height:${Math.max(h.count / maxH * 100, 3)}%"></i></div>`).join("") +
+      `<u style="bottom:${p.expectedShared / maxH * 100 * 0.9}%"></u></div>`;
+    commonHtml =
+      `<div class="pt-big"><b>${nb}</b><span>/ ${k} numéros communs avec le tirage précédent${p.prevDate ? ` (${fmtDate(p.prevDate)})` : ""}</span></div>` +
+      (nb ? `<div class="pt-mini">${p.sharedPrev.map(n => `<span class="on">${n}</span>`).join("")}</div>` : "") +
+      `<div class="board-sub" style="margin:8px 0 4px">Moyenne théorique : ${p.expectedShared.toFixed(1)} — ce tirage est <b>${tendance}</b>.</div>` +
+      barsHtml +
+      `<div class="board-sub" style="margin-top:6px">Communs avec le tirage précédent sur les ${p.sharedHist.length} derniers tirages${p.histAvg !== null ? ` · moyenne observée ${p.histAvg.toFixed(1)}` : ""}. Pointillés : moyenne théorique.</div>`;
+  }
 
   host.innerHTML = `<div class="portrait-grid">` +
     `<div class="pt-box"><div class="pt-h">Suites consécutives</div>${runsHtml}</div>` +
@@ -2571,7 +2608,7 @@ function renderPortrait() {
     `<div class="pt-box"><div class="pt-h">Dernier chiffre</div>${digHtml}</div>` +
     `<div class="pt-box"><div class="pt-h">Rang parmi ${p.total} tirages</div>${rankHtml}</div>` +
     `<div class="pt-box"><div class="pt-h">Tirages les plus ressemblants</div>${simHtml}</div>` +
-    `<div class="pt-box"><div class="pt-h">Numéros revenus</div>${repHtml}</div>` +
+    `<div class="pt-box"><div class="pt-h">Communs avec le tirage précédent</div>${commonHtml}</div>` +
     `</div>`;
 }
 
