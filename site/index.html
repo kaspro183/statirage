@@ -642,6 +642,17 @@
           <p>Les barres épousent la courbe. La plupart des tirages ont une somme moyenne ; les sommes extrêmes (que des petits ou que des grands numéros) sont rares. <b>Le hasard en personne.</b></p>
         </div>
       </div>
+
+      <div class="chart-explain">
+        <div>
+          <h3 class="chart-h3">La cloche des communs</h3>
+          <div class="chart-box"><canvas id="chartShared"></canvas></div>
+        </div>
+        <div class="chart-note">
+          <p>Pour chaque tirage, on compte combien de numéros il partage avec le tirage <b>précédent</b>. Répétée sur tout l'historique, cette distribution dessine elle aussi une cloche — les barres sont la réalité, la courbe la théorie.</p>
+          <p id="sharedNote"></p>
+        </div>
+      </div>
     </div>
 
     <div class="row">
@@ -3239,6 +3250,49 @@ function renderCharts() {
       ]},
     options: chartBase,
   });
+
+  // --- 4. Cloche des communs : chevauchement avec le tirage précédent ---
+  // Nombre de numéros partagés entre deux tirages consécutifs : loi hypergéométrique
+  // P(X=j) = C(K,j)·C(N-K, K-j) / C(N,K)  avec N=g.max, K=g.drawSize.
+  const K = g.drawSize, N = g.max;
+  const logFact = (() => {
+    const t = [0];
+    for (let i = 1; i <= N; i++) t[i] = t[i - 1] + Math.log(i);
+    return t;
+  })();
+  const logC = (n, r) => (r < 0 || r > n) ? -Infinity : logFact[n] - logFact[r] - logFact[n - r];
+  const logDen = logC(N, K);
+  const sharedObs = new Array(K + 1).fill(0);
+  let sharedPairs = 0, sharedSum = 0;
+  for (let i = 0; i + 1 < scope.length; i++) {
+    const cur = scope[i].numbers, prev = scope[i + 1].numbers;
+    const c = cur.filter(n => prev.includes(n)).length;
+    sharedObs[c]++; sharedPairs++; sharedSum += c;
+  }
+  const sharedTheo = sharedObs.map((_, j) =>
+    sharedPairs * Math.exp(logC(K, j) + logC(N - K, K - j) - logDen));
+  const sharedMu = K * K / N;                    // espérance = 4.57 au Keno
+  const obsAvg = sharedPairs ? sharedSum / sharedPairs : 0;
+  // ne garder que les colonnes où la théorie ou l'observé est visible
+  let jMax = K; while (jMax > 0 && sharedTheo[jMax] < 0.3 && sharedObs[jMax] === 0) jMax--;
+  const labels4 = [], obs4 = [], theo4 = [];
+  for (let j = 0; j <= jMax; j++) { labels4.push(j); obs4.push(sharedObs[j]); theo4.push(sharedTheo[j]); }
+  killChart("shared");
+  charts.shared = new Chart($("#chartShared"), {
+    type: "bar",
+    data: { labels: labels4,
+      datasets: [
+        { data: obs4, backgroundColor: "rgba(51,97,158,.55)" },
+        { data: theo4, type: "line", borderColor: INK, pointRadius: 0, borderWidth: 2, tension: .35 },
+      ]},
+    options: chartBase,
+  });
+  const noteEl = $("#sharedNote");
+  if (noteEl) noteEl.innerHTML =
+    `Sur ${sharedPairs} paires de tirages consécutifs, la moyenne observée est de ` +
+    `<b>${obsAvg.toFixed(2)}</b> numéros communs, pour une espérance théorique de ` +
+    `<b>${sharedMu.toFixed(2)}</b>. Un tirage qui partage beaucoup — ou aucun — numéro ` +
+    `avec le précédent reste dans la marge du hasard : rien à en déduire pour la suite.`;
   } catch (e) {
     console.error("Erreur graphiques :", e);
     $("#trackSub").textContent = "Graphiques indisponibles : " + e.message;
