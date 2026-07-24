@@ -1,20 +1,22 @@
 # Mise à jour automatique des tirages (Keno, EuroMillions, Loto, EuroDreams).
 #
-# OPTIMISÉ POUR LE PLAN NETLIFY GRATUIT (300 crédits/mois) :
-#  - 1 seul passage par jour (au lieu de 2) -> ~30 exécutions/mois
-#  - le commit (et donc le déploiement Netlify) n'a lieu QUE si les données
-#    ont réellement changé -> pas de déploiement inutile les jours sans tirage
-#  - budget : ~30 déploiements x 15 crédits = 450 crédits max, mais en pratique
-#    bien moins car certains jours n'apportent aucun nouveau tirage.
+# DÉCLENCHEMENT : 21h15 heure de Paris toute l'année.
+# GitHub Actions tourne en UTC, donc on programme deux crons (19h15 UTC pour
+# l'heure d'été UTC+2, 20h15 UTC pour l'heure d'hiver UTC+1) et un garde-fou
+# arrête celui qui ne correspond pas à la saison en cours. Résultat : toujours
+# exactement un vrai passage par jour, après le Keno (20h), le Loto et
+# l'EuroMillions (20h45-21h).
+#
+# CRÉDITS NETLIFY : le commit (et donc le déploiement) n'a lieu QUE si les
+# données ont réellement changé -> pas de build les jours sans nouveau tirage.
 
 name: Mise à jour des tirages
 
 on:
   schedule:
-    # 21h40 UTC = ~23h40 heure française d'été : après TOUS les tirages du soir
-    # (Keno soir, Loto, EuroMillions, EuroDreams selon les jours).
-    - cron: "40 21 * * *"
-  workflow_dispatch: {}       # bouton "Run workflow" pour lancer à la main
+    - cron: "15 19 * * *"   # 21h15 heure française d'été (UTC+2)
+    - cron: "15 20 * * *"   # 21h15 heure française d'hiver (UTC+1)
+  workflow_dispatch: {}     # bouton "Run workflow" pour lancer à la main
 
 permissions:
   contents: write
@@ -27,19 +29,35 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
+      - name: Ne garder que le passage correspondant à l'heure de Paris
+        id: gate
+        run: |
+          HEURE_PARIS=$(TZ=Europe/Paris date +%H)
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "$HEURE_PARIS" = "21" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "Passage hors saison (${HEURE_PARIS}h à Paris) — on s'arrête."
+          fi
+
       - uses: actions/checkout@v4
+        if: steps.gate.outputs.run == 'true'
 
       - uses: actions/setup-python@v5
+        if: steps.gate.outputs.run == 'true'
         with:
           python-version: "3.12"
 
       - name: Régénérer les JSON de tirages
+        if: steps.gate.outputs.run == 'true'
         run: python tools/update_data.py
 
       - name: Générer les pages SEO par numéro + sitemap
+        if: steps.gate.outputs.run == 'true'
         run: python tools/generate_pages.py
 
       - name: Committer UNIQUEMENT si les données ont changé
+        if: steps.gate.outputs.run == 'true'
         run: |
           git config user.name "tirages-bot"
           git config user.email "actions@users.noreply.github.com"
