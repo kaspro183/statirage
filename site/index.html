@@ -196,9 +196,10 @@
     border-radius: 20px; padding: 24px;
     box-shadow: 0 14px 34px rgba(0,0,0,.24);
   }
-  /* Espacement vertical uniforme entre blocs de premier niveau.
-     Les panneaux à l'intérieur d'une .row sont espacés par le gap de la grille. */
-  #app > .panel, #app > .board-card, #app > .row { margin-top: 16px; }
+  /* Espacement vertical entre blocs de premier niveau.
+     L'ombre portée descend de 14+34px : la marge doit être plus grande
+     qu'elle, sinon l'ombre du bloc du haut retombe sur le bloc du bas. */
+  #app > .panel, #app > .board-card, #app > .row { margin-top: 26px; }
   .row > .panel, .row > .board-card { margin-top: 0; }
   .board-title { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 22px; margin-bottom: 3px; }
   .board-sub { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
@@ -249,7 +250,7 @@
   .extra-ball .val { font: 400 10.5px 'IBM Plex Mono', monospace; opacity: .85; }
 
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  @media (max-width: 720px) { .row { grid-template-columns: 1fr; } #board { gap: 5px; } .orb { width: 38px; height: 38px; font-size: 14px; } }
+  @media (max-width: 720px) { .row { grid-template-columns: 1fr; gap: 26px; } #board { gap: 5px; } .orb { width: 38px; height: 38px; font-size: 14px; } }
   .panel h2 { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 19px; margin-bottom: 10px; }
   .panel h2.hot { color: var(--hot); } .panel h2.cold { color: var(--cold); }
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
@@ -480,7 +481,7 @@
     .hero-date { font-size: clamp(20px, 7vw, 28px); }
     .orb { width: 34px; height: 34px; font-size: 13px; }
     .balls { gap: 6px; }
-    .board-card, .panel { padding: 14px; }
+    .board-card, .panel { padding: 14px; box-shadow: 0 8px 20px rgba(0,0,0,.20); }
     .board-title, .panel h2 { font-size: 17px; }
     #board { gap: 4px; }
     .cell { border-radius: 7px; }
@@ -593,6 +594,7 @@
     <div class="panel" id="portraitPanel">
       <h2>Le portrait du tirage</h2>
       <p class="atelier-note">Cinq lectures descriptives du dernier tirage, comparées à l'ensemble de l'historique. Ce sont des constats sur ce qui vient de se produire — ils ne disent rien du tirage suivant.</p>
+      <div id="drawAnalysis"></div>
       <div id="portraitBody"></div>
     </div>
 
@@ -712,10 +714,8 @@
       </div>
       <div class="atelier-tools">
         <button class="btn" type="button" id="smartBtn">Générer la grille</button>
-        <button class="chip" type="button" id="aiBtn">Analyser cette grille</button>
       </div>
       <div id="smartBody"></div>
-      <div id="aiBody"></div>
     </div>
 
     <div class="panel atelier-panel gate-panel">
@@ -2521,7 +2521,34 @@ function renderNextDraws() {
   }).join("") + '<p class="board-sub" style="margin-top:10px">Horaires indicatifs — se référer aux heures officielles.</p>';
 }
 
-let lastGrid = null;
+const isoDay = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+/* ---------- Le commentaire du tirage, rédigé par IA (généré une fois par tirage) ---------- */
+let lastAnalysisKey = null;
+async function loadDrawAnalysis() {
+  const host = $("#drawAnalysis");
+  if (!host) return;
+  const draws = store[currentGame];
+  if (!draws || !draws.length) { host.innerHTML = ""; return; }
+  const key = `${currentGame}:${isoDay(draws[0].date)}`;
+  if (lastAnalysisKey === key) return;   // déjà affiché pour ce tirage
+  lastAnalysisKey = key;
+  host.innerHTML = "";
+  try {
+    const r = await fetch(`/api/draw-analysis?game=${currentGame}`);
+    const data = await r.json();
+    if (!r.ok || !data.analysis) return;   // silencieux : le portrait suffit
+    host.innerHTML =
+      `<div style="background:#fff;border:1px solid var(--ligne);border-left:3px solid var(--accent);` +
+      `border-radius:12px;padding:15px 17px;margin-bottom:16px">` +
+      `<div style="font-weight:700;font-size:13px;color:var(--accent);margin-bottom:7px">Le commentaire du tirage</div>` +
+      `<p style="font-size:14.5px;line-height:1.62;margin:0">${data.analysis.replace(/[<>]/g, "")}</p>` +
+      `<p class="board-sub" style="margin:10px 0 0;font-size:11.5px">Rédigé par une IA à partir des statistiques ` +
+      `calculées par Statirage : tous les chiffres cités proviennent de l'historique des tirages, le texte les met en forme. ` +
+      `Aucune prédiction — chaque tirage reste indépendant.</p></div>`;
+  } catch { /* réseau indisponible : on n'affiche rien */ }
+}
+
 function renderPortrait() {
   const host = $("#portraitBody");
   if (!host) return;
@@ -2577,8 +2604,6 @@ function renderPortrait() {
 
 function renderSmart() {
   const grid = smartGrid(currentGame, activeProfile);
-  lastGrid = grid;
-  $("#aiBody").innerHTML = "";
   const m = grid.metrics;
   const p = GRID_PROFILES[activeProfile];
   const k = grid.numbers.length;
@@ -2684,42 +2709,6 @@ PICKERS.forEach(p => {
 });
 
 function refreshPickers() { PICKERS.forEach(renderPicker); }
-
-/* ---------- Analyse rédigée de la grille ---------- */
-$("#aiBtn") && $("#aiBtn").addEventListener("click", async () => {
-  const out = $("#aiBody");
-  if (!lastGrid) { renderSmart(); }
-  if (!lastGrid) return;
-  if (!session.premium) { openModal(session.email ? "paywall" : "auth"); return; }
-  const btn = $("#aiBtn");
-  btn.disabled = true;
-  const label = btn.textContent;
-  btn.textContent = "Analyse en cours…";
-  out.innerHTML = `<p class="profile-note" style="opacity:.7">Rédaction de l'analyse…</p>`;
-  try {
-    const r = await api("/api/grid-analysis", {
-      method: "POST",
-      body: JSON.stringify({
-        game: currentGame,
-        profile: activeProfile,
-        numbers: lastGrid.numbers,
-      }),
-    });
-    out.innerHTML =
-      `<div style="background:#fff;border:1px solid var(--ligne);border-left:3px solid var(--accent);border-radius:12px;padding:14px 16px;margin-top:12px">` +
-      `<div style="font-weight:700;font-size:13px;color:var(--accent);margin-bottom:6px">L'analyse de la grille</div>` +
-      `<p style="font-size:14.5px;line-height:1.6;margin:0">${r.analysis.replace(/[<>]/g, "")}</p>` +
-      `<p class="board-sub" style="margin:10px 0 0;font-size:11.5px">Rédigée par un modèle de langage à partir des statistiques calculées par Statirage. ` +
-      `Les chiffres proviennent de l'historique des tirages ; le texte les met en forme. Aucune prédiction — chaque tirage reste indépendant.` +
-      (typeof r.remaining === "number" ? ` · ${r.remaining} analyse${r.remaining > 1 ? "s" : ""} restante${r.remaining > 1 ? "s" : ""} ce mois-ci.` : "") +
-      `</p></div>`;
-  } catch (e) {
-    out.innerHTML = `<p class="profile-note" style="color:var(--hot)">${e.message || "L'analyse n'a pas pu être générée."}</p>`;
-  } finally {
-    btn.disabled = false;
-    btn.textContent = label;
-  }
-});
 
 /* ---------- Atelier : état & interactions ---------- */
 let pool = [];
@@ -3261,6 +3250,7 @@ function renderExtras2() {
   safe("next", () => { mcResult = null; renderNext(); });
   safe("fact", renderFact);
   safe("portrait", renderPortrait);
+  loadDrawAnalysis();
   safe("pickers", refreshPickers);
   safe("rank", renderRank);
   safe("cal", () => { calCursor = null; renderCal(); });
@@ -3315,8 +3305,6 @@ $("#shareBtn") && $("#shareBtn").addEventListener("click", shareSite);
 /* ---------- Calendrier : choisir un tirage par sa date ---------- */
 const MOIS_FR = ["janvier", "février", "mars", "avril", "mai", "juin",
   "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
-const isoDay = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-
 function drawDaysSet(gameKey) {
   const set = new Map();   // clé ISO -> nombre de tirages ce jour-là
   (store[gameKey] || []).forEach(d => {
