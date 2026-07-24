@@ -594,7 +594,6 @@
     <div class="panel" id="portraitPanel">
       <h2>Le portrait du tirage</h2>
       <p class="atelier-note">Cinq lectures descriptives du dernier tirage, comparées à l'ensemble de l'historique. Ce sont des constats sur ce qui vient de se produire — ils ne disent rien du tirage suivant.</p>
-      <div id="drawAnalysis"></div>
       <div id="portraitBody"></div>
     </div>
 
@@ -2523,32 +2522,6 @@ function renderNextDraws() {
 
 const isoDay = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
-/* ---------- Le commentaire du tirage, rédigé par IA (généré une fois par tirage) ---------- */
-let lastAnalysisKey = null;
-async function loadDrawAnalysis() {
-  const host = $("#drawAnalysis");
-  if (!host) return;
-  const draws = store[currentGame];
-  if (!draws || !draws.length) { host.innerHTML = ""; return; }
-  const key = `${currentGame}:${isoDay(draws[0].date)}`;
-  if (lastAnalysisKey === key) return;   // déjà affiché pour ce tirage
-  lastAnalysisKey = key;
-  host.innerHTML = "";
-  try {
-    const r = await fetch(`/api/draw-analysis?game=${currentGame}`);
-    const data = await r.json();
-    if (!r.ok || !data.analysis) return;   // silencieux : le portrait suffit
-    host.innerHTML =
-      `<div style="background:#fff;border:1px solid var(--ligne);border-left:3px solid var(--accent);` +
-      `border-radius:12px;padding:15px 17px;margin-bottom:16px">` +
-      `<div style="font-weight:700;font-size:13px;color:var(--accent);margin-bottom:7px">Le commentaire du tirage</div>` +
-      `<p style="font-size:14.5px;line-height:1.62;margin:0">${data.analysis.replace(/[<>]/g, "")}</p>` +
-      `<p class="board-sub" style="margin:10px 0 0;font-size:11.5px">Rédigé par une IA à partir des statistiques ` +
-      `calculées par Statirage : tous les chiffres cités proviennent de l'historique des tirages, le texte les met en forme. ` +
-      `Aucune prédiction — chaque tirage reste indépendant.</p></div>`;
-  } catch { /* réseau indisponible : on n'affiche rien */ }
-}
-
 function renderPortrait() {
   const host = $("#portraitBody");
   if (!host) return;
@@ -3250,7 +3223,6 @@ function renderExtras2() {
   safe("next", () => { mcResult = null; renderNext(); });
   safe("fact", renderFact);
   safe("portrait", renderPortrait);
-  loadDrawAnalysis();
   safe("pickers", refreshPickers);
   safe("rank", renderRank);
   safe("cal", () => { calCursor = null; renderCal(); });
