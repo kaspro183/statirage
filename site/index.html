@@ -139,6 +139,13 @@
   }
   @keyframes drop { from { transform: translateY(-26px); opacity: 0; } to { transform: none; opacity: 1; } }
   .hero-meta { margin-top: 10px; font-size: 13px; color: rgba(247,243,232,.7); }
+  .hero-mult {
+    display: inline-flex; align-items: center; gap: 8px; margin: 2px 0 4px;
+    background: rgba(247,243,232,.1); border: 1px solid rgba(247,243,232,.22);
+    border-radius: 999px; padding: 6px 15px; font-size: 14px; color: var(--papier);
+  }
+  .hero-mult b { font: 700 17px 'IBM Plex Mono', monospace; color: var(--accent-soft); }
+  .hero-mult span { color: rgba(247,243,232,.68); font-size: 12.5px; }
 
   /* ---- Chargement / erreur ---- */
   #loader { padding: 26px 4px 12px; }
@@ -550,6 +557,7 @@
     <div class="kicker" id="heroKicker"></div>
     <div class="hero-date" id="heroDate"></div>
     <div class="rail"><div class="balls" id="heroBalls"></div></div>
+    <div class="hero-mult hidden" id="heroMult"></div>
     <div class="hero-meta" id="heroMeta"></div>
   </section>
 
@@ -1186,6 +1194,18 @@ function renderHero() {
     extras.map((n, i) => `<span class="orb orb-extra" style="animation-delay:${(nums.length + i) * 55}ms">${n}</span>`).join("");
   const oldest = draws[draws.length - 1].date.toLocaleDateString("fr-FR");
   $("#heroMeta").textContent = draws.length + " tirages en mémoire · depuis le " + oldest;
+
+  // Multiplicateur du tirage (Keno uniquement) : la mise doublée l'active,
+  // le coefficient est tiré au sort à chaque tirage. On affiche celui du jour.
+  const multEl = $("#heroMult");
+  const mult = (d.mult || "").replace(/[^0-9]/g, "");
+  if (currentGame === "keno" && mult) {
+    multEl.innerHTML = `Multiplicateur du tirage : <b>×${mult}</b> <span>· appliqué aux gains si l'option était jouée</span>`;
+    multEl.classList.remove("hidden");
+  } else {
+    multEl.classList.add("hidden");
+  }
+
   $("#hero").classList.remove("hidden");
 }
 
@@ -1557,6 +1577,17 @@ function multStats(gameKey) {
   const counts = {};
   draws.forEach(d => { counts[d.mult] = (counts[d.mult] || 0) + 1; });
   return { total: draws.length, rows: Object.entries(counts).sort((a, b) => b[1] - a[1]) };
+}
+
+/* Espérance du coefficient multiplicateur observée sur l'historique Keno.
+   Sert à montrer que l'option Multiplicateur laisse le taux de retour inchangé :
+   la mise est doublée, le gain moyen est multiplié par cette espérance (~2). */
+function multExpectation(gameKey) {
+  const ms = multStats(gameKey);
+  if (!ms) return null;
+  let sum = 0, n = 0;
+  ms.rows.forEach(([m, c]) => { const v = parseInt(m) || 1; sum += v * c; n += c; });
+  return n ? { mean: sum / n, total: n } : null;
 }
 
 function exportCsv(gameKey) {
@@ -3117,11 +3148,26 @@ function renderProba() {
   const foot = $("#probaFoot");
   if (payable) {
     const trj = esperance / mise * 100;
+    let multLine = "";
+    const mx = multExpectation("keno");
+    if (mx) {
+      // La FDJ calibre l'option pour un coefficient moyen proche de 2 : mise doublée,
+      // gain moyen doublé, donc taux de retour inchangé. On affiche la moyenne OBSERVÉE
+      // à titre illustratif, sans en tirer un TRJ figé (échantillon parfois réduit).
+      multLine =
+        `<br><br><strong>Avec l'option Multiplicateur :</strong> la mise passe à ${fmtEuro(mise * 2)} ` +
+        `et chaque gain est multiplié par un coefficient tiré au sort à chaque tirage. Sur les ${mx.total} tirages chargés, ` +
+        `ce coefficient vaut <strong>${mx.mean.toFixed(2)}×</strong> en moyenne. ` +
+        `L'option est calibrée pour doubler à la fois la mise et le gain moyen : elle ` +
+        `<strong>ne change donc pas le taux de retour</strong>. Elle augmente seulement l'amplitude ` +
+        `des gains — et des pertes. Jouer avec Multiplicateur ne rend pas le Keno plus rentable, ` +
+        `seulement plus volatil.`;
+    }
     foot.innerHTML = `<div class="board-sub" style="margin-top:10px">` +
       `<strong>Espérance de gain :</strong> ${esperance.toFixed(3)} € pour ${mise} € misé, soit un retour de <strong>${trj.toFixed(1)} %</strong>. ` +
       `Autrement dit, sur un grand nombre de grilles, il rentre en moyenne ${trj.toFixed(1)} centimes par euro joué — l'écart va à la FDJ et à l'État. ` +
-      `Ce taux est le même quels que soient les numéros choisis.<br>` +
-      `Rapports officiels FDJ depuis le 3 nov. 2025, hors option Multiplicateur — montants indicatifs, le règlement fait foi.</div>`;
+      `Ce taux est le même quels que soient les numéros choisis.` + multLine + `<br>` +
+      `Rapports officiels FDJ depuis le 3 nov. 2025 — montants indicatifs, le règlement fait foi.</div>`;
   } else foot.innerHTML = "";
 }
 
