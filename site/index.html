@@ -869,7 +869,7 @@
       <div class="panel hidden" id="multPanel">
         <h2>Multiplicateurs Keno</h2>
         <p class="atelier-note">Répartition observée des multiplicateurs sur l'historique chargé, comparée aux probabilités officielles FDJ.</p>
-        <table><thead><tr><th>Multiplicateur</th><th>Sorties</th><th>Part observée</th><th>Théorique FDJ</th></tr></thead>
+        <table><thead><tr><th>Multiplicateur</th><th>Sorties</th><th>Part observée</th><th>Théorique FDJ</th><th>1 chance sur</th></tr></thead>
         <tbody id="multBody"></tbody></table>
         <div id="multFoot"></div>
       </div>
@@ -3192,10 +3192,12 @@ function renderMult() {
   if (!ms) return;
   // Probabilités officielles FDJ du coefficient multiplicateur Keno (x2/x3/x5).
   const MULT_THEO = { "2": 1 / 1.49, "3": 1 / 3.70, "5": 1 / 16.67 };
+  const MULT_ODDS = { "2": "1,49", "3": "3,70", "5": "16,67" };
   $("#multBody").innerHTML = ms.rows.map(([m, c]) => {
     const theo = MULT_THEO[m];
     const theoTxt = theo != null ? (theo * 100).toFixed(1) + " %" : "—";
-    return `<tr><td>${m}</td><td>${c}×</td><td>${(c / ms.total * 100).toFixed(1)} %</td><td>${theoTxt}</td></tr>`;
+    const oddsTxt = MULT_ODDS[m] != null ? "1 sur " + MULT_ODDS[m] : "—";
+    return `<tr><td>${m}</td><td>${c}×</td><td>${(c / ms.total * 100).toFixed(1)} %</td><td>${theoTxt}</td><td>${oddsTxt}</td></tr>`;
   }).join("");
   // Espérance observée vs théorique + effet sur le taux de retour.
   let sumObs = 0, nObs = 0;
