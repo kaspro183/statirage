@@ -311,6 +311,16 @@
   .metric-box .m-label { font-size: 11px; color: var(--muted); }
   .metric-box .m-val { font: 600 15px 'IBM Plex Mono', monospace; }
   .profile-note { font-size: 12.5px; color: var(--muted); margin-top: 12px; line-height: 1.55; max-width: 75ch; }
+  .genadv-grid { display: grid; gap: 10px; margin-top: 14px; }
+  .genadv-row { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; font-size: 13.5px; color: var(--encre); line-height: 1.4; }
+  .genadv-row input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px; flex: none; }
+  .genadv-num { width: 62px; padding: 4px 7px; border: 1.5px solid rgba(140,34,70,.25); border-radius: 8px; font: inherit; font-size: 13px; }
+  .genadv-txt { width: 130px; padding: 4px 8px; border: 1.5px solid rgba(140,34,70,.25); border-radius: 8px; font: inherit; font-size: 13px; }
+  .genadv-sel { padding: 4px 8px; border: 1.5px solid rgba(140,34,70,.25); border-radius: 8px; font: inherit; font-size: 13px; background: #fff; }
+  .genadv-result { margin-top: 16px; }
+  .genadv-balls { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+  .genadv-ball { width: 42px; height: 42px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font: 700 16px 'IBM Plex Mono', monospace; }
+  .genadv-fail { color: var(--accent); font-size: 13.5px; margin-top: 12px; }
   .smart-grid .ball { width: 34px; height: 34px; font-size: 14px; }
   .atelier-note { font-size: 13.5px; color: var(--muted); margin-bottom: 14px; max-width: 70ch; }
   .atelier-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0; }
@@ -739,6 +749,56 @@
         <button class="btn" type="button" id="smartBtn">Générer la grille</button>
       </div>
       <div id="smartBody"></div>
+    </div>
+
+    <div class="panel atelier-panel">
+      <h2>Le générateur avancé</h2>
+      <p class="atelier-note">Coche les critères que tu veux imposer à la grille. Les filtres non cochés sont ignorés. <b>Rappel : aucun réglage ne change tes chances de gagner</b> — chaque grille reste aussi probable qu'une autre. Ces filtres servent à composer une grille au profil choisi, rien de plus.</p>
+
+      <div class="genadv-grid">
+        <label class="genadv-row"><input type="checkbox" id="fSum"> Somme entre
+          <input type="number" id="fSumMin" class="genadv-num" value="380"> et
+          <input type="number" id="fSumMax" class="genadv-num" value="530"></label>
+
+        <label class="genadv-row"><input type="checkbox" id="fEven"> Nombre de numéros pairs
+          <input type="number" id="fEvenMin" class="genadv-num" value="7"> à
+          <input type="number" id="fEvenMax" class="genadv-num" value="9"></label>
+
+        <label class="genadv-row"><input type="checkbox" id="fLow"> Numéros bas (première moitié)
+          <input type="number" id="fLowMin" class="genadv-num" value="7"> à
+          <input type="number" id="fLowMax" class="genadv-num" value="9"></label>
+
+        <label class="genadv-row"><input type="checkbox" id="fGap"> Éviter les gros écarts : aucun numéro absent depuis plus de
+          <input type="number" id="fGapMax" class="genadv-num" value="15"> tirages</label>
+
+        <label class="genadv-row"><input type="checkbox" id="fDecade"> Bien répartir sur les dizaines : max
+          <input type="number" id="fDecadeMax" class="genadv-num" value="4"> numéros par dizaine</label>
+
+        <label class="genadv-row"><input type="checkbox" id="fConsec"> Suites de consécutifs : au plus
+          <input type="number" id="fConsecMax" class="genadv-num" value="2"> paires qui se suivent</label>
+
+        <label class="genadv-row"><input type="checkbox" id="fEnding"> Éviter trop de mêmes terminaisons : max
+          <input type="number" id="fEndingMax" class="genadv-num" value="3"> numéros finissant par le même chiffre</label>
+
+        <label class="genadv-row"><input type="checkbox" id="fFreq"> Privilégier les numéros
+          <select id="fFreqType" class="genadv-sel"><option value="hot">chauds</option><option value="cold">froids</option><option value="mid">équilibrés</option></select>
+          (fenêtre en cours)</label>
+
+        <label class="genadv-row"><input type="checkbox" id="fInclude"> Inclure obligatoirement
+          <input type="text" id="fIncludeVal" class="genadv-txt" placeholder="ex : 7 13 22"></label>
+
+        <label class="genadv-row"><input type="checkbox" id="fExclude"> Exclure
+          <input type="text" id="fExcludeVal" class="genadv-txt" placeholder="ex : 13 40"></label>
+
+        <label class="genadv-row"><input type="checkbox" id="fUnseen"> Éviter les grilles déjà sorties dans l'historique</label>
+      </div>
+
+      <div class="atelier-tools" style="margin-top:14px">
+        <span class="label">Numéros à jouer</span>
+        <select id="genCount" class="genadv-sel"></select>
+        <button class="btn" type="button" id="genAdvBtn">Générer la grille</button>
+      </div>
+      <div id="genAdvBody"></div>
     </div>
 
     <div class="panel atelier-panel gate-panel">
@@ -1778,6 +1838,90 @@ function smartGrid(gameKey, profile = "balanced") {
   return { numbers, extras, profile, metrics: gridMetrics(numbers, gameKey) };
 }
 
+/* Générateur avancé : lit les filtres cochés et génère par rejet.
+   Aucun filtre ne modifie la probabilité — ils sélectionnent un profil de grille. */
+function readAdvFilters(gameKey) {
+  const on = id => $("#" + id) && $("#" + id).checked;
+  const num = id => { const v = parseInt($("#" + id) && $("#" + id).value); return Number.isFinite(v) ? v : null; };
+  const parseList = id => {
+    const raw = ($("#" + id) && $("#" + id).value || "").split(/[^0-9]+/).map(x => parseInt(x)).filter(Number.isFinite);
+    return raw;
+  };
+  return {
+    sum: on("fSum") ? [num("fSumMin"), num("fSumMax")] : null,
+    even: on("fEven") ? [num("fEvenMin"), num("fEvenMax")] : null,
+    low: on("fLow") ? [num("fLowMin"), num("fLowMax")] : null,
+    gapMax: on("fGap") ? num("fGapMax") : null,
+    decadeMax: on("fDecade") ? num("fDecadeMax") : null,
+    consecMax: on("fConsec") ? num("fConsecMax") : null,
+    endingMax: on("fEnding") ? num("fEndingMax") : null,
+    freqType: on("fFreq") ? ($("#fFreqType") && $("#fFreqType").value) : null,
+    include: on("fInclude") ? parseList("fIncludeVal") : [],
+    exclude: on("fExclude") ? parseList("fExcludeVal") : [],
+    unseen: on("fUnseen"),
+  };
+}
+
+function gridPasses(nums, f, gameKey, stats, seenSet, half) {
+  if (f.sum) { const s = nums.reduce((a, b) => a + b, 0); if (s < f.sum[0] || s > f.sum[1]) return false; }
+  if (f.even) { const e = nums.filter(n => n % 2 === 0).length; if (e < f.even[0] || e > f.even[1]) return false; }
+  if (f.low) { const l = nums.filter(n => n <= half).length; if (l < f.low[0] || l > f.low[1]) return false; }
+  if (f.gapMax != null && stats) { if (nums.some(n => (stats[n - 1].currentGap || 0) > f.gapMax)) return false; }
+  if (f.decadeMax != null) {
+    const dec = {}; nums.forEach(n => { const d = Math.floor((n - 1) / 10); dec[d] = (dec[d] || 0) + 1; });
+    if (Object.values(dec).some(c => c > f.decadeMax)) return false;
+  }
+  if (f.consecMax != null) {
+    const s = [...nums].sort((a, b) => a - b); let c = 0;
+    for (let i = 1; i < s.length; i++) if (s[i] === s[i - 1] + 1) c++;
+    if (c > f.consecMax) return false;
+  }
+  if (f.endingMax != null) {
+    const end = {}; nums.forEach(n => { const e = n % 10; end[e] = (end[e] || 0) + 1; });
+    if (Object.values(end).some(c => c > f.endingMax)) return false;
+  }
+  if (f.unseen && seenSet) { const key = [...nums].sort((a, b) => a - b).join(","); if (seenSet.has(key)) return false; }
+  return true;
+}
+
+function generateAdvanced(gameKey, count) {
+  const g = GAMES[gameKey];
+  const half = g.max / 2;
+  const draws = store[gameKey];
+  const stats = draws.length ? computeStats(draws, windowSize, gameKey).stats : null;
+  const f = readAdvFilters(gameKey);
+
+  // pool de départ : tous les numéros, moins les exclus
+  let pool = Array.from({ length: g.max }, (_, i) => i + 1).filter(n => !f.exclude.includes(n));
+  // inclusions obligatoires validées
+  const forced = f.include.filter(n => n >= 1 && n <= g.max && !f.exclude.includes(n));
+  if (forced.length > count) return { fail: `Tu imposes ${forced.length} numéros mais la grille n'en compte que ${count}.` };
+
+  // biais fréquence : on ordonne le pool selon chaud/froid, puis on tire dans une tranche
+  if (f.freqType && stats) {
+    const sorted = [...pool].sort((a, b) => stats[b - 1].freq - stats[a - 1].freq);
+    if (f.freqType === "hot") pool = sorted.slice(0, Math.max(count * 2, Math.ceil(g.max * 0.5)));
+    else if (f.freqType === "cold") pool = sorted.slice(-Math.max(count * 2, Math.ceil(g.max * 0.5)));
+    else { const q = Math.floor(g.max * 0.25); pool = sorted.slice(q, g.max - q); }
+    // garder les forcés dans le pool même s'ils sont hors tranche
+    forced.forEach(n => { if (!pool.includes(n)) pool.push(n); });
+  }
+
+  const seenSet = f.unseen ? new Set(draws.map(d => [...d.numbers].sort((a, b) => a - b).join(","))) : null;
+  const shuffle = arr => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; };
+
+  const MAX_TRIES = 8000;
+  for (let t = 0; t < MAX_TRIES; t++) {
+    const rest = shuffle(pool.filter(n => !forced.includes(n))).slice(0, count - forced.length);
+    const nums = [...forced, ...rest].sort((a, b) => a - b);
+    if (nums.length !== count) continue;
+    if (gridPasses(nums, f, gameKey, stats, seenSet, half)) {
+      return { numbers: nums, tries: t + 1, metrics: gridMetrics(nums, gameKey) };
+    }
+  }
+  return { fail: "Aucune grille ne satisfait tous ces critères — ils sont trop stricts ensemble. Décoche-en un ou élargis une fourchette." };
+}
+
 
 /* ---------- Records historiques ---------- */
 function computeRecords(gameKey) {
@@ -2703,6 +2847,41 @@ document.querySelectorAll("#profileTabs .chip").forEach(c => c.addEventListener(
 }));
 $("#smartBtn") && $("#smartBtn").addEventListener("click", renderSmart);
 
+/* ---------- Générateur avancé ---------- */
+function fillGenCount() {
+  const sel = $("#genCount");
+  if (!sel) return;
+  const g = GAMES[currentGame];
+  // Keno : on peut jouer de 2 à 10 numéros ; autres jeux : taille fixe du tirage.
+  const opts = currentGame === "keno"
+    ? Array.from({ length: 9 }, (_, i) => i + 2)
+    : [g.drawSize];
+  const prev = sel.value;
+  sel.innerHTML = opts.map(o => `<option${String(o) === prev ? " selected" : (o === (currentGame === "keno" ? 7 : g.drawSize) ? " selected" : "")}>${o}</option>`).join("");
+}
+
+function renderGenAdv() {
+  const count = parseInt($("#genCount") && $("#genCount").value) || GAMES[currentGame].drawSize;
+  const res = generateAdvanced(currentGame, count);
+  const host = $("#genAdvBody");
+  if (!host) return;
+  if (res.fail) { host.innerHTML = `<p class="genadv-fail">${res.fail}</p>`; return; }
+  const m = res.metrics, k = res.numbers.length;
+  host.innerHTML =
+    `<div class="genadv-result">` +
+    `<div class="genadv-balls">${res.numbers.map(n => `<span class="genadv-ball">${n}</span>`).join("")}</div>` +
+    `<div class="metrics-row">` +
+    `<div class="metric-box"><div class="m-label">Somme</div><div class="m-val">${m.sum}</div></div>` +
+    `<div class="metric-box"><div class="m-label">Pairs / impairs</div><div class="m-val">${m.evens} / ${k - m.evens}</div></div>` +
+    `<div class="metric-box"><div class="m-label">Bas / haut</div><div class="m-val">${m.lows} / ${k - m.lows}</div></div>` +
+    `<div class="metric-box"><div class="m-label">Consécutifs</div><div class="m-val">${m.consec}</div></div>` +
+    (m.avgGap !== null ? `<div class="metric-box"><div class="m-label">Écart moyen</div><div class="m-val">${m.avgGap.toFixed(1)}</div></div>` : "") +
+    `</div>` +
+    `<p class="profile-note">Grille trouvée en ${res.tries} essai${res.tries > 1 ? "s" : ""}. Elle respecte les critères cochés, mais a <b>exactement les mêmes chances</b> de sortir que n'importe quelle autre.</p>` +
+    `</div>`;
+}
+$("#genAdvBtn") && $("#genAdvBtn").addEventListener("click", renderGenAdv);
+
 /* ---------- Sélecteur de numéros dépliable (grille cliquable) ---------- */
 const PICKERS = [
   { btn: "#myNumsPick", box: "#myNumsPicker", input: "#myNumsInput", max: () => GAMES[currentGame].drawSize,
@@ -3386,6 +3565,7 @@ function renderExtras2() {
   safe("proba", renderProba);
   safe("weekday", renderWeekday);
   safe("mult", renderMult);
+  safe("gencount", fillGenCount);
   safe("backtest", renderBacktest);
   safe("compare", renderCompare);
   safe("decades", renderDecades);
