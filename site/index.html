@@ -868,9 +868,10 @@
       </div>
       <div class="panel hidden" id="multPanel">
         <h2>Multiplicateurs Keno</h2>
-        <p class="atelier-note">Répartition observée des multiplicateurs sur l'historique chargé.</p>
-        <table><thead><tr><th>Multiplicateur</th><th>Sorties</th><th>Part</th></tr></thead>
+        <p class="atelier-note">Répartition observée des multiplicateurs sur l'historique chargé, comparée aux probabilités officielles FDJ.</p>
+        <table><thead><tr><th>Multiplicateur</th><th>Sorties</th><th>Part observée</th><th>Théorique FDJ</th></tr></thead>
         <tbody id="multBody"></tbody></table>
+        <div id="multFoot"></div>
       </div>
     </div>
 
@@ -2025,7 +2026,10 @@ function render() {
     html += '<th class="msum">Somme</th>';
     if (hasExtras) html += `<th class="msum">Somme ${g.extraLabel.toLowerCase()}</th>`;
     html += `<th class="msum" title="Pairs / Impairs : combien de numéros pairs et impairs dans le tirage">P/I</th>` +
-      `<th class="msum" title="Bas / Haut : combien de numéros dans la première moitié de la grille (1–${Math.floor(half)}) et dans la seconde (${Math.floor(half) + 1}–${g.max})">Bas/Haut</th></tr></thead><tbody>`;
+      `<th class="msum" title="Bas / Haut : combien de numéros dans la première moitié de la grille (1–${Math.floor(half)}) et dans la seconde (${Math.floor(half) + 1}–${g.max})">Bas/Haut</th>`;
+    const showMult = currentGame === "keno";
+    if (showMult) html += `<th class="msum" title="Coefficient multiplicateur tiré au sort pour ce tirage">Mult</th>`;
+    html += `</tr></thead><tbody>`;
     last.forEach(d => {
       const inDraw = new Set(d.numbers);
       const nums = d.numbers;
@@ -2043,6 +2047,10 @@ function render() {
       html += `<td class="msum">${sum}</td>`;
       if (hasExtras) html += `<td class="msum">${d.extras.reduce((a, b) => a + b, 0)}</td>`;
       html += `<td class="msum">${evens}/${nums.length - evens}</td><td class="msum">${lows}/${nums.length - lows}</td>`;
+      if (showMult) {
+        const mv = (d.mult || "").replace(/[^0-9]/g, "");
+        html += `<td class="msum">${mv ? "×" + mv : "—"}</td>`;
+      }
       html += "</tr>";
     });
     html += "</tbody></table></div>";
@@ -3182,8 +3190,29 @@ function renderMult() {
   const ms = multStats(currentGame);
   $("#multPanel").classList.toggle("hidden", !ms);
   if (!ms) return;
-  $("#multBody").innerHTML = ms.rows.map(([m, c]) =>
-    `<tr><td>${m}</td><td>${c}×</td><td>${(c / ms.total * 100).toFixed(1)} %</td></tr>`).join("");
+  // Probabilités officielles FDJ du coefficient multiplicateur Keno (x2/x3/x5).
+  const MULT_THEO = { "2": 1 / 1.49, "3": 1 / 3.70, "5": 1 / 16.67 };
+  $("#multBody").innerHTML = ms.rows.map(([m, c]) => {
+    const theo = MULT_THEO[m];
+    const theoTxt = theo != null ? (theo * 100).toFixed(1) + " %" : "—";
+    return `<tr><td>${m}</td><td>${c}×</td><td>${(c / ms.total * 100).toFixed(1)} %</td><td>${theoTxt}</td></tr>`;
+  }).join("");
+  // Espérance observée vs théorique + effet sur le taux de retour.
+  let sumObs = 0, nObs = 0;
+  ms.rows.forEach(([m, c]) => { sumObs += (parseInt(m) || 0) * c; nObs += c; });
+  const eObs = nObs ? sumObs / nObs : 0;
+  let sT = 0, pT = 0;
+  for (const [m, p] of Object.entries(MULT_THEO)) { sT += (parseInt(m) || 0) * p; pT += p; }
+  const eTheo = pT ? sT / pT : 0;
+  const foot = $("#multFoot");
+  if (foot) foot.innerHTML =
+    `<div class="board-sub" style="margin-top:10px">` +
+    `Coefficient moyen : <b>${eObs.toFixed(2)}×</b> observé, <b>${eTheo.toFixed(2)}×</b> en théorie. ` +
+    `Comme ce coefficient moyen dépasse 2 alors que l'option ne fait que doubler la mise, ` +
+    `l'option Multiplicateur <b>augmente le taux de retour</b> d'environ ` +
+    `<b>${((eTheo / 2 - 1) * 100).toFixed(0)} %</b> : c'est l'une des rares options FDJ ` +
+    `légèrement favorable au joueur. En contrepartie, elle accroît la variance — les gains ` +
+    `comme les pertes sont plus amples.</div>`;
 }
 
 
