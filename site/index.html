@@ -311,10 +311,18 @@
   .metric-box .m-label { font-size: 11px; color: var(--muted); }
   .metric-box .m-val { font: 600 15px 'IBM Plex Mono', monospace; }
   .profile-note { font-size: 12.5px; color: var(--muted); margin-top: 12px; line-height: 1.55; max-width: 75ch; }
-  .genadv-grid { display: grid; gap: 10px; margin-top: 14px; }
-  .genadv-row { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; font-size: 13.5px; color: var(--encre); line-height: 1.4; }
-  .genadv-row input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px; flex: none; }
-  .genadv-num { width: 62px; padding: 4px 7px; border: 1.5px solid rgba(140,34,70,.25); border-radius: 8px; font: inherit; font-size: 13px; }
+  .genadv-grid { display: grid; gap: 16px; margin-top: 14px; }
+  .genadv-row { display: grid; grid-template-columns: 20px 1fr; align-items: start; gap: 9px; font-size: 13.5px; color: var(--encre); line-height: 1.5; }
+  .genadv-row > input[type="checkbox"] { accent-color: var(--accent); width: 17px; height: 17px; margin-top: 2px; }
+  .genadv-text { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+  .genadv-slider { display: grid; grid-template-columns: 20px 1fr; gap: 9px; align-items: start; }
+  .genadv-slider > input[type="checkbox"] { accent-color: var(--accent); width: 17px; height: 17px; margin-top: 2px; }
+  .genadv-sliderbody { display: flex; flex-direction: column; gap: 6px; }
+  .genadv-sliderlabel { font-size: 13.5px; color: var(--encre); line-height: 1.4; }
+  .genadv-sliderlabel b { color: var(--accent); font-family: 'IBM Plex Mono', monospace; }
+  .genadv-range { width: 100%; max-width: 340px; accent-color: var(--accent); height: 22px; cursor: pointer; }
+  .genadv-rangepair { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .genadv-rangepair .genadv-range { max-width: 150px; }
   .genadv-txt { width: 130px; padding: 4px 8px; border: 1.5px solid rgba(140,34,70,.25); border-radius: 8px; font: inherit; font-size: 13px; }
   .genadv-sel { padding: 4px 8px; border: 1.5px solid rgba(140,34,70,.25); border-radius: 8px; font: inherit; font-size: 13px; background: #fff; }
   .genadv-result { margin-top: 16px; }
@@ -756,41 +764,69 @@
       <p class="atelier-note">Coche les critères que tu veux imposer à la grille. Les filtres non cochés sont ignorés. <b>Rappel : aucun réglage ne change tes chances de gagner</b> — chaque grille reste aussi probable qu'une autre. Ces filtres servent à composer une grille au profil choisi, rien de plus.</p>
 
       <div class="genadv-grid">
-        <label class="genadv-row"><input type="checkbox" id="fSum"> Somme entre
-          <input type="number" id="fSumMin" class="genadv-num" value="380"> et
-          <input type="number" id="fSumMax" class="genadv-num" value="530"></label>
+        <div class="genadv-slider"><input type="checkbox" id="fSum">
+          <div class="genadv-sliderbody">
+            <div class="genadv-sliderlabel">Somme entre <b id="fSumMinV">380</b> et <b id="fSumMaxV">530</b></div>
+            <div class="genadv-rangepair">
+              <input type="range" id="fSumMin" class="genadv-range" min="0" max="1000" value="380">
+              <input type="range" id="fSumMax" class="genadv-range" min="0" max="1000" value="530">
+            </div>
+          </div>
+        </div>
 
-        <label class="genadv-row"><input type="checkbox" id="fEven"> Nombre de numéros pairs
-          <input type="number" id="fEvenMin" class="genadv-num" value="7"> à
-          <input type="number" id="fEvenMax" class="genadv-num" value="9"></label>
+        <div class="genadv-slider"><input type="checkbox" id="fEven">
+          <div class="genadv-sliderbody">
+            <div class="genadv-sliderlabel">Exactement <b id="fEvenV">5</b> numéros pairs</div>
+            <input type="range" id="fEven2" class="genadv-range" min="0" max="10" value="5">
+          </div>
+        </div>
 
-        <label class="genadv-row"><input type="checkbox" id="fLow"> Numéros bas (première moitié)
-          <input type="number" id="fLowMin" class="genadv-num" value="7"> à
-          <input type="number" id="fLowMax" class="genadv-num" value="9"></label>
+        <div class="genadv-slider"><input type="checkbox" id="fLow">
+          <div class="genadv-sliderbody">
+            <div class="genadv-sliderlabel">Exactement <b id="fLowV">5</b> numéros bas (première moitié)</div>
+            <input type="range" id="fLow2" class="genadv-range" min="0" max="10" value="5">
+          </div>
+        </div>
 
-        <label class="genadv-row"><input type="checkbox" id="fGap"> Éviter les gros écarts : aucun numéro absent depuis plus de
-          <input type="number" id="fGapMax" class="genadv-num" value="15"> tirages</label>
+        <div class="genadv-slider"><input type="checkbox" id="fGap">
+          <div class="genadv-sliderbody">
+            <div class="genadv-sliderlabel">Aucun numéro absent depuis plus de <b id="fGapV">15</b> tirages</div>
+            <input type="range" id="fGapMax" class="genadv-range" min="1" max="40" value="15">
+          </div>
+        </div>
 
-        <label class="genadv-row"><input type="checkbox" id="fDecade"> Bien répartir sur les dizaines : max
-          <input type="number" id="fDecadeMax" class="genadv-num" value="4"> numéros par dizaine</label>
+        <div class="genadv-slider"><input type="checkbox" id="fDecade">
+          <div class="genadv-sliderbody">
+            <div class="genadv-sliderlabel">Max <b id="fDecadeV">4</b> numéros par dizaine</div>
+            <input type="range" id="fDecadeMax" class="genadv-range" min="1" max="10" value="4">
+          </div>
+        </div>
 
-        <label class="genadv-row"><input type="checkbox" id="fConsec"> Suites de consécutifs : au plus
-          <input type="number" id="fConsecMax" class="genadv-num" value="2"> paires qui se suivent</label>
+        <div class="genadv-slider"><input type="checkbox" id="fConsec">
+          <div class="genadv-sliderbody">
+            <div class="genadv-sliderlabel">Au plus <b id="fConsecV">2</b> paires de consécutifs</div>
+            <input type="range" id="fConsecMax" class="genadv-range" min="0" max="10" value="2">
+          </div>
+        </div>
 
-        <label class="genadv-row"><input type="checkbox" id="fEnding"> Éviter trop de mêmes terminaisons : max
-          <input type="number" id="fEndingMax" class="genadv-num" value="3"> numéros finissant par le même chiffre</label>
+        <div class="genadv-slider"><input type="checkbox" id="fEnding">
+          <div class="genadv-sliderbody">
+            <div class="genadv-sliderlabel">Max <b id="fEndingV">3</b> numéros finissant par le même chiffre</div>
+            <input type="range" id="fEndingMax" class="genadv-range" min="1" max="10" value="3">
+          </div>
+        </div>
 
-        <label class="genadv-row"><input type="checkbox" id="fFreq"> Privilégier les numéros
+        <label class="genadv-row"><input type="checkbox" id="fFreq"><span class="genadv-text">Privilégier les numéros
           <select id="fFreqType" class="genadv-sel"><option value="hot">chauds</option><option value="cold">froids</option><option value="mid">équilibrés</option></select>
-          (fenêtre en cours)</label>
+          (fenêtre en cours)</span></label>
 
-        <label class="genadv-row"><input type="checkbox" id="fInclude"> Inclure obligatoirement
-          <input type="text" id="fIncludeVal" class="genadv-txt" placeholder="ex : 7 13 22"></label>
+        <label class="genadv-row"><input type="checkbox" id="fInclude"><span class="genadv-text">Inclure obligatoirement
+          <input type="text" id="fIncludeVal" class="genadv-txt" placeholder="ex : 7 13 22"></span></label>
 
-        <label class="genadv-row"><input type="checkbox" id="fExclude"> Exclure
-          <input type="text" id="fExcludeVal" class="genadv-txt" placeholder="ex : 13 40"></label>
+        <label class="genadv-row"><input type="checkbox" id="fExclude"><span class="genadv-text">Exclure
+          <input type="text" id="fExcludeVal" class="genadv-txt" placeholder="ex : 13 40"></span></label>
 
-        <label class="genadv-row"><input type="checkbox" id="fUnseen"> Éviter les grilles déjà sorties dans l'historique</label>
+        <label class="genadv-row"><input type="checkbox" id="fUnseen"><span class="genadv-text">Éviter les grilles déjà sorties dans l'historique</span></label>
       </div>
 
       <div class="atelier-tools" style="margin-top:14px">
@@ -1849,8 +1885,8 @@ function readAdvFilters(gameKey) {
   };
   return {
     sum: on("fSum") ? [num("fSumMin"), num("fSumMax")] : null,
-    even: on("fEven") ? [num("fEvenMin"), num("fEvenMax")] : null,
-    low: on("fLow") ? [num("fLowMin"), num("fLowMax")] : null,
+    even: on("fEven") ? num("fEven2") : null,
+    low: on("fLow") ? num("fLow2") : null,
     gapMax: on("fGap") ? num("fGapMax") : null,
     decadeMax: on("fDecade") ? num("fDecadeMax") : null,
     consecMax: on("fConsec") ? num("fConsecMax") : null,
@@ -1864,8 +1900,8 @@ function readAdvFilters(gameKey) {
 
 function gridPasses(nums, f, gameKey, stats, seenSet, half) {
   if (f.sum) { const s = nums.reduce((a, b) => a + b, 0); if (s < f.sum[0] || s > f.sum[1]) return false; }
-  if (f.even) { const e = nums.filter(n => n % 2 === 0).length; if (e < f.even[0] || e > f.even[1]) return false; }
-  if (f.low) { const l = nums.filter(n => n <= half).length; if (l < f.low[0] || l > f.low[1]) return false; }
+  if (f.even != null) { const e = nums.filter(n => n % 2 === 0).length; if (e !== f.even) return false; }
+  if (f.low != null) { const l = nums.filter(n => n <= half).length; if (l !== f.low) return false; }
   if (f.gapMax != null && stats) { if (nums.some(n => (stats[n - 1].currentGap || 0) > f.gapMax)) return false; }
   if (f.decadeMax != null) {
     const dec = {}; nums.forEach(n => { const d = Math.floor((n - 1) / 10); dec[d] = (dec[d] || 0) + 1; });
@@ -2858,7 +2894,59 @@ function fillGenCount() {
     : [g.drawSize];
   const prev = sel.value;
   sel.innerHTML = opts.map(o => `<option${String(o) === prev ? " selected" : (o === (currentGame === "keno" ? 7 : g.drawSize) ? " selected" : "")}>${o}</option>`).join("");
+  syncGenBounds();
 }
+
+// Adapte les bornes des curseurs (pairs, bas, dizaines…) au nombre de numéros joués,
+// et met à jour toutes les valeurs affichées.
+function syncGenBounds() {
+  const g = GAMES[currentGame];
+  const count = parseInt($("#genCount") && $("#genCount").value) || g.drawSize;
+  // pairs et bas : de 0 à count
+  [["fEven2", "fEvenV"], ["fLow2", "fLowV"]].forEach(([r, v]) => {
+    const el = $("#" + r); if (!el) return;
+    el.max = count;
+    if (+el.value > count) el.value = count;
+    if ($("#" + v)) $("#" + v).textContent = el.value;
+  });
+  // dizaines / consécutifs / terminaisons : plafonnés par count aussi
+  [["fDecadeMax", "fDecadeV"], ["fConsecMax", "fConsecV"], ["fEndingMax", "fEndingV"]].forEach(([r, v]) => {
+    const el = $("#" + r); if (!el) return;
+    el.max = count;
+    if (+el.value > count) el.value = count;
+    if ($("#" + v)) $("#" + v).textContent = el.value;
+  });
+  // somme : bornes théoriques min/max pour la taille de grille
+  const sMin = count * (count + 1) / 2;                       // 1+2+...+count
+  const sMax = count * (2 * g.max - count + 1) / 2;           // les count plus grands
+  ["fSumMin", "fSumMax"].forEach(r => { const el = $("#" + r); if (el) { el.min = sMin; el.max = sMax; } });
+  if ($("#fGapMax")) $("#fGapMax").max = Math.max(20, store[currentGame].length || 40);
+  updateGenLabels();
+}
+
+// Rafraîchit toutes les valeurs affichées à côté des curseurs.
+function updateGenLabels() {
+  const map = { fSumMin: "fSumMinV", fSumMax: "fSumMaxV", fEven2: "fEvenV", fLow2: "fLowV",
+    fGapMax: "fGapV", fDecadeMax: "fDecadeV", fConsecMax: "fConsecV", fEndingMax: "fEndingV" };
+  for (const [r, v] of Object.entries(map)) {
+    if ($("#" + r) && $("#" + v)) $("#" + v).textContent = $("#" + r).value;
+  }
+  // garantir min <= max sur la somme
+  const mn = $("#fSumMin"), mx = $("#fSumMax");
+  if (mn && mx && +mn.value > +mx.value) {
+    // on pousse l'autre poignée pour rester cohérent
+    if (document.activeElement === mn) mx.value = mn.value; else mn.value = mx.value;
+    if ($("#fSumMinV")) $("#fSumMinV").textContent = mn.value;
+    if ($("#fSumMaxV")) $("#fSumMaxV").textContent = mx.value;
+  }
+}
+
+// Câblage temps réel des curseurs.
+["fSumMin", "fSumMax", "fEven2", "fLow2", "fGapMax", "fDecadeMax", "fConsecMax", "fEndingMax"].forEach(id => {
+  const el = $("#" + id);
+  if (el) el.addEventListener("input", updateGenLabels);
+});
+$("#genCount") && $("#genCount").addEventListener("change", syncGenBounds);
 
 function renderGenAdv() {
   const count = parseInt($("#genCount") && $("#genCount").value) || GAMES[currentGame].drawSize;
