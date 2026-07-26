@@ -1,11 +1,12 @@
 # Mise à jour automatique des tirages (Keno, EuroMillions, Loto, EuroDreams).
 #
-# DÉCLENCHEMENT : 21h15 heure de Paris toute l'année.
-# GitHub Actions tourne en UTC, donc on programme deux crons (19h15 UTC pour
-# l'heure d'été UTC+2, 20h15 UTC pour l'heure d'hiver UTC+1) et un garde-fou
+# DÉCLENCHEMENT : 21h40 heure de Paris toute l'année.
+# GitHub Actions tourne en UTC, donc on programme deux crons (19h40 UTC pour
+# l'heure d'été UTC+2, 20h40 UTC pour l'heure d'hiver UTC+1) et un garde-fou
 # arrête celui qui ne correspond pas à la saison en cours. Résultat : toujours
-# exactement un vrai passage par jour, après le Keno (20h), le Loto et
-# l'EuroMillions (20h45-21h).
+# exactement un vrai passage par jour, après TOUS les tirages du soir et une
+# fois que la FDJ a publié son archive (Keno soir 20h, Loto/EuroMillions
+# 20h45-21h, EuroDreams selon les jours).
 #
 # CRÉDITS NETLIFY : le commit (et donc le déploiement) n'a lieu QUE si les
 # données ont réellement changé -> pas de build les jours sans nouveau tirage.
@@ -14,8 +15,8 @@ name: Mise à jour des tirages
 
 on:
   schedule:
-    - cron: "15 19 * * *"   # 21h15 heure française d'été (UTC+2)
-    - cron: "15 20 * * *"   # 21h15 heure française d'hiver (UTC+1)
+    - cron: "40 19 * * *"   # 21h40 heure française d'été (UTC+2)
+    - cron: "40 20 * * *"   # 21h40 heure française d'hiver (UTC+1)
   workflow_dispatch: {}     # bouton "Run workflow" pour lancer à la main
 
 permissions:
@@ -37,7 +38,7 @@ jobs:
             echo "run=true" >> "$GITHUB_OUTPUT"
           else
             echo "run=false" >> "$GITHUB_OUTPUT"
-            echo "Passage hors saison (${HEURE_PARIS}h à Paris) — on s'arrête."
+            echo "Passage hors saison (${HEURE_PARIS}h a Paris) — on s'arrete."
           fi
 
       - uses: actions/checkout@v4
@@ -63,7 +64,7 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           git add site/data/*.json data-private/*.json site/keno site/euromillions site/loto site/eurodreams site/sitemap.xml
           if git diff --cached --quiet; then
-            echo "Aucun nouveau tirage — pas de commit, pas de déploiement Netlify."
+            echo "Aucun nouveau tirage — pas de commit, pas de deploiement Netlify."
             exit 0
           fi
           git commit -m "data: tirages du $(date -u +%Y-%m-%d)"
