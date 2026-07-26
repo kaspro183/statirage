@@ -2176,6 +2176,7 @@ async function tryAutoLoad(gameKey) {
         if (Array.isArray(data.draws) && data.draws.length ) {
           const draws = data.draws.map(d => ({
             date: parseFrDate(d.date), time: d.time || "", numbers: d.numbers, extras: d.extras || [],
+            mult: d.mult || "",
           })).filter(d => d.date);
           draws.sort((a, b) => b.date - a.date || (b.time > a.time ? 1 : -1));
           adoptDraws(gameKey, { draws, rejected: 0 },
