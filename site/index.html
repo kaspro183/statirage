@@ -1827,7 +1827,7 @@ const GRID_PROFILES = {
   },
   complement: {
     label: "Système de complémentarité",
-    note: "Compose la grille avec les numéros qui comblent les intervalles entre les numéros des deux derniers tirages — ceux qui « complètent » la suite. Chaque tirage restant indépendant, cela ne modifie pas la probabilité : c'est une règle de composition parmi d'autres.",
+    note: "Repère les numéros « répétitifs » présents dans les deux derniers tirages, en fait des bornes, et compose la grille avec les numéros internes à ces séries pas encore ressortis — ceux que la série doit « compléter ». Chaque tirage restant indépendant, cela ne modifie pas la probabilité : c'est une règle de composition parmi d'autres.",
   },
   markov: {
     label: "Chaîne de Markov",
@@ -1885,22 +1885,39 @@ function smartGrid(gameKey, profile = "balanced", size = null) {
     const pool = above.length >= k ? above : Array.from({ length: g.max }, (_, i) => i + 1).filter(n => n > Math.floor(g.max / 3));
     numbers = shuffle([...pool]).slice(0, k);
   } else if (profile === "complement") {
-    // Système de complémentarité : les numéros qui comblent les trous
-    // à l'intérieur de la plage des deux derniers tirages combinés.
-    const sortis = new Set();
-    if (draws[0]) draws[0].numbers.forEach(n => sortis.add(n));
-    if (draws[1]) draws[1].numbers.forEach(n => sortis.add(n));
-    const arr = [...sortis];
-    const lo = Math.min(...arr), hi = Math.max(...arr);
-    // trous internes : présents dans la plage [lo, hi] mais absents des tirages
+    // Système de complémentarité (méthode Roig) :
+    // 1) les "répétitifs" = numéros présents dans les deux derniers tirages consécutifs
+    //    servent de bornes ; 2) chaque paire de bornes définit une "série" (intervalle) ;
+    //    3) la grille est composée des numéros internes à ces séries qui ne sont pas
+    //    encore ressortis au dernier tirage — ceux que la série doit encore "livrer".
+    const last = draws[0] ? draws[0].numbers : [];
+    const prev = draws[1] ? draws[1].numbers : [];
+    const lastSet = new Set(last);
+    // bornes : numéros répétitifs (dans les deux tirages), triés
+    const bornes = [...new Set(prev.filter(n => lastSet.has(n)))].sort((a, b) => a - b);
     let pool = [];
-    for (let n = lo; n <= hi; n++) if (!sortis.has(n)) pool.push(n);
-    // repli si pas assez de trous : on élargit aux numéros absents hors plage
+    if (bornes.length >= 2) {
+      // séries = intervalles entre bornes répétitives successives
+      for (let i = 0; i < bornes.length - 1; i++) {
+        for (let n = bornes[i] + 1; n < bornes[i + 1]; n++) {
+          if (!lastSet.has(n)) pool.push(n);   // numéros que la série doit encore livrer
+        }
+      }
+      pool = [...new Set(pool)];
+    }
+    // repli si aucune série exploitable ou pas assez de numéros : trous internes des 2 tirages
     if (pool.length < k) {
-      const rest = Array.from({ length: g.max }, (_, i) => i + 1).filter(n => !sortis.has(n) && !pool.includes(n));
+      const sortis = new Set([...last, ...prev]);
+      const arr = [...sortis];
+      const lo = Math.min(...arr), hi = Math.max(...arr);
+      const trous = [];
+      for (let n = lo; n <= hi; n++) if (!sortis.has(n) && !pool.includes(n)) trous.push(n);
+      pool = pool.concat(shuffle(trous));
+    }
+    if (pool.length < k) {
+      const rest = Array.from({ length: g.max }, (_, i) => i + 1).filter(n => !pool.includes(n));
       pool = pool.concat(shuffle(rest));
     }
-    if (pool.length < k) pool = Array.from({ length: g.max }, (_, i) => i + 1);
     numbers = shuffle([...pool]).slice(0, k);
   } else if (profile === "markov") {
     // Tirage par sauts : écart préférentiel autour de l'espacement moyen (max/drawSize)
