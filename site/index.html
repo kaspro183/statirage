@@ -751,13 +751,19 @@
 
     <div class="panel gate-panel">
       <h2>Le générateur statistique</h2>
-      <p class="atelier-note">Cinq profils, cinq façons de composer une grille à partir de critères explicites. Aucun ne modifie vos chances — ils structurent le choix.</p>
+      <p class="atelier-note">Sept profils, sept façons de composer une grille à partir de critères explicites. Aucun ne modifie vos chances — ils structurent le choix.</p>
       <div class="atelier-tools" id="profileTabs">
         <button class="chip active" data-profile="balanced">Équilibrée</button>
         <button class="chip" data-profile="cold">Les retardataires</button>
         <button class="chip" data-profile="hot">Les habituées</button>
         <button class="chip" data-profile="contrarian">Anti-consensus</button>
+        <button class="chip" data-profile="markov">Chaîne de Markov</button>
+        <button class="chip" data-profile="signature">Signature</button>
         <button class="chip" data-profile="random">Au hasard pur</button>
+      </div>
+      <div class="atelier-tools" id="sigRow" style="display:none">
+        <span class="label">Ton mot</span>
+        <input type="text" id="sigWord" class="select" placeholder="ex : Marley" maxlength="32" style="min-width:160px" value="Marley">
       </div>
       <div class="atelier-tools">
         <button class="btn" type="button" id="smartBtn">Générer la grille</button>
@@ -1809,6 +1815,14 @@ const GRID_PROFILES = {
     label: "Anti-consensus",
     note: "Écarte les numéros que tout le monde joue (1–31, les dates de naissance). Ne change pas vos chances de gagner — mais réduit le risque de partager le gain.",
   },
+  markov: {
+    label: "Chaîne de Markov",
+    note: "Chaque numéro est tiré selon l'écart au précédent, réglé sur l'espacement moyen d'un vrai tirage. La grille ressemble statistiquement à un tirage réel sans en copier aucun. Effet purement descriptif : la probabilité reste identique.",
+  },
+  signature: {
+    label: "Signature",
+    note: "Une grille déterministe dérivée d'un mot de votre choix par hachage. Le même mot redonne toujours la même grille ; deux mots différents n'en donnent jamais la même. Unique et reproductible — mais aussi probable que n'importe quelle autre.",
+  },
   random: {
     label: "Au hasard pur",
     note: "Un tirage aléatoire sans aucun critère. La référence pour comparer les autres profils.",
@@ -1856,6 +1870,32 @@ function smartGrid(gameKey, profile = "balanced") {
     const above = Array.from({ length: g.max }, (_, i) => i + 1).filter(n => n > 31);
     const pool = above.length >= k ? above : Array.from({ length: g.max }, (_, i) => i + 1).filter(n => n > Math.floor(g.max / 3));
     numbers = shuffle([...pool]).slice(0, k);
+  } else if (profile === "markov") {
+    // Tirage par sauts : écart préférentiel autour de l'espacement moyen (max/drawSize)
+    const step = g.max / k;
+    numbers = [];
+    let last = 1 + Math.floor(Math.random() * g.max);
+    numbers.push(last);
+    let guard = 0;
+    while (numbers.length < k && guard++ < 500) {
+      // saut ~ espacement moyen ±50 %, replié modulo max
+      const jump = Math.max(1, Math.round(step * (0.5 + Math.random())));
+      const cand = ((last - 1 + jump) % g.max) + 1;
+      if (!numbers.includes(cand)) { numbers.push(cand); last = cand; }
+      else last = 1 + Math.floor(Math.random() * g.max);
+    }
+  } else if (profile === "signature") {
+    // Hachage FNV-1a du mot → LCG déterministe → k numéros + extras
+    const seed = (window.__sigWord || "statirage").toLowerCase();
+    let h = 2166136261 >>> 0;
+    for (let i = 0; i < seed.length; i++) { h ^= seed.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+    let x = h >>> 0;
+    const next = () => { x = (Math.imul(x, 1103515245) + 12345) >>> 0; return x; };
+    const picked = new Set();
+    let guard = 0;
+    while (picked.size < k && guard++ < 500) picked.add((next() % g.max) + 1);
+    numbers = [...picked];
+    window.__sigSeed = next;   // réutilisé pour les extras déterministes
   } else if (profile === "random") {
     numbers = shuffle(Array.from({ length: g.max }, (_, i) => i + 1)).slice(0, k);
   } else {
@@ -1877,7 +1917,14 @@ function smartGrid(gameKey, profile = "balanced") {
   const extras = [];
   if (g.extraMax) {
     const cnt = gameKey === "euromillions" ? 2 : 1;
-    extras.push(...shuffle(Array.from({ length: g.extraMax }, (_, i) => i + 1)).slice(0, cnt).sort((a, b) => a - b));
+    if (profile === "signature" && window.__sigSeed) {
+      const pickedX = new Set();
+      let guard = 0;
+      while (pickedX.size < cnt && guard++ < 200) pickedX.add((window.__sigSeed() % g.extraMax) + 1);
+      extras.push(...[...pickedX].sort((a, b) => a - b));
+    } else {
+      extras.push(...shuffle(Array.from({ length: g.extraMax }, (_, i) => i + 1)).slice(0, cnt).sort((a, b) => a - b));
+    }
   }
   return { numbers, extras, profile, metrics: gridMetrics(numbers, gameKey) };
 }
@@ -2857,6 +2904,10 @@ function renderPortrait() {
 }
 
 function renderSmart() {
+  if (activeProfile === "signature") {
+    const w = $("#sigWord");
+    window.__sigWord = (w && w.value.trim()) ? w.value.trim() : "statirage";
+  }
   const grid = smartGrid(currentGame, activeProfile);
   const m = grid.metrics;
   const p = GRID_PROFILES[activeProfile];
@@ -2892,8 +2943,10 @@ document.querySelectorAll("#profileTabs .chip").forEach(c => c.addEventListener(
   document.querySelectorAll("#profileTabs .chip").forEach(x => x.classList.remove("active"));
   c.classList.add("active");
   activeProfile = c.dataset.profile;
+  const sr = $("#sigRow"); if (sr) sr.style.display = activeProfile === "signature" ? "" : "none";
   renderSmart();
 }));
+$("#sigWord") && $("#sigWord").addEventListener("input", () => { if (activeProfile === "signature") renderSmart(); });
 $("#smartBtn") && $("#smartBtn").addEventListener("click", renderSmart);
 
 /* ---------- Générateur avancé ---------- */
