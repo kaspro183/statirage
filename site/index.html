@@ -231,6 +231,9 @@
   .pt-mini span { width: 25px; height: 25px; border-radius: 50%; background: #fff; border: 1px solid var(--ligne);
     display: flex; align-items: center; justify-content: center; font: 600 11px 'IBM Plex Mono', monospace; }
   .pt-mini span.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .pt-mini .pt-sep { width: 1px; height: 25px; background: var(--ligne); margin: 0 4px; flex: none; }
+  .pt-mini span.xtra { border-radius: 8px; border-color: var(--accent); color: var(--accent); background: #fff; }
+  .pt-mini span.xtra.on { background: var(--accent); color: #fff; }
   .pt-big { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
   .pt-big b { font: 700 30px 'IBM Plex Mono', monospace; color: var(--accent); line-height: 1; }
   .pt-big span { color: var(--muted); font-size: 12px; }
@@ -614,6 +617,12 @@
       </div>
     </div>
 
+    <div class="panel" id="portraitPanel">
+      <h2>Le portrait du tirage</h2>
+      <p class="atelier-note">Cinq lectures descriptives du dernier tirage, comparées à l'ensemble de l'historique. Ce sont des constats sur ce qui vient de se produire — ils ne disent rien du tirage suivant.</p>
+      <div id="portraitBody"></div>
+    </div>
+
     <div class="board-card">
       <div class="board-title">La grille</div>
       <div class="board-sub" id="boardSub"></div>
@@ -623,12 +632,6 @@
         <span class="label" id="extrasLabel"></span>
         <div class="extras-row" id="extrasRow"></div>
       </div>
-    </div>
-
-    <div class="panel" id="portraitPanel">
-      <h2>Le portrait du tirage</h2>
-      <p class="atelier-note">Cinq lectures descriptives du dernier tirage, comparées à l'ensemble de l'historique. Ce sont des constats sur ce qui vient de se produire — ils ne disent rien du tirage suivant.</p>
-      <div id="portraitBody"></div>
     </div>
 
     <div class="panel chart-panel">
@@ -1350,6 +1353,7 @@ function drawPortrait(gameKey, index = 0) {
 
   // 4. Tirages les plus ressemblants
   const similar = draws.map((x, i) => ({ i, date: x.date, numbers: x.numbers,
+      extras: Array.isArray(x.extras) ? x.extras : [],
       shared: i === index ? -1 : x.numbers.filter(n => nums.includes(n)).length }))
     .filter(x => x.shared >= 0)
     .sort((a, b) => b.shared - a.shared || a.i - b.i)
@@ -1376,7 +1380,8 @@ function drawPortrait(gameKey, index = 0) {
   const histAvg = sharedHist.length
     ? sharedHist.reduce((a, b) => a + b.count, 0) / sharedHist.length : null;
 
-  return { draw: d, numbers: nums, runs, decades, lastDigits, sum, avgSum: +avgSum.toFixed(1),
+  const drawExtras = Array.isArray(d.extras) ? [...d.extras].sort((a, b) => a - b) : [];
+  return { draw: d, numbers: nums, extras: drawExtras, runs, decades, lastDigits, sum, avgSum: +avgSum.toFixed(1),
     sumPct: pct(allSums, sum), evens, odds: k - evens, evensPct: pct(allEvens, evens),
     lows: nums.filter(n => n <= g.max / 2).length, similar, rep, total: draws.length,
     expectedShared, sharedPrev, prevDate, sharedHist, histAvg };
@@ -2809,10 +2814,15 @@ function renderPortrait() {
     `<div class="pt-gauge"><i style="left:${p.evensPct}%"></i></div>` +
     `<div class="board-sub">${p.evensPct}ᵉ percentile · ${p.lows} numéros dans la moitié basse (1–${g.max / 2}).</div>`;
 
-  const simHtml = p.similar.map(s =>
-    `<div class="pt-line"><b>${s.shared}/${k}</b><span>${fmtDate(s.date)}</span></div>` +
-    `<div class="pt-mini">${s.numbers.map(n => `<span class="${p.numbers.includes(n) ? "on" : ""}">${n}</span>`).join("")}</div>`
-  ).join("") + `<div class="board-sub" style="margin-top:8px">Les tirages passés partageant le plus de numéros avec celui-ci. En couleur : les numéros communs.</div>`;
+  const curExtras = p.extras || [];
+  const simHtml = p.similar.map(s => {
+    const numsHtml = s.numbers.map(n => `<span class="${p.numbers.includes(n) ? "on" : ""}">${n}</span>`).join("");
+    const extrasHtml = (g.extraMax && s.extras && s.extras.length)
+      ? `<span class="pt-sep"></span>` + s.extras.map(n => `<span class="xtra${curExtras.includes(n) ? " on" : ""}">${n}</span>`).join("")
+      : "";
+    return `<div class="pt-line"><b>${s.shared}/${k}</b><span>${fmtDate(s.date)}</span></div>` +
+      `<div class="pt-mini">${numsHtml}${extrasHtml}</div>`;
+  }).join("") + `<div class="board-sub" style="margin-top:8px">Les tirages passés partageant le plus de numéros avec celui-ci. En couleur : les numéros communs${g.extraMax ? ` · ${g.extraLabel.toLowerCase()} à droite` : ""}.</div>`;
 
   let commonHtml;
   if (p.sharedPrev === null) {
