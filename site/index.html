@@ -765,6 +765,13 @@
         <span class="label">Ton mot</span>
         <input type="text" id="sigWord" class="select" placeholder="ex : Marley" maxlength="32" style="min-width:160px" value="Marley">
       </div>
+      <div class="atelier-tools" id="kenoSizeRow" style="display:none">
+        <span class="label">Numéros joués</span>
+        <select id="kenoSize" class="select">
+          <option>4</option><option>5</option><option>6</option><option>7</option>
+          <option selected>8</option><option>9</option><option>10</option>
+        </select>
+      </div>
       <div class="atelier-tools">
         <button class="btn" type="button" id="smartBtn">Générer la grille</button>
       </div>
@@ -1184,6 +1191,8 @@ function applyGameTheme(gameKey) {
   r.setProperty("--accent-soft", t.soft);
   r.setProperty("--bg1", t.bg1);
   r.setProperty("--bg2", t.bg2);
+  const ksr = document.getElementById("kenoSizeRow");
+  if (ksr) ksr.style.display = gameKey === "keno" ? "" : "none";
 }
 
 /* MODE TEST : true = tout est débloqué (pas de paywall). Passer à false au lancement. */
@@ -1838,7 +1847,7 @@ function gridMetrics(nums, gameKey) {
   const gaps = stats ? nums.map(n => stats[n - 1].currentGap) : [];
   return {
     sum: nums.reduce((a, b) => a + b, 0),
-    targetSum: g.drawSize * (g.max + 1) / 2,
+    targetSum: nums.length * (g.max + 1) / 2,
     evens: nums.filter(n => n % 2 === 0).length,
     lows: nums.filter(n => n <= half).length,
     consec,
@@ -1846,9 +1855,9 @@ function gridMetrics(nums, gameKey) {
   };
 }
 
-function smartGrid(gameKey, profile = "balanced") {
+function smartGrid(gameKey, profile = "balanced", size = null) {
   const g = GAMES[gameKey];
-  const k = g.drawSize;
+  const k = size || g.drawSize;
   const half = g.max / 2;
   const draws = store[gameKey];
   const stats = draws.length ? computeStats(draws, windowSize, gameKey).stats : null;
@@ -2908,7 +2917,8 @@ function renderSmart() {
     const w = $("#sigWord");
     window.__sigWord = (w && w.value.trim()) ? w.value.trim() : "statirage";
   }
-  const grid = smartGrid(currentGame, activeProfile);
+  const kenoSize = (currentGame === "keno" && $("#kenoSize")) ? parseInt($("#kenoSize").value) : null;
+  const grid = smartGrid(currentGame, activeProfile, kenoSize);
   const m = grid.metrics;
   const p = GRID_PROFILES[activeProfile];
   const k = grid.numbers.length;
@@ -2947,6 +2957,7 @@ document.querySelectorAll("#profileTabs .chip").forEach(c => c.addEventListener(
   renderSmart();
 }));
 $("#sigWord") && $("#sigWord").addEventListener("input", () => { if (activeProfile === "signature") renderSmart(); });
+$("#kenoSize") && $("#kenoSize").addEventListener("change", renderSmart);
 $("#smartBtn") && $("#smartBtn").addEventListener("click", renderSmart);
 
 /* ---------- Générateur avancé ---------- */
