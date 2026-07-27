@@ -751,12 +751,13 @@
 
     <div class="panel gate-panel">
       <h2>Le générateur statistique</h2>
-      <p class="atelier-note">Sept profils, sept façons de composer une grille à partir de critères explicites. Aucun ne modifie vos chances — ils structurent le choix.</p>
+      <p class="atelier-note">Huit profils, huit façons de composer une grille à partir de critères explicites. Aucun ne modifie vos chances — ils structurent le choix.</p>
       <div class="atelier-tools" id="profileTabs">
         <button class="chip active" data-profile="balanced">Équilibrée</button>
         <button class="chip" data-profile="cold">Les retardataires</button>
         <button class="chip" data-profile="hot">Les habituées</button>
         <button class="chip" data-profile="contrarian">Anti-consensus</button>
+        <button class="chip" data-profile="complement">Complémentarité</button>
         <button class="chip" data-profile="markov">Chaîne de Markov</button>
         <button class="chip" data-profile="signature">Signature</button>
         <button class="chip" data-profile="random">Au hasard pur</button>
@@ -1824,6 +1825,10 @@ const GRID_PROFILES = {
     label: "Anti-consensus",
     note: "Écarte les numéros que tout le monde joue (1–31, les dates de naissance). Ne change pas vos chances de gagner — mais réduit le risque de partager le gain.",
   },
+  complement: {
+    label: "Système de complémentarité",
+    note: "Compose la grille avec les numéros qui comblent les intervalles entre les numéros des deux derniers tirages — ceux qui « complètent » la suite. Chaque tirage restant indépendant, cela ne modifie pas la probabilité : c'est une règle de composition parmi d'autres.",
+  },
   markov: {
     label: "Chaîne de Markov",
     note: "Chaque numéro est tiré selon l'écart au précédent, réglé sur l'espacement moyen d'un vrai tirage. La grille ressemble statistiquement à un tirage réel sans en copier aucun. Effet purement descriptif : la probabilité reste identique.",
@@ -1878,6 +1883,24 @@ function smartGrid(gameKey, profile = "balanced", size = null) {
     // Écarte 1–31 (dates) tant qu'il reste assez de numéros au-dessus
     const above = Array.from({ length: g.max }, (_, i) => i + 1).filter(n => n > 31);
     const pool = above.length >= k ? above : Array.from({ length: g.max }, (_, i) => i + 1).filter(n => n > Math.floor(g.max / 3));
+    numbers = shuffle([...pool]).slice(0, k);
+  } else if (profile === "complement") {
+    // Système de complémentarité : les numéros qui comblent les trous
+    // à l'intérieur de la plage des deux derniers tirages combinés.
+    const sortis = new Set();
+    if (draws[0]) draws[0].numbers.forEach(n => sortis.add(n));
+    if (draws[1]) draws[1].numbers.forEach(n => sortis.add(n));
+    const arr = [...sortis];
+    const lo = Math.min(...arr), hi = Math.max(...arr);
+    // trous internes : présents dans la plage [lo, hi] mais absents des tirages
+    let pool = [];
+    for (let n = lo; n <= hi; n++) if (!sortis.has(n)) pool.push(n);
+    // repli si pas assez de trous : on élargit aux numéros absents hors plage
+    if (pool.length < k) {
+      const rest = Array.from({ length: g.max }, (_, i) => i + 1).filter(n => !sortis.has(n) && !pool.includes(n));
+      pool = pool.concat(shuffle(rest));
+    }
+    if (pool.length < k) pool = Array.from({ length: g.max }, (_, i) => i + 1);
     numbers = shuffle([...pool]).slice(0, k);
   } else if (profile === "markov") {
     // Tirage par sauts : écart préférentiel autour de l'espacement moyen (max/drawSize)
