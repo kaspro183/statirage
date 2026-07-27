@@ -418,6 +418,9 @@
   .wheel-grid .gnum { font: 600 12px 'IBM Plex Mono', monospace; color: var(--muted); min-width: 66px; }
   .draws-panel { margin-top: 16px; }
   .draw-line { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--papier-2); }
+  .mynums-scroll { max-height: 520px; overflow-y: auto; margin-top: 6px; padding-right: 8px; }
+  .mynums-scroll::-webkit-scrollbar { width: 8px; }
+  .mynums-scroll::-webkit-scrollbar-thumb { background: rgba(140,34,70,.25); border-radius: 8px; }
   .draw-date { font: 600 12.5px 'IBM Plex Mono', monospace; color: var(--muted); min-width: 132px; }
   .ball {
     width: 27px; height: 27px; border-radius: 50%; background: #fff; border: 1px solid var(--ligne);
@@ -3275,17 +3278,34 @@ function renderMyNums() {
   const payable = currentGame === "keno" && !!KENO_PAY[saved.length];
   const mise = payable ? +$("#myMise").value : 0;
   const useMult = payable && $("#myMult").checked;
-  let html = draws.slice(0, 7).map((d, i) => {
+
+  // On prépare toutes les lignes avec leur gain, puis on ne garde que les
+  // tirages gagnants (gain > 0) — plus le tirage le plus récent, toujours affiché.
+  const rows = draws.map((d, i) => {
     const hits = saved.filter(n => d.numbers.includes(n));
+    const g = payable ? kenoGain(saved.length, hits.length, mise) * (useMult ? (parseInt(d.mult) || 1) : 1) : 0;
+    return { d, i, hits, g };
+  });
+  const shown = payable ? rows.filter(r => r.g > 0 || r.i === 0) : rows;
+
+  const lineHtml = ({ d, i, hits, g }) => {
     let euro = "";
     if (payable) {
-      const g = kenoGain(saved.length, hits.length, mise) * (useMult ? (parseInt(d.mult) || 1) : 1);
       euro = `<span class="draw-date" style="min-width:auto;margin-left:4px;${g > 0 ? "color:var(--accent);font-weight:700" : "opacity:.55"}">${g > 0 ? "+ " + fmtEuro(g) : "0 €"}</span>`;
     }
     return `<div class="draw-line"><span class="draw-date">${fmtDate(d.date)}${d.time && d.time !== "unique" ? " · " + d.time : ""}</span>` +
       saved.map(n => `<span class="ball" style="${hits.includes(n) ? "background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700" : "opacity:.45"}">${n}</span>`).join("") +
       `<span class="draw-date" style="min-width:auto;margin-left:6px">${hits.length}/${saved.length}${i === 0 ? " ce tirage" : ""}</span>${euro}</div>`;
-  }).join("");
+  };
+
+  let html = "";
+  if (payable) {
+    const wins = shown.filter(r => r.g > 0).length;
+    html += `<div class="board-sub" style="margin:4px 0 8px">${wins > 0
+      ? `Tirages gagnants uniquement (${wins} sur ${draws.length}) — plus le dernier tirage.`
+      : `Aucun tirage gagnant sur les ${draws.length} chargés avec cette grille. Seul le dernier tirage est affiché.`}</div>`;
+  }
+  html += `<div class="mynums-scroll">` + shown.map(lineHtml).join("") + `</div>`;
   if (payable) html += euroSummaryHtml(kenoLedger(saved, mise, useMult, draws), mise, useMult);
   else if (currentGame === "keno") html += `<div class="board-sub" style="margin-top:8px">Les gains en euros s'affichent pour une grille Keno de 4 à 10 numéros.</div>`;
   out.innerHTML = html;
