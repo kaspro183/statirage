@@ -314,6 +314,27 @@
   .metric-box .m-label { font-size: 11px; color: var(--muted); }
   .metric-box .m-val { font: 600 15px 'IBM Plex Mono', monospace; }
   .profile-note { font-size: 12.5px; color: var(--muted); margin-top: 12px; line-height: 1.55; max-width: 75ch; }
+  /* Section système de complémentarité */
+  .comp-draw { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
+  .comp-label { width: 92px; flex: none; font: 600 12px 'IBM Plex Mono', monospace; color: var(--muted); text-align: right; }
+  .comp-nums { display: flex; gap: 4px; flex-wrap: wrap; }
+  .comp-n { width: 29px; height: 29px; border-radius: 8px; background: var(--papier-2); border: 1.5px solid var(--ligne);
+    display: flex; align-items: center; justify-content: center; font: 600 12px 'IBM Plex Mono', monospace; color: var(--encre); transition: all .3s ease; }
+  .comp-n.borne { background: var(--laiton); border-color: var(--laiton); color: #fff; font-weight: 700; }
+  .comp-n.livre { background: #2E8B57; border-color: #2E8B57; color: #fff; }
+  .comp-n.attente { background: #fff; border-style: dashed; opacity: .55; }
+  .comp-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin: 12px 0; }
+  .comp-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .comp-dot { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
+  .comp-dot.borne { background: var(--laiton); }
+  .comp-dot.livre { background: #2E8B57; }
+  .comp-dot.attente { background: #fff; border: 1.5px dashed var(--ligne); }
+  .comp-serie { margin: 12px 0; padding: 12px 14px; background: var(--papier-2); border-radius: 10px; }
+  .comp-serie-title { font: 600 12.5px 'Poppins', sans-serif; color: var(--encre); margin-bottom: 8px; }
+  .comp-interval { display: flex; gap: 3px; flex-wrap: wrap; align-items: center; }
+  .comp-prog-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin: 10px 0 5px; }
+  .comp-prog-bar { height: 9px; border-radius: 6px; background: var(--papier); overflow: hidden; border: 1px solid var(--ligne); }
+  .comp-prog-fill { height: 100%; background: linear-gradient(90deg, var(--laiton), #2E8B57); border-radius: 6px; transition: width .5s ease; }
   .genadv-grid { display: grid; gap: 16px; margin-top: 14px; }
   .genadv-row { display: grid; grid-template-columns: 20px 1fr; align-items: start; gap: 9px; font-size: 13.5px; color: var(--encre); line-height: 1.5; }
   .genadv-row > input[type="checkbox"] { accent-color: var(--accent); width: 17px; height: 17px; margin-top: 2px; }
@@ -751,13 +772,12 @@
 
     <div class="panel gate-panel">
       <h2>Le générateur statistique</h2>
-      <p class="atelier-note">Huit profils, huit façons de composer une grille à partir de critères explicites. Aucun ne modifie vos chances — ils structurent le choix.</p>
+      <p class="atelier-note">Sept profils, sept façons de composer une grille à partir de critères explicites. Aucun ne modifie vos chances — ils structurent le choix.</p>
       <div class="atelier-tools" id="profileTabs">
         <button class="chip active" data-profile="balanced">Équilibrée</button>
         <button class="chip" data-profile="cold">Les retardataires</button>
         <button class="chip" data-profile="hot">Les habituées</button>
         <button class="chip" data-profile="contrarian">Anti-consensus</button>
-        <button class="chip" data-profile="complement">Complémentarité</button>
         <button class="chip" data-profile="markov">Chaîne de Markov</button>
         <button class="chip" data-profile="signature">Signature</button>
         <button class="chip" data-profile="random">Au hasard pur</button>
@@ -777,6 +797,16 @@
         <button class="btn" type="button" id="smartBtn">Générer la grille</button>
       </div>
       <div id="smartBody"></div>
+    </div>
+
+    <div class="panel gate-panel" id="compPanel">
+      <h2>Le système de complémentarité</h2>
+      <p class="atelier-note">Repère les numéros « répétitifs » entre les deux derniers tirages : ils deviennent des <b>bornes</b> qui définissent une <b>série</b> (l'intervalle entre elles). Les tirages suivants « complètent » cette série. Une lecture descriptive — elle ne modifie pas la probabilité du prochain tirage.</p>
+      <div id="compBody"></div>
+      <div class="atelier-tools" style="margin-top:14px">
+        <button class="btn" type="button" id="compGridBtn">Générer une grille depuis la série</button>
+      </div>
+      <div id="compGrid"></div>
     </div>
 
     <div class="panel atelier-panel">
@@ -1825,10 +1855,6 @@ const GRID_PROFILES = {
     label: "Anti-consensus",
     note: "Écarte les numéros que tout le monde joue (1–31, les dates de naissance). Ne change pas vos chances de gagner — mais réduit le risque de partager le gain.",
   },
-  complement: {
-    label: "Système de complémentarité",
-    note: "Repère les numéros « répétitifs » présents dans les deux derniers tirages, en fait des bornes, et compose la grille avec les numéros internes à ces séries pas encore ressortis — ceux que la série doit « compléter ». Chaque tirage restant indépendant, cela ne modifie pas la probabilité : c'est une règle de composition parmi d'autres.",
-  },
   markov: {
     label: "Chaîne de Markov",
     note: "Chaque numéro est tiré selon l'écart au précédent, réglé sur l'espacement moyen d'un vrai tirage. La grille ressemble statistiquement à un tirage réel sans en copier aucun. Effet purement descriptif : la probabilité reste identique.",
@@ -1883,41 +1909,6 @@ function smartGrid(gameKey, profile = "balanced", size = null) {
     // Écarte 1–31 (dates) tant qu'il reste assez de numéros au-dessus
     const above = Array.from({ length: g.max }, (_, i) => i + 1).filter(n => n > 31);
     const pool = above.length >= k ? above : Array.from({ length: g.max }, (_, i) => i + 1).filter(n => n > Math.floor(g.max / 3));
-    numbers = shuffle([...pool]).slice(0, k);
-  } else if (profile === "complement") {
-    // Système de complémentarité (méthode Roig) :
-    // 1) les "répétitifs" = numéros présents dans les deux derniers tirages consécutifs
-    //    servent de bornes ; 2) chaque paire de bornes définit une "série" (intervalle) ;
-    //    3) la grille est composée des numéros internes à ces séries qui ne sont pas
-    //    encore ressortis au dernier tirage — ceux que la série doit encore "livrer".
-    const last = draws[0] ? draws[0].numbers : [];
-    const prev = draws[1] ? draws[1].numbers : [];
-    const lastSet = new Set(last);
-    // bornes : numéros répétitifs (dans les deux tirages), triés
-    const bornes = [...new Set(prev.filter(n => lastSet.has(n)))].sort((a, b) => a - b);
-    let pool = [];
-    if (bornes.length >= 2) {
-      // séries = intervalles entre bornes répétitives successives
-      for (let i = 0; i < bornes.length - 1; i++) {
-        for (let n = bornes[i] + 1; n < bornes[i + 1]; n++) {
-          if (!lastSet.has(n)) pool.push(n);   // numéros que la série doit encore livrer
-        }
-      }
-      pool = [...new Set(pool)];
-    }
-    // repli si aucune série exploitable ou pas assez de numéros : trous internes des 2 tirages
-    if (pool.length < k) {
-      const sortis = new Set([...last, ...prev]);
-      const arr = [...sortis];
-      const lo = Math.min(...arr), hi = Math.max(...arr);
-      const trous = [];
-      for (let n = lo; n <= hi; n++) if (!sortis.has(n) && !pool.includes(n)) trous.push(n);
-      pool = pool.concat(shuffle(trous));
-    }
-    if (pool.length < k) {
-      const rest = Array.from({ length: g.max }, (_, i) => i + 1).filter(n => !pool.includes(n));
-      pool = pool.concat(shuffle(rest));
-    }
     numbers = shuffle([...pool]).slice(0, k);
   } else if (profile === "markov") {
     // Tirage par sauts : écart préférentiel autour de l'espacement moyen (max/drawSize)
@@ -2980,7 +2971,107 @@ function renderSmart() {
     `<p class="profile-note">Cette grille a exactement les mêmes chances qu'une grille prise au hasard.</p>`;
 }
 
-$("#nextNum") && $("#nextNum").addEventListener("change", renderNext);
+/* ---------- Système de complémentarité (méthode Roig) ---------- */
+let compState = null;   // { series: [...], awaited: [...] } pour le générateur de grille
+function computeComplement(gameKey) {
+  const draws = store[gameKey];
+  if (!draws || draws.length < 2) return null;
+  const last = [...draws[0].numbers].sort((a, b) => a - b);
+  const prev = [...draws[1].numbers].sort((a, b) => a - b);
+  const lastSet = new Set(last), prevSet = new Set(prev);
+  const outSet = new Set([...last, ...prev]);
+  // bornes = numéros répétitifs (présents dans les deux tirages)
+  const bornes = [...new Set(prev.filter(n => lastSet.has(n)))].sort((a, b) => a - b);
+  // séries = intervalles entre bornes successives ; on note ce qui est livré / attendu
+  const series = [];
+  for (let i = 0; i < bornes.length - 1; i++) {
+    const lo = bornes[i], hi = bornes[i + 1];
+    if (hi - lo < 2) continue;   // pas d'intérieur
+    const interior = [];
+    for (let n = lo + 1; n < hi; n++) interior.push({ n, livre: outSet.has(n) });
+    series.push({ lo, hi, interior });
+  }
+  const awaited = [];
+  series.forEach(s => s.interior.forEach(x => { if (!x.livre) awaited.push(x.n); }));
+  return { last, prev, lastSet, prevSet, bornes, series, awaited,
+    dateLast: draws[0].date, datePrev: draws[1].date };
+}
+
+function renderComplement() {
+  const host = $("#compBody");
+  if (!host) return;
+  const c = computeComplement(currentGame);
+  compState = c;
+  if (!c) { host.innerHTML = `<div class="board-sub">Pas assez de tirages chargés pour analyser les répétitifs.</div>`;
+    const gb = $("#compGridBtn"); if (gb) gb.style.display = "none"; $("#compGrid").innerHTML = ""; return; }
+
+  const numCell = (n, set, extraCls = "") =>
+    `<div class="comp-n ${c.bornes.includes(n) ? "borne" : ""} ${extraCls}">${n}</div>`;
+
+  const drawHtml =
+    `<div class="comp-draw"><div class="comp-label">${fmtDate(c.datePrev)}</div><div class="comp-nums">` +
+      c.prev.map(n => numCell(n, c.prevSet)).join("") + `</div></div>` +
+    `<div class="comp-draw"><div class="comp-label">${fmtDate(c.dateLast)}</div><div class="comp-nums">` +
+      c.last.map(n => numCell(n, c.lastSet)).join("") + `</div></div>`;
+
+  const legend =
+    `<div class="comp-legend">` +
+    `<span><i class="comp-dot borne"></i> répétitif (borne)</span>` +
+    `<span><i class="comp-dot livre"></i> livré par la série</span>` +
+    `<span><i class="comp-dot attente"></i> en attente</span></div>`;
+
+  let seriesHtml;
+  if (!c.bornes.length) {
+    seriesHtml = `<div class="board-sub">Aucun numéro répétitif entre ces deux tirages — aucune série n'est amorcée aujourd'hui. Le système est en veille jusqu'au prochain répétitif.</div>`;
+  } else if (!c.series.length) {
+    seriesHtml = `<div class="board-sub">${c.bornes.length} répétitif${c.bornes.length > 1 ? "s" : ""} (${c.bornes.join(", ")}), mais aucun intervalle exploitable entre eux.</div>`;
+  } else {
+    seriesHtml = c.series.map(s => {
+      const total = s.interior.length;
+      const done = s.interior.filter(x => x.livre).length;
+      const pct = total ? Math.round(done / total * 100) : 0;
+      const cells = `<div class="comp-n borne">${s.lo}</div>` +
+        s.interior.map(x => `<div class="comp-n ${x.livre ? "livre" : "attente"}">${x.n}</div>`).join("") +
+        `<div class="comp-n borne">${s.hi}</div>`;
+      return `<div class="comp-serie">` +
+        `<div class="comp-serie-title">Série ${s.lo} → ${s.hi}</div>` +
+        `<div class="comp-interval">${cells}</div>` +
+        `<div class="comp-prog-label"><span>Complétion</span><span>${done} / ${total} · ${pct}%</span></div>` +
+        `<div class="comp-prog-bar"><div class="comp-prog-fill" style="width:${pct}%"></div></div>` +
+        `</div>`;
+    }).join("");
+  }
+
+  host.innerHTML = drawHtml + legend + seriesHtml;
+  const gb = $("#compGridBtn");
+  if (gb) gb.style.display = c.awaited.length ? "" : "none";
+  $("#compGrid").innerHTML = "";
+}
+
+function renderComplementGrid() {
+  if (!compState || !compState.awaited.length) return;
+  const g = GAMES[currentGame];
+  const k = currentGame === "keno" && $("#kenoSize") ? parseInt($("#kenoSize").value) : g.drawSize;
+  const shuffle = (arr) => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; };
+  let pool = [...compState.awaited];
+  // repli si la série ne fournit pas assez de numéros
+  if (pool.length < k) {
+    const rest = Array.from({ length: g.max }, (_, i) => i + 1).filter(n => !pool.includes(n));
+    pool = pool.concat(shuffle(rest));
+  }
+  const nums = shuffle([...pool]).slice(0, k).sort((a, b) => a - b);
+  const extras = [];
+  if (g.extraMax) {
+    const cnt = currentGame === "euromillions" ? 2 : 1;
+    extras.push(...shuffle(Array.from({ length: g.extraMax }, (_, i) => i + 1)).slice(0, cnt).sort((a, b) => a - b));
+  }
+  $("#compGrid").innerHTML =
+    `<div class="smart-grid" style="margin-top:14px">` +
+    nums.map(n => `<span class="ball">${n}</span>`).join("") +
+    extras.map(n => `<span class="ball star">${n}</span>`).join("") +
+    `</div>` +
+    `<p class="profile-note">Numéros piochés dans les séries en attente de complétion. Cette grille a exactement les mêmes chances qu'une grille prise au hasard.</p>`;
+}
 document.querySelectorAll("[data-next]").forEach(b => b.addEventListener("click", () => {
   document.querySelectorAll("[data-next]").forEach(x => x.classList.remove("active"));
   b.classList.add("active");
@@ -2999,6 +3090,7 @@ document.querySelectorAll("#profileTabs .chip").forEach(c => c.addEventListener(
 $("#sigWord") && $("#sigWord").addEventListener("input", () => { if (activeProfile === "signature") renderSmart(); });
 $("#kenoSize") && $("#kenoSize").addEventListener("change", renderSmart);
 $("#smartBtn") && $("#smartBtn").addEventListener("click", renderSmart);
+$("#compGridBtn") && $("#compGridBtn").addEventListener("click", renderComplementGrid);
 
 /* ---------- Générateur avancé ---------- */
 function fillGenCount() {
@@ -3794,6 +3886,7 @@ function renderExtras2() {
   safe("next", () => { mcResult = null; renderNext(); });
   safe("fact", renderFact);
   safe("portrait", renderPortrait);
+  safe("complement", renderComplement);
   safe("pickers", refreshPickers);
   safe("rank", renderRank);
   safe("cal", () => { calCursor = null; renderCal(); });
