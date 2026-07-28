@@ -801,7 +801,7 @@
 
     <div class="panel gate-panel" id="compPanel">
       <h2>Le système de complémentarité</h2>
-      <p class="atelier-note">Repère les numéros « répétitifs » entre tirages consécutifs : ils deviennent des <b>bornes</b> qui définissent une <b>série</b> (l'intervalle entre elles). Le curseur choisit sur combien de tirages remonter : à 2, on suit la série tout juste ouverte ; en élargissant, on suit une série plus ancienne et on voit sa complétion progresser. Une lecture descriptive — elle ne modifie pas la probabilité du prochain tirage.</p>
+      <p class="atelier-note">Repère les numéros « répétitifs » (présents dans deux tirages consécutifs) : ils deviennent des <b>bornes</b> qui découpent l'espace en <b>séries</b>, une par intervalle entre bornes voisines. Chaque série se « complète » quand tous ses numéros internes sont sortis. Le curseur choisit sur combien de tirages remonter pour relever les bornes. Une lecture descriptive — elle ne modifie pas la probabilité du prochain tirage.</p>
       <div class="atelier-tools" id="compDepthRow">
         <span class="label">Profondeur</span>
         <input type="range" id="compDepth" min="2" max="20" value="2" step="1" style="flex:1;min-width:120px;accent-color:var(--accent)">
@@ -2984,38 +2984,38 @@ function computeComplement(gameKey, depth) {
   depth = Math.max(2, Math.min(depth || 2, draws.length));
   // fenêtre = les `depth` derniers tirages, du plus ancien au plus récent
   const win = draws.slice(0, depth).map(d => ({ date: d.date, set: new Set(d.numbers), nums: [...d.numbers].sort((a, b) => a - b) })).reverse();
-  // parcours des tirages consécutifs : chaque binôme (répétitif) ouvre des séries.
-  // on garde la série ouverte LA PLUS ANCIENNE de la fenêtre, et on suit sa complétion
-  // sur tous les tirages depuis son ouverture (plus la fenêtre est large, plus elle avance).
-  let chosen = null;   // { lo, hi, openedAt }
-  for (let t = 1; t < win.length && !chosen; t++) {
-    const rep = [...win[t - 1].set].filter(n => win[t].set.has(n)).sort((a, b) => a - b);
-    for (let i = 0; i < rep.length - 1; i++) {
-      const lo = rep[i], hi = rep[i + 1];
-      if (hi - lo >= 2) { chosen = { lo, hi, openedAt: t }; break; }   // première série trouvée
-    }
+  const nWin = win.length;
+  const last = win[nWin - 1].nums, prev = win[nWin - 2].nums;
+  const lastSet = win[nWin - 1].set, prevSet = win[nWin - 2].set;
+
+  // bornes = numéros "répétitifs" : présents dans deux tirages CONSÉCUTIFS quelque part dans la fenêtre
+  const borneSet = new Set();
+  for (let t = 1; t < nWin; t++) {
+    win[t - 1].set.forEach(n => { if (win[t].set.has(n)) borneSet.add(n); });
   }
-  // dernier tirage & précédent pour l'affichage des bornes
-  const last = win[win.length - 1].nums, prev = win[win.length - 2].nums;
-  const lastSet = win[win.length - 1].set, prevSet = win[win.length - 2].set;
-  if (!chosen) {
-    return { win, last, prev, lastSet, prevSet, bornes: [], series: [], awaited: [],
-      dateLast: win[win.length - 1].date, datePrev: win[win.length - 2].date, depth };
+  const bornes = [...borneSet].sort((a, b) => a - b);
+
+  // un numéro est "livré" s'il est sorti n'importe où dans la fenêtre
+  const outAll = new Set();
+  win.forEach(d => d.set.forEach(n => outAll.add(n)));
+
+  // séries = intervalles entre bornes CONSÉCUTIVES (celles qui ont un intérieur)
+  const series = [];
+  for (let i = 0; i < bornes.length - 1; i++) {
+    const lo = bornes[i], hi = bornes[i + 1];
+    if (hi - lo < 2) continue;
+    const interior = [];
+    for (let n = lo + 1; n < hi; n++) interior.push({ n, livre: outAll.has(n) });
+    series.push({ lo, hi, interior });
   }
-  // complétion : un numéro interne est "livré" s'il est sorti depuis l'ouverture de la série
-  const outSince = new Set();
-  for (let t = chosen.openedAt; t < win.length; t++) win[t].set.forEach(n => outSince.add(n));
-  const interior = [];
-  for (let n = chosen.lo + 1; n < chosen.hi; n++) interior.push({ n, livre: outSince.has(n) });
-  const awaited = interior.filter(x => !x.livre).map(x => x.n);
-  const series = [{ lo: chosen.lo, hi: chosen.hi, interior }];
-  const bornes = [chosen.lo, chosen.hi];
-  // les deux tirages dont le chevauchement a ouvert la série (pour l'affichage des bornes)
-  const dOpenPrev = win[chosen.openedAt - 1], dOpenLast = win[chosen.openedAt];
-  return { win, last: dOpenLast.nums, prev: dOpenPrev.nums,
-    lastSet: dOpenLast.set, prevSet: dOpenPrev.set, bornes, series, awaited,
-    dateLast: dOpenLast.date, datePrev: dOpenPrev.date, depth,
-    nSince: win.length - chosen.openedAt };
+
+  // numéros en attente = union des intérieurs non livrés (dédupliqués)
+  const awaitedSet = new Set();
+  series.forEach(s => s.interior.forEach(x => { if (!x.livre) awaitedSet.add(x.n); }));
+  const awaited = [...awaitedSet].sort((a, b) => a - b);
+
+  return { win, last, prev, lastSet, prevSet, bornes, series, awaited,
+    dateLast: win[nWin - 1].date, datePrev: win[nWin - 2].date, depth, nWin };
 }
 
 function compDepth() {
@@ -3041,11 +3041,12 @@ function renderComplement() {
     `<div class="comp-draw"><div class="comp-label">${fmtDate(c.datePrev)}</div><div class="comp-nums">` +
       c.prev.map(numCell).join("") + `</div></div>` +
     `<div class="comp-draw"><div class="comp-label">${fmtDate(c.dateLast)}</div><div class="comp-nums">` +
-      c.last.map(numCell).join("") + `</div></div>`;
+      c.last.map(numCell).join("") + `</div></div>` +
+    (c.depth > 2 ? `<div class="board-sub" style="margin-top:4px">Les deux derniers tirages sont affichés ; les bornes en doré sont les répétitifs relevés sur l'ensemble des ${c.depth} tirages de la fenêtre.</div>` : "");
 
   const legend =
     `<div class="comp-legend">` +
-    `<span><i class="comp-dot borne"></i> borne de la série active</span>` +
+    `<span><i class="comp-dot borne"></i> borne (répétitif)</span>` +
     `<span><i class="comp-dot livre"></i> livré par la série</span>` +
     `<span><i class="comp-dot attente"></i> en attente</span></div>`;
 
@@ -3053,7 +3054,8 @@ function renderComplement() {
   if (!c.series.length) {
     seriesHtml = `<div class="board-sub">Aucune série exploitable sur cette profondeur — aucun couple de numéros répétitifs n'encadre d'intervalle. Élargis la fenêtre avec le curseur.</div>`;
   } else {
-    seriesHtml = c.series.map(s => {
+    const head = `<div class="board-sub" style="margin:2px 0 4px"><b>${c.series.length} série${c.series.length > 1 ? "s" : ""}</b> ouverte${c.series.length > 1 ? "s" : ""} par les bornes ${c.bornes.join(", ")}.</div>`;
+    seriesHtml = head + c.series.map(s => {
       const total = s.interior.length;
       const done = s.interior.filter(x => x.livre).length;
       const pct = total ? Math.round(done / total * 100) : 0;
@@ -3061,7 +3063,7 @@ function renderComplement() {
         s.interior.map(x => `<div class="comp-n ${x.livre ? "livre" : "attente"}">${x.n}</div>`).join("") +
         `<div class="comp-n borne">${s.hi}</div>`;
       return `<div class="comp-serie">` +
-        `<div class="comp-serie-title">Série active ${s.lo} → ${s.hi}${c.nSince ? ` · suivie sur ${c.nSince} tirage${c.nSince > 1 ? "s" : ""}` : ""}</div>` +
+        `<div class="comp-serie-title">Série ${s.lo} → ${s.hi}</div>` +
         `<div class="comp-interval">${cells}</div>` +
         `<div class="comp-prog-label"><span>Complétion</span><span>${done} / ${total} · ${pct}%</span></div>` +
         `<div class="comp-prog-bar"><div class="comp-prog-fill" style="width:${pct}%"></div></div>` +
