@@ -801,11 +801,11 @@
 
     <div class="panel gate-panel" id="compPanel">
       <h2>Le système de complémentarité</h2>
-      <p class="atelier-note">Repère les numéros « répétitifs » (présents dans deux tirages consécutifs) : ils deviennent des <b>bornes</b> qui découpent l'espace en <b>séries</b>, une par intervalle entre bornes voisines. Chaque série se « complète » quand tous ses numéros internes sont sortis. Le curseur choisit sur combien de tirages remonter pour relever les bornes. Une lecture descriptive — elle ne modifie pas la probabilité du prochain tirage.</p>
+      <p class="atelier-note">Repère les numéros « répétitifs » d'un couple de deux tirages consécutifs : ils deviennent des <b>bornes</b> qui découpent l'espace en <b>séries</b> (une par intervalle entre bornes voisines). Chaque série se « complète » à mesure que ses numéros internes sortent lors des tirages suivants. Le curseur choisit quel couple observer : le plus récent, ou un couple plus ancien qui a déjà eu le temps de se compléter. Une lecture descriptive — elle ne modifie pas la probabilité du prochain tirage.</p>
       <div class="atelier-tools" id="compDepthRow">
         <span class="label">Profondeur</span>
-        <input type="range" id="compDepth" min="2" max="20" value="2" step="1" style="flex:1;min-width:120px;accent-color:var(--accent)">
-        <span class="label" id="compDepthVal" style="min-width:120px">2 derniers tirages</span>
+        <input type="range" id="compDepth" min="1" max="20" value="1" step="1" style="flex:1;min-width:120px;accent-color:var(--accent)">
+        <span class="label" id="compDepthVal" style="min-width:150px">couple le plus récent</span>
       </div>
       <div id="compBody"></div>
       <div class="atelier-tools" style="margin-top:14px">
@@ -2979,48 +2979,48 @@ function renderSmart() {
 /* ---------- Système de complémentarité (méthode Roig) ---------- */
 let compState = null;   // { series: [...], awaited: [...] } pour le générateur de grille
 function computeComplement(gameKey, depth) {
-  const draws = store[gameKey];
+  const draws = store[gameKey];   // draws[0] = tirage le plus récent
   if (!draws || draws.length < 2) return null;
-  depth = Math.max(2, Math.min(depth || 2, draws.length));
-  // fenêtre = les `depth` derniers tirages, du plus ancien au plus récent
-  const win = draws.slice(0, depth).map(d => ({ date: d.date, set: new Set(d.numbers), nums: [...d.numbers].sort((a, b) => a - b) })).reverse();
-  const nWin = win.length;
-  const last = win[nWin - 1].nums, prev = win[nWin - 2].nums;
-  const lastSet = win[nWin - 1].set, prevSet = win[nWin - 2].set;
+  // curseur N = le couple de tirages situé N crans en arrière.
+  // N=1 -> (draws[1], draws[0]) les deux derniers ; N=2 -> (draws[2], draws[1]) ; etc.
+  const N = Math.max(1, Math.min(depth || 1, draws.length - 1));
+  const older = draws[N];        // le plus ancien du couple
+  const newer = draws[N - 1];    // le plus récent du couple
+  const prevNums = [...older.numbers].sort((a, b) => a - b);
+  const lastNums = [...newer.numbers].sort((a, b) => a - b);
+  const olderSet = new Set(older.numbers), newerSet = new Set(newer.numbers);
 
-  // bornes = numéros "répétitifs" : présents dans deux tirages CONSÉCUTIFS quelque part dans la fenêtre
-  const borneSet = new Set();
-  for (let t = 1; t < nWin; t++) {
-    win[t - 1].set.forEach(n => { if (win[t].set.has(n)) borneSet.add(n); });
-  }
-  const bornes = [...borneSet].sort((a, b) => a - b);
+  // binômes = numéros répétitifs présents dans LES DEUX tirages du couple -> bornes
+  const bornes = [...new Set(older.numbers.filter(n => newerSet.has(n)))].sort((a, b) => a - b);
 
-  // un numéro est "livré" s'il est sorti n'importe où dans la fenêtre
-  const outAll = new Set();
-  win.forEach(d => d.set.forEach(n => outAll.add(n)));
+  // complétion : numéros sortis dans les tirages POSTÉRIEURS au couple (draws[0 .. N-2])
+  const outAfter = new Set();
+  for (let i = 0; i <= N - 2; i++) draws[i].numbers.forEach(n => outAfter.add(n));
+  const nAfter = Math.max(0, N - 1);   // nombre de tirages après le couple
 
-  // séries = intervalles entre bornes CONSÉCUTIVES (celles qui ont un intérieur)
+  // séries = intervalles entre bornes consécutives ayant un intérieur
   const series = [];
   for (let i = 0; i < bornes.length - 1; i++) {
     const lo = bornes[i], hi = bornes[i + 1];
     if (hi - lo < 2) continue;
     const interior = [];
-    for (let n = lo + 1; n < hi; n++) interior.push({ n, livre: outAll.has(n) });
+    for (let n = lo + 1; n < hi; n++) interior.push({ n, livre: outAfter.has(n) });
     series.push({ lo, hi, interior });
   }
 
-  // numéros en attente = union des intérieurs non livrés (dédupliqués)
+  // numéros en attente = union des intérieurs non encore livrés
   const awaitedSet = new Set();
   series.forEach(s => s.interior.forEach(x => { if (!x.livre) awaitedSet.add(x.n); }));
   const awaited = [...awaitedSet].sort((a, b) => a - b);
 
-  return { win, last, prev, lastSet, prevSet, bornes, series, awaited,
-    dateLast: win[nWin - 1].date, datePrev: win[nWin - 2].date, depth, nWin };
+  return { last: lastNums, prev: prevNums, lastSet: newerSet, prevSet: olderSet,
+    bornes, series, awaited, dateLast: newer.date, datePrev: older.date,
+    depth: N, nAfter };
 }
 
 function compDepth() {
   const el = $("#compDepth");
-  return el ? parseInt(el.value) : 2;
+  return el ? parseInt(el.value) : 1;
 }
 
 function renderComplement() {
@@ -3028,21 +3028,22 @@ function renderComplement() {
   if (!host) return;
   const depth = compDepth();
   const dv = $("#compDepthVal");
-  if (dv) dv.textContent = depth === 2 ? "2 derniers tirages" : depth + " derniers tirages";
   const c = computeComplement(currentGame, depth);
   compState = c;
   if (!c) { host.innerHTML = `<div class="board-sub">Pas assez de tirages chargés pour analyser les répétitifs.</div>`;
     const gb = $("#compGridBtn"); if (gb) gb.style.display = "none"; $("#compGrid").innerHTML = ""; return; }
+  if (dv) dv.textContent = c.depth === 1 ? "couple le plus récent" : "couple n-" + c.depth;
 
   const numCell = (n) =>
     `<div class="comp-n ${c.bornes.includes(n) ? "borne" : ""}">${n}</div>`;
 
   const drawHtml =
+    `<div class="board-sub" style="margin-bottom:6px">Binômes lus sur ce couple de deux tirages consécutifs :</div>` +
     `<div class="comp-draw"><div class="comp-label">${fmtDate(c.datePrev)}</div><div class="comp-nums">` +
       c.prev.map(numCell).join("") + `</div></div>` +
     `<div class="comp-draw"><div class="comp-label">${fmtDate(c.dateLast)}</div><div class="comp-nums">` +
       c.last.map(numCell).join("") + `</div></div>` +
-    (c.depth > 2 ? `<div class="board-sub" style="margin-top:4px">Les deux derniers tirages sont affichés ; les bornes en doré sont les répétitifs relevés sur l'ensemble des ${c.depth} tirages de la fenêtre.</div>` : "");
+    `<div class="board-sub" style="margin-top:4px">Complétion mesurée sur les <b>${c.nAfter}</b> tirage${c.nAfter > 1 ? "s" : ""} survenu${c.nAfter > 1 ? "s" : ""} depuis ce couple.</div>`;
 
   const legend =
     `<div class="comp-legend">` +
