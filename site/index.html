@@ -738,20 +738,14 @@
         <table><thead><tr><th>Trio</th><th>Ensemble</th><th>Attendu</th><th>Ratio</th></tr></thead>
         <tbody id="triosBody"></tbody></table>
         <h3 class="chart-h3" style="margin-top:14px">Quatuors</h3>
-        <table><thead><tr><th>Quatuor</th><th>Ensemble</th><th>Attendu</th><th>Ratio</th></tr></thead>
+        <table id="quadsT"><thead><tr><th>Quatuor</th><th>Ensemble</th><th>Attendu</th><th>Ratio</th></tr></thead>
         <tbody id="quadsBody"></tbody></table>
-        <h3 class="chart-h3" style="margin-top:14px" id="quintsH">Quintets</h3>
-        <table id="quintsT"><thead><tr><th>Quintet</th><th>Ensemble</th><th>Attendu</th><th>Ratio</th></tr></thead>
-        <tbody id="quintsBody"></tbody></table>
-        <h3 class="chart-h3" style="margin-top:14px" id="sextsH">Sextuors</h3>
-        <table id="sextsT"><thead><tr><th>Sextuor</th><th>Ensemble</th><th>Attendu</th><th>Ratio</th></tr></thead>
-        <tbody id="sextsBody"></tbody></table>
-        <h3 class="chart-h3" style="margin-top:18px" id="bigH">Grands groupes (7 à 10)</h3>
-        <p class="board-sub" id="bigNote">Calcul lourd, à la demande : choisis une taille et lance. À ces tailles, les combinaisons ne se répètent quasiment jamais plus de 2 fois — c'est une curiosité, pas un signal.</p>
+        <h3 class="chart-h3" style="margin-top:18px" id="bigH">Grands groupes</h3>
+        <p class="board-sub" id="bigNote">Calcul lourd, sur tout l'historique et à la demande : choisis une taille et lance. Plus le groupe est grand, plus les répétitions sont rares — c'est une curiosité, pas un signal.</p>
         <div class="atelier-tools" id="bigTools">
           <span class="label">Taille</span>
-          <select id="bigSize" class="select"><option>7</option><option>8</option><option>9</option><option>10</option></select>
-          <button class="btn" type="button" id="bigRun">Afficher les grands groupes</button>
+          <select id="bigSize" class="select"></select>
+          <button class="btn" type="button" id="bigRun">Calculer</button>
         </div>
         <table id="bigT" style="display:none"><thead><tr><th id="bigLabel">Groupe</th><th>Ensemble</th><th>Attendu</th><th>Ratio</th></tr></thead>
         <tbody id="bigBody"></tbody></table>
@@ -1534,15 +1528,12 @@ function computeAdvanced(all, win, gameKey) {
     .map(([k, c]) => ({ a: Math.floor(k / 100), b: k % 100, obs: c, exp: expPair, ratio: c / expPair }))
     .sort((x, y) => y.obs - x.obs).slice(0, 12);
 
-  // --- Trios, quatuors, quintets, sextuors complices (clés numériques compactes) ---
+  // --- Trios et quatuors complices (clés numériques compactes) ---
   const D = g.drawSize, M = g.max;
-  const combP = (r) => { let num = 1, den = 1; for (let i = 0; i < r; i++) { num *= (D - i); den *= (M - i); } return num / den; };
-  const trioP = combP(3);
-  const quadP = D >= 4 ? combP(4) : 0;
-  const quintP = D >= 5 ? combP(5) : 0;
-  const sextP = D >= 6 ? combP(6) : 0;
-  const expTrio = total * trioP, expQuad = total * quadP, expQuint = total * quintP, expSext = total * sextP;
-  const trioCount = new Map(), quadCount = new Map(), quintCount = new Map(), sextCount = new Map();
+  const trioP = D >= 3 ? D * (D - 1) * (D - 2) / (M * (M - 1) * (M - 2)) : 0;
+  const quadP = D >= 4 ? D * (D - 1) * (D - 2) * (D - 3) / (M * (M - 1) * (M - 2) * (M - 3)) : 0;
+  const expTrio = total * trioP, expQuad = total * quadP;
+  const trioCount = new Map(), quadCount = new Map();
   scope.forEach(d => {
     const n = d.numbers, L = n.length;
     for (let i = 0; i < L; i++)
@@ -1553,14 +1544,6 @@ function computeAdvanced(all, win, gameKey) {
           for (let q = l + 1; q < L; q++) {
             const kq = kt * 100 + n[q];
             quadCount.set(kq, (quadCount.get(kq) || 0) + 1);
-            for (let p = q + 1; p < L; p++) {
-              const k5 = kq * 100 + n[p];
-              quintCount.set(k5, (quintCount.get(k5) || 0) + 1);
-              for (let s = p + 1; s < L; s++) {
-                const k6 = k5 * 100 + n[s];
-                sextCount.set(k6, (sextCount.get(k6) || 0) + 1);
-              }
-            }
           }
         }
   });
@@ -1572,17 +1555,15 @@ function computeAdvanced(all, win, gameKey) {
   const topN = (map, size, exp) => [...map.entries()]
     .map(([k, c]) => ({ nums: unpack(k, size), obs: c, exp, ratio: exp > 0 ? c / exp : 0 }))
     .sort((x, y) => y.obs - x.obs).slice(0, 8);
-  const trios = topN(trioCount, 3, expTrio);
-  const quads = topN(quadCount, 4, expQuad);
-  const quints = quintP ? topN(quintCount, 5, expQuint) : [];
-  const sexts = sextP ? topN(sextCount, 6, expSext) : [];
+  const trios = trioP ? topN(trioCount, 3, expTrio) : [];
+  const quads = quadP ? topN(quadCount, 4, expQuad) : [];
 
   // --- Extrêmes du Z ---
   const zRank = [];
   for (let n = 1; n <= g.max; n++) zRank.push({ n, z: z[n], freq: freq[n] });
   zRank.sort((a, b) => Math.abs(b.z) - Math.abs(a.z));
 
-  return { total, z, chi2, df, pValue, structure, pairs, trios, quads, quints, sexts, zTop: zRank.slice(0, 6), expected: mu };
+  return { total, z, chi2, df, pValue, structure, pairs, trios, quads, zTop: zRank.slice(0, 6), expected: mu };
 }
 
 
@@ -2329,24 +2310,25 @@ function render() {
       `<tr><td>${pr.a} & ${pr.b}</td><td>${pr.obs}×</td><td>${pr.exp.toFixed(1)}×</td><td>×${pr.ratio.toFixed(2)}</td></tr>`).join("");
     $("#triosBody").innerHTML = adv.trios.map(tr =>
       `<tr><td>${tr.nums.join(" & ")}</td><td>${tr.obs}×</td><td>${tr.exp.toFixed(2)}×</td><td>${tr.exp > 0 ? "×" + tr.ratio.toFixed(1) : "—"}</td></tr>`).join("");
-    $("#quadsBody").innerHTML = adv.quads.length ? adv.quads.map(qd =>
+    // Quatuors : auto pour le Keno seulement ; pour les autres jeux, 4+ passe à la demande
+    const showQuadsAuto = currentGame === "keno";
+    const quadsT = $("#quadsT"), quadsH = quadsT ? quadsT.previousElementSibling : null;
+    if (quadsT) quadsT.style.display = showQuadsAuto ? "" : "none";
+    if (quadsH && quadsH.classList.contains("chart-h3")) quadsH.style.display = showQuadsAuto ? "" : "none";
+    if (showQuadsAuto) $("#quadsBody").innerHTML = adv.quads.length ? adv.quads.map(qd =>
       `<tr><td>${qd.nums.join(" & ")}</td><td>${qd.obs}×</td><td>${qd.exp.toFixed(3)}×</td><td>${qd.exp > 0 ? "×" + qd.ratio.toFixed(0) : "—"}</td></tr>`).join("")
       : '<tr><td colspan="4">Pas assez de numéros par tirage</td></tr>';
-    const showQuints = adv.quints && adv.quints.length;
-    const showSexts = adv.sexts && adv.sexts.length;
-    ["quintsH", "quintsT"].forEach(id => { const el = $("#" + id); if (el) el.style.display = showQuints ? "" : "none"; });
-    ["sextsH", "sextsT"].forEach(id => { const el = $("#" + id); if (el) el.style.display = showSexts ? "" : "none"; });
-    if (showQuints) $("#quintsBody").innerHTML = adv.quints.map(qi =>
-      `<tr><td>${qi.nums.join(" & ")}</td><td>${qi.obs}×</td><td>${qi.exp.toFixed(4)}×</td><td>${qi.exp > 0 ? "×" + qi.ratio.toFixed(0) : "—"}</td></tr>`).join("");
-    if (showSexts) $("#sextsBody").innerHTML = adv.sexts.map(sx =>
-      `<tr><td>${sx.nums.join(" & ")}</td><td>${sx.obs}×</td><td>${sx.exp.toFixed(5)}×</td><td>${sx.exp > 0 ? "×" + sx.ratio.toFixed(0) : "—"}</td></tr>`).join("");
 
-    // grands groupes : réinitialiser (résultat périmé) + limiter les tailles au jeu
-    const bt = $("#bigT"); if (bt) bt.style.display = "none";
+    // grands groupes à la demande : réinitialiser + tailles selon le jeu
+    // Keno : 5→10 · autres jeux : 4→drawSize
+    const bigTbl = $("#bigT"); if (bigTbl) bigTbl.style.display = "none";
     const bbody = $("#bigBody"); if (bbody) bbody.innerHTML = "";
     const bsel = $("#bigSize");
     if (bsel) {
-      const opts = [7, 8, 9, 10].filter(s => s <= GAMES[currentGame].drawSize);
+      const g2 = GAMES[currentGame];
+      const startSize = currentGame === "keno" ? 5 : 4;
+      const opts = [];
+      for (let s = startSize; s <= Math.min(10, g2.drawSize); s++) opts.push(s);
       const bh = $("#bigH"), btools = $("#bigTools"), bnote = $("#bigNote");
       const showBig = opts.length > 0;
       [bh, btools, bnote].forEach(el => { if (el) el.style.display = showBig ? "" : "none"; });
@@ -3677,9 +3659,8 @@ function renderBigGroups() {
     body.innerHTML = `<tr><td colspan="4">Ce jeu ne sort que ${g.drawSize} numéros par tirage.</td></tr>`;
     table.style.display = ""; return;
   }
-  // fenêtre active
-  const draws = store[currentGame];
-  const scope = windowSize > 0 ? draws.slice(0, windowSize) : draws;
+  // tout l'historique (pas la fenêtre active) : les co-sorties ont besoin de volume
+  const scope = store[currentGame];
   const total = scope.length;
   if (!total) { body.innerHTML = ""; table.style.display = "none"; return; }
 
@@ -3712,7 +3693,7 @@ function renderBigGroups() {
     .map(([k, c]) => ({ nums: k, obs: c }))
     .sort((a, b) => b.obs - a.obs).slice(0, 8);
 
-  const labels = { 7: "Groupe de 7", 8: "Groupe de 8", 9: "Groupe de 9", 10: "Groupe de 10" };
+  const labels = { 4: "Quatuor", 5: "Quintet", 6: "Sextuor", 7: "Groupe de 7", 8: "Groupe de 8", 9: "Groupe de 9", 10: "Groupe de 10" };
   $("#bigLabel").textContent = labels[size] || "Groupe";
   body.innerHTML = top.map(t =>
     `<tr><td>${t.nums.replace(/,/g, " & ")}</td><td>${t.obs}×</td><td>${exp < 0.01 ? exp.toExponential(1) : exp.toFixed(3)}×</td><td>${exp > 0 ? "×" + Math.round(t.obs / exp) : "—"}</td></tr>`).join("") +
