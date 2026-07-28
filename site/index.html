@@ -3030,6 +3030,15 @@ function compDepth() {
 function renderComplement() {
   const host = $("#compBody");
   if (!host) return;
+  // portée du curseur : 20 couples pour le Keno, 40 pour les autres jeux
+  // (répétitifs bien plus rares hors Keno, il faut pouvoir remonter plus loin)
+  const sl = $("#compDepth");
+  if (sl) {
+    const maxDepth = currentGame === "keno" ? 20 : 40;
+    const cap = Math.min(maxDepth, Math.max(1, (store[currentGame] || []).length - 1));
+    if (parseInt(sl.max) !== cap) sl.max = cap;
+    if (parseInt(sl.value) > cap) sl.value = cap;
+  }
   const depth = compDepth();
   const dv = $("#compDepthVal");
   const c = computeComplement(currentGame, depth);
@@ -3057,7 +3066,7 @@ function renderComplement() {
 
   let seriesHtml;
   if (!c.series.length) {
-    seriesHtml = `<div class="board-sub">Aucune série exploitable sur cette profondeur — aucun couple de numéros répétitifs n'encadre d'intervalle. Élargis la fenêtre avec le curseur.</div>`;
+    seriesHtml = `<div class="board-sub">Aucune série sur ce couple : il faut au moins deux numéros répétitifs qui encadrent un intervalle, et ce couple n'en a pas.${currentGame !== "keno" ? " Sur ce jeu, peu de numéros sortent par tirage, donc les répétitifs sont rares — <b>déplace le curseur</b> pour trouver un couple qui en contient." : " Déplace le curseur pour choisir un autre couple."}</div>`;
   } else {
     const head = `<div class="board-sub" style="margin:2px 0 4px"><b>${c.series.length} série${c.series.length > 1 ? "s" : ""}</b> ouverte${c.series.length > 1 ? "s" : ""} par les bornes ${c.bornes.join(", ")}.</div>`;
     seriesHtml = head + c.series.map(s => {
