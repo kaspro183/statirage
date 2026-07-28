@@ -139,13 +139,6 @@
   }
   @keyframes drop { from { transform: translateY(-26px); opacity: 0; } to { transform: none; opacity: 1; } }
   .hero-meta { margin-top: 10px; font-size: 13px; color: rgba(247,243,232,.7); }
-  .hero-mult {
-    display: inline-flex; align-items: center; gap: 8px; margin: 2px 0 4px;
-    background: rgba(247,243,232,.1); border: 1px solid rgba(247,243,232,.22);
-    border-radius: 999px; padding: 6px 15px; font-size: 14px; color: var(--papier);
-  }
-  .hero-mult b { font: 700 17px 'IBM Plex Mono', monospace; color: var(--accent-soft); }
-  .hero-mult span { color: rgba(247,243,232,.68); font-size: 12.5px; }
 
   /* ---- Chargement / erreur ---- */
   #loader { padding: 26px 4px 12px; }
@@ -197,6 +190,32 @@
   .toggle button { font: 600 13px 'Poppins', sans-serif; border: none; background: transparent; color: var(--papier); padding: 7px 14px; cursor: pointer; }
   .toggle button.active { background: var(--accent); color: var(--accent-ink); }
 
+  /* ---- Navigation par sections ---- */
+  .section-nav { position: sticky; top: 0; z-index: 30; display: flex; gap: 6px; flex-wrap: wrap;
+    padding: 11px 0; margin-bottom: 4px;
+    background: linear-gradient(160deg, rgba(140,34,70,.97), rgba(76,18,38,.97));
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+  .section-nav a { font: 600 13.5px 'Poppins', sans-serif; color: rgba(247,243,232,.85); text-decoration: none;
+    border: 1px solid rgba(247,243,232,.28); border-radius: 999px; padding: 8px 15px; transition: all .15s;
+    display: inline-flex; align-items: center; gap: 7px; }
+  .section-nav a:hover { border-color: var(--laiton); color: #fff; }
+  .section-nav a.active { background: var(--papier); color: var(--encre); border-color: var(--papier); }
+  .section-nav .ic { font-size: 15px; }
+  .section-head { margin: 30px 0 2px; display: flex; align-items: baseline; gap: 12px; scroll-margin-top: 64px; }
+  .section-head h2 { color: var(--papier); font-size: 25px; font-weight: 800; }
+  .section-head span { color: rgba(247,243,232,.6); font-size: 13px; }
+  details.foldable { background: var(--papier); border-radius: 16px; margin-bottom: 10px; overflow: hidden;
+    box-shadow: 0 8px 20px rgba(0,0,0,.18); }
+  details.foldable > summary { padding: 16px 22px; font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 16px;
+    cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+  details.foldable > summary::-webkit-details-marker { display: none; }
+  details.foldable > summary::after { content: "›"; font-size: 22px; color: var(--muted); transition: transform .2s; }
+  details.foldable[open] > summary::after { transform: rotate(90deg); }
+  @media (max-width: 620px) {
+    .section-nav { gap: 5px; padding: 9px 0; }
+    .section-nav a { font-size: 12px; padding: 7px 11px; }
+    .section-head h2 { font-size: 21px; }
+  }
   /* ---- Cartes bulletin (papier) ---- */
   .board-card, .panel {
     background: var(--papier); color: var(--encre);
@@ -208,6 +227,9 @@
      qu'elle, sinon l'ombre du bloc du haut retombe sur le bloc du bas. */
   #app > .panel, #app > .board-card, #app > .row { margin-top: 26px; }
   .row > .panel, .row > .board-card { margin-top: 0; }
+  .section-block > .panel, .section-block > .board-card,
+  .section-block > details.foldable { margin-top: 0; margin-bottom: 14px; }
+  .section-block { display: block; }
   .board-title { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 22px; margin-bottom: 3px; }
   .board-sub { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
   .portrait-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin-top: 14px; }
@@ -231,14 +253,6 @@
   .pt-mini span { width: 25px; height: 25px; border-radius: 50%; background: #fff; border: 1px solid var(--ligne);
     display: flex; align-items: center; justify-content: center; font: 600 11px 'IBM Plex Mono', monospace; }
   .pt-mini span.on { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .pt-mini .pt-sep { width: 1px; height: 25px; background: var(--ligne); margin: 0 4px; flex: none; }
-  .pt-mini span.xtra { border-radius: 8px; border-color: var(--accent); color: var(--accent); background: #fff; }
-  .pt-mini span.xtra.on { background: var(--accent); color: #fff; }
-  .pt-big { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
-  .pt-big b { font: 700 30px 'IBM Plex Mono', monospace; color: var(--accent); line-height: 1; }
-  .pt-big span { color: var(--muted); font-size: 12px; }
-  .pt-hist { gap: 2px; height: 48px; }
-  .pt-hist .pt-bar i { border-radius: 2px 2px 0 0; opacity: .8; }
   @media (max-width: 620px) { .portrait-grid { grid-template-columns: 1fr; gap: 9px; } }
   #board { display: grid; gap: 8px; }
   .cell {
@@ -314,45 +328,6 @@
   .metric-box .m-label { font-size: 11px; color: var(--muted); }
   .metric-box .m-val { font: 600 15px 'IBM Plex Mono', monospace; }
   .profile-note { font-size: 12.5px; color: var(--muted); margin-top: 12px; line-height: 1.55; max-width: 75ch; }
-  /* Section système de complémentarité */
-  .comp-draw { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
-  .comp-label { width: 92px; flex: none; font: 600 12px 'IBM Plex Mono', monospace; color: var(--muted); text-align: right; }
-  .comp-nums { display: flex; gap: 4px; flex-wrap: wrap; }
-  .comp-n { width: 29px; height: 29px; border-radius: 8px; background: var(--papier-2); border: 1.5px solid var(--ligne);
-    display: flex; align-items: center; justify-content: center; font: 600 12px 'IBM Plex Mono', monospace; color: var(--encre); transition: all .3s ease; }
-  .comp-n.borne { background: var(--laiton); border-color: var(--laiton); color: #fff; font-weight: 700; }
-  .comp-n.livre { background: #2E8B57; border-color: #2E8B57; color: #fff; }
-  .comp-n.attente { background: #fff; border-style: dashed; opacity: .55; }
-  .comp-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin: 12px 0; }
-  .comp-legend span { display: inline-flex; align-items: center; gap: 6px; }
-  .comp-dot { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
-  .comp-dot.borne { background: var(--laiton); }
-  .comp-dot.livre { background: #2E8B57; }
-  .comp-dot.attente { background: #fff; border: 1.5px dashed var(--ligne); }
-  .comp-serie { margin: 12px 0; padding: 12px 14px; background: var(--papier-2); border-radius: 10px; }
-  .comp-serie-title { font: 600 12.5px 'Poppins', sans-serif; color: var(--encre); margin-bottom: 8px; }
-  .comp-interval { display: flex; gap: 3px; flex-wrap: wrap; align-items: center; }
-  .comp-prog-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin: 10px 0 5px; }
-  .comp-prog-bar { height: 9px; border-radius: 6px; background: var(--papier); overflow: hidden; border: 1px solid var(--ligne); }
-  .comp-prog-fill { height: 100%; background: linear-gradient(90deg, var(--laiton), #2E8B57); border-radius: 6px; transition: width .5s ease; }
-  .genadv-grid { display: grid; gap: 16px; margin-top: 14px; }
-  .genadv-row { display: grid; grid-template-columns: 20px 1fr; align-items: start; gap: 9px; font-size: 13.5px; color: var(--encre); line-height: 1.5; }
-  .genadv-row > input[type="checkbox"] { accent-color: var(--accent); width: 17px; height: 17px; margin-top: 2px; }
-  .genadv-text { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
-  .genadv-slider { display: grid; grid-template-columns: 20px 1fr; gap: 9px; align-items: start; }
-  .genadv-slider > input[type="checkbox"] { accent-color: var(--accent); width: 17px; height: 17px; margin-top: 2px; }
-  .genadv-sliderbody { display: flex; flex-direction: column; gap: 6px; }
-  .genadv-sliderlabel { font-size: 13.5px; color: var(--encre); line-height: 1.4; }
-  .genadv-sliderlabel b { color: var(--accent); font-family: 'IBM Plex Mono', monospace; }
-  .genadv-range { width: 100%; max-width: 340px; accent-color: var(--accent); height: 22px; cursor: pointer; }
-  .genadv-rangepair { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .genadv-rangepair .genadv-range { max-width: 150px; }
-  .genadv-txt { width: 130px; padding: 4px 8px; border: 1.5px solid rgba(140,34,70,.25); border-radius: 8px; font: inherit; font-size: 13px; }
-  .genadv-sel { padding: 4px 8px; border: 1.5px solid rgba(140,34,70,.25); border-radius: 8px; font: inherit; font-size: 13px; background: #fff; }
-  .genadv-result { margin-top: 16px; }
-  .genadv-balls { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
-  .genadv-ball { width: 42px; height: 42px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font: 700 16px 'IBM Plex Mono', monospace; }
-  .genadv-fail { color: var(--accent); font-size: 13.5px; margin-top: 12px; }
   .smart-grid .ball { width: 34px; height: 34px; font-size: 14px; }
   .atelier-note { font-size: 13.5px; color: var(--muted); margin-bottom: 14px; max-width: 70ch; }
   .atelier-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0; }
@@ -442,9 +417,6 @@
   .wheel-grid .gnum { font: 600 12px 'IBM Plex Mono', monospace; color: var(--muted); min-width: 66px; }
   .draws-panel { margin-top: 16px; }
   .draw-line { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--papier-2); }
-  .mynums-scroll { max-height: 520px; overflow-y: auto; margin-top: 6px; padding-right: 8px; }
-  .mynums-scroll::-webkit-scrollbar { width: 8px; }
-  .mynums-scroll::-webkit-scrollbar-thumb { background: rgba(140,34,70,.25); border-radius: 8px; }
   .draw-date { font: 600 12.5px 'IBM Plex Mono', monospace; color: var(--muted); min-width: 132px; }
   .ball {
     width: 27px; height: 27px; border-radius: 50%; background: #fff; border: 1px solid var(--ligne);
@@ -602,7 +574,6 @@
     <div class="kicker" id="heroKicker"></div>
     <div class="hero-date" id="heroDate"></div>
     <div class="rail"><div class="balls" id="heroBalls"></div></div>
-    <div class="hero-mult hidden" id="heroMult"></div>
     <div class="hero-meta" id="heroMeta"></div>
   </section>
 
@@ -622,6 +593,12 @@
   <div id="status"></div>
 
   <div id="app" class="hidden">
+    <nav class="section-nav" id="sectionNav">
+      <a href="#sec-tirage" data-sec="sec-tirage"><span class="ic">🎯</span> Le tirage du soir</a>
+      <a href="#sec-numeros" data-sec="sec-numeros"><span class="ic">🔢</span> Explorer les numéros</a>
+      <a href="#sec-grilles" data-sec="sec-grilles"><span class="ic">🎫</span> Mes grilles</a>
+      <a href="#sec-comprendre" data-sec="sec-comprendre"><span class="ic">📊</span> Comprendre</a>
+    </nav>
     <div class="controls">
       <span class="label">Fenêtre</span>
       <button class="chip active" data-win="30">30 tirages</button>
@@ -638,12 +615,6 @@
       </div>
     </div>
 
-    <div class="panel" id="portraitPanel">
-      <h2>Le portrait du tirage</h2>
-      <p class="atelier-note">Cinq lectures descriptives du dernier tirage, comparées à l'ensemble de l'historique. Ce sont des constats sur ce qui vient de se produire — ils ne disent rien du tirage suivant.</p>
-      <div id="portraitBody"></div>
-    </div>
-
     <div class="board-card">
       <div class="board-title">La grille</div>
       <div class="board-sub" id="boardSub"></div>
@@ -653,6 +624,12 @@
         <span class="label" id="extrasLabel"></span>
         <div class="extras-row" id="extrasRow"></div>
       </div>
+    </div>
+
+    <div class="panel" id="portraitPanel">
+      <h2>Le portrait du tirage</h2>
+      <p class="atelier-note">Cinq lectures descriptives du dernier tirage, comparées à l'ensemble de l'historique. Ce sont des constats sur ce qui vient de se produire — ils ne disent rien du tirage suivant.</p>
+      <div id="portraitBody"></div>
     </div>
 
     <div class="panel chart-panel">
@@ -693,17 +670,6 @@
         <div class="chart-note">
           <p>On additionne les numéros de chaque tirage. Réparties sur des centaines de tirages, ces <b>sommes</b> dessinent une cloche : les barres bleues sont la réalité, la courbe noire la théorie.</p>
           <p>Les barres épousent la courbe. La plupart des tirages ont une somme moyenne ; les sommes extrêmes (que des petits ou que des grands numéros) sont rares. <b>Le hasard en personne.</b></p>
-        </div>
-      </div>
-
-      <div class="chart-explain">
-        <div>
-          <h3 class="chart-h3">La cloche des communs</h3>
-          <div class="chart-box"><canvas id="chartShared"></canvas></div>
-        </div>
-        <div class="chart-note">
-          <p>Pour chaque tirage, on compte combien de numéros il partage avec le tirage <b>précédent</b>. Répétée sur tout l'historique, cette distribution dessine elle aussi une cloche — les barres sont la réalité, la courbe la théorie.</p>
-          <p id="sharedNote"></p>
         </div>
       </div>
     </div>
@@ -772,124 +738,18 @@
 
     <div class="panel gate-panel">
       <h2>Le générateur statistique</h2>
-      <p class="atelier-note">Sept profils, sept façons de composer une grille à partir de critères explicites. Aucun ne modifie vos chances — ils structurent le choix.</p>
+      <p class="atelier-note">Cinq profils, cinq façons de composer une grille à partir de critères explicites. Aucun ne modifie vos chances — ils structurent le choix.</p>
       <div class="atelier-tools" id="profileTabs">
         <button class="chip active" data-profile="balanced">Équilibrée</button>
         <button class="chip" data-profile="cold">Les retardataires</button>
         <button class="chip" data-profile="hot">Les habituées</button>
         <button class="chip" data-profile="contrarian">Anti-consensus</button>
-        <button class="chip" data-profile="markov">Chaîne de Markov</button>
-        <button class="chip" data-profile="signature">Signature</button>
         <button class="chip" data-profile="random">Au hasard pur</button>
-      </div>
-      <div class="atelier-tools" id="sigRow" style="display:none">
-        <span class="label">Ton mot</span>
-        <input type="text" id="sigWord" class="select" placeholder="ex : Marley" maxlength="32" style="min-width:160px" value="Marley">
-      </div>
-      <div class="atelier-tools" id="kenoSizeRow" style="display:none">
-        <span class="label">Numéros joués</span>
-        <select id="kenoSize" class="select">
-          <option>4</option><option>5</option><option>6</option><option>7</option>
-          <option selected>8</option><option>9</option><option>10</option>
-        </select>
       </div>
       <div class="atelier-tools">
         <button class="btn" type="button" id="smartBtn">Générer la grille</button>
       </div>
       <div id="smartBody"></div>
-    </div>
-
-    <div class="panel gate-panel" id="compPanel">
-      <h2>Le système de complémentarité</h2>
-      <p class="atelier-note">Repère les numéros « répétitifs » d'un couple de deux tirages consécutifs : ils deviennent des <b>bornes</b> qui découpent l'espace en <b>séries</b> (une par intervalle entre bornes voisines). Chaque série se « complète » à mesure que ses numéros internes sortent lors des tirages suivants. Le curseur choisit quel couple observer : le plus récent, ou un couple plus ancien qui a déjà eu le temps de se compléter. Une lecture descriptive — elle ne modifie pas la probabilité du prochain tirage.</p>
-      <div class="atelier-tools" id="compDepthRow">
-        <span class="label">Profondeur</span>
-        <input type="range" id="compDepth" min="1" max="20" value="1" step="1" style="flex:1;min-width:120px;accent-color:var(--accent)">
-        <span class="label" id="compDepthVal" style="min-width:150px">couple le plus récent</span>
-      </div>
-      <div id="compBody"></div>
-      <div class="atelier-tools" style="margin-top:14px">
-        <button class="btn" type="button" id="compGridBtn">Générer une grille depuis la série</button>
-      </div>
-      <div id="compGrid"></div>
-    </div>
-
-    <div class="panel atelier-panel">
-      <h2>Le générateur avancé</h2>
-      <p class="atelier-note">Coche les critères que tu veux imposer à la grille. Les filtres non cochés sont ignorés. <b>Rappel : aucun réglage ne change tes chances de gagner</b> — chaque grille reste aussi probable qu'une autre. Ces filtres servent à composer une grille au profil choisi, rien de plus.</p>
-
-      <div class="genadv-grid">
-        <div class="genadv-slider"><input type="checkbox" id="fSum">
-          <div class="genadv-sliderbody">
-            <div class="genadv-sliderlabel">Somme entre <b id="fSumMinV">380</b> et <b id="fSumMaxV">530</b></div>
-            <div class="genadv-rangepair">
-              <input type="range" id="fSumMin" class="genadv-range" min="0" max="1000" value="380">
-              <input type="range" id="fSumMax" class="genadv-range" min="0" max="1000" value="530">
-            </div>
-          </div>
-        </div>
-
-        <div class="genadv-slider"><input type="checkbox" id="fEven">
-          <div class="genadv-sliderbody">
-            <div class="genadv-sliderlabel">Exactement <b id="fEvenV">5</b> numéros pairs</div>
-            <input type="range" id="fEven2" class="genadv-range" min="0" max="10" value="5">
-          </div>
-        </div>
-
-        <div class="genadv-slider"><input type="checkbox" id="fLow">
-          <div class="genadv-sliderbody">
-            <div class="genadv-sliderlabel">Exactement <b id="fLowV">5</b> numéros bas (première moitié)</div>
-            <input type="range" id="fLow2" class="genadv-range" min="0" max="10" value="5">
-          </div>
-        </div>
-
-        <div class="genadv-slider"><input type="checkbox" id="fGap">
-          <div class="genadv-sliderbody">
-            <div class="genadv-sliderlabel">Aucun numéro absent depuis plus de <b id="fGapV">15</b> tirages</div>
-            <input type="range" id="fGapMax" class="genadv-range" min="1" max="40" value="15">
-          </div>
-        </div>
-
-        <div class="genadv-slider"><input type="checkbox" id="fDecade">
-          <div class="genadv-sliderbody">
-            <div class="genadv-sliderlabel">Max <b id="fDecadeV">4</b> numéros par dizaine</div>
-            <input type="range" id="fDecadeMax" class="genadv-range" min="1" max="10" value="4">
-          </div>
-        </div>
-
-        <div class="genadv-slider"><input type="checkbox" id="fConsec">
-          <div class="genadv-sliderbody">
-            <div class="genadv-sliderlabel">Au plus <b id="fConsecV">2</b> paires de consécutifs</div>
-            <input type="range" id="fConsecMax" class="genadv-range" min="0" max="10" value="2">
-          </div>
-        </div>
-
-        <div class="genadv-slider"><input type="checkbox" id="fEnding">
-          <div class="genadv-sliderbody">
-            <div class="genadv-sliderlabel">Max <b id="fEndingV">3</b> numéros finissant par le même chiffre</div>
-            <input type="range" id="fEndingMax" class="genadv-range" min="1" max="10" value="3">
-          </div>
-        </div>
-
-        <label class="genadv-row"><input type="checkbox" id="fFreq"><span class="genadv-text">Privilégier les numéros
-          <select id="fFreqType" class="genadv-sel"><option value="hot">chauds</option><option value="cold">froids</option><option value="mid">équilibrés</option></select>
-          (fenêtre en cours)</span></label>
-
-        <label class="genadv-row"><input type="checkbox" id="fInclude"><span class="genadv-text">Inclure obligatoirement
-          <input type="text" id="fIncludeVal" class="genadv-txt" placeholder="ex : 7 13 22"></span></label>
-
-        <label class="genadv-row"><input type="checkbox" id="fExclude"><span class="genadv-text">Exclure
-          <input type="text" id="fExcludeVal" class="genadv-txt" placeholder="ex : 13 40"></span></label>
-
-        <label class="genadv-row"><input type="checkbox" id="fUnseen"><span class="genadv-text">Éviter les grilles déjà sorties dans l'historique</span></label>
-      </div>
-
-      <div class="atelier-tools" style="margin-top:14px">
-        <span class="label">Numéros à jouer</span>
-        <select id="genCount" class="genadv-sel"></select>
-        <button class="btn" type="button" id="genAdvBtn">Générer la grille</button>
-      </div>
-      <div id="genAdvBody"></div>
     </div>
 
     <div class="panel atelier-panel gate-panel">
@@ -1019,10 +879,9 @@
       </div>
       <div class="panel hidden" id="multPanel">
         <h2>Multiplicateurs Keno</h2>
-        <p class="atelier-note">Répartition observée des multiplicateurs sur l'historique chargé, comparée aux probabilités officielles FDJ.</p>
-        <table><thead><tr><th>Multiplicateur</th><th>Sorties</th><th>Part observée</th><th>Théorique FDJ</th><th>1 chance sur</th></tr></thead>
+        <p class="atelier-note">Répartition observée des multiplicateurs sur l'historique chargé.</p>
+        <table><thead><tr><th>Multiplicateur</th><th>Sorties</th><th>Part</th></tr></thead>
         <tbody id="multBody"></tbody></table>
-        <div id="multFoot"></div>
       </div>
     </div>
 
@@ -1227,8 +1086,6 @@ function applyGameTheme(gameKey) {
   r.setProperty("--accent-soft", t.soft);
   r.setProperty("--bg1", t.bg1);
   r.setProperty("--bg2", t.bg2);
-  const ksr = document.getElementById("kenoSizeRow");
-  if (ksr) ksr.style.display = gameKey === "keno" ? "" : "none";
 }
 
 /* MODE TEST : true = tout est débloqué (pas de paywall). Passer à false au lancement. */
@@ -1348,18 +1205,6 @@ function renderHero() {
     extras.map((n, i) => `<span class="orb orb-extra" style="animation-delay:${(nums.length + i) * 55}ms">${n}</span>`).join("");
   const oldest = draws[draws.length - 1].date.toLocaleDateString("fr-FR");
   $("#heroMeta").textContent = draws.length + " tirages en mémoire · depuis le " + oldest;
-
-  // Multiplicateur du tirage (Keno uniquement) : la mise doublée l'active,
-  // le coefficient est tiré au sort à chaque tirage. On affiche celui du jour.
-  const multEl = $("#heroMult");
-  const mult = (d.mult || "").replace(/[^0-9]/g, "");
-  if (currentGame === "keno" && mult) {
-    multEl.innerHTML = `Multiplicateur du tirage : <b>×${mult}</b> <span>· appliqué aux gains si l'option était jouée</span>`;
-    multEl.classList.remove("hidden");
-  } else {
-    multEl.classList.add("hidden");
-  }
-
   $("#hero").classList.remove("hidden");
 }
 
@@ -1404,7 +1249,6 @@ function drawPortrait(gameKey, index = 0) {
 
   // 4. Tirages les plus ressemblants
   const similar = draws.map((x, i) => ({ i, date: x.date, numbers: x.numbers,
-      extras: Array.isArray(x.extras) ? x.extras : [],
       shared: i === index ? -1 : x.numbers.filter(n => nums.includes(n)).length }))
     .filter(x => x.shared >= 0)
     .sort((a, b) => b.shared - a.shared || a.i - b.i)
@@ -1417,25 +1261,9 @@ function drawPortrait(gameKey, index = 0) {
     rep.push({ lag, numbers: nums.filter(n => prev.includes(n)), date: draws[index + lag].date });
   }
 
-  // 5 bis. Chevauchement avec le tirage précédent + historique des communs consécutifs
-  const expectedShared = k * g.drawSize / g.max;   // espérance hypergéométrique
-  const sharedPrev = (index + 1 < draws.length)
-    ? nums.filter(n => draws[index + 1].numbers.includes(n))
-    : null;
-  const prevDate = (index + 1 < draws.length) ? draws[index + 1].date : null;
-  const sharedHist = [];                            // du plus ancien au plus récent
-  for (let i = Math.min(draws.length - 2, index + 29); i >= index; i--) {
-    const cur = draws[i].numbers, prev = draws[i + 1].numbers;
-    sharedHist.push({ date: draws[i].date, count: cur.filter(n => prev.includes(n)).length });
-  }
-  const histAvg = sharedHist.length
-    ? sharedHist.reduce((a, b) => a + b.count, 0) / sharedHist.length : null;
-
-  const drawExtras = Array.isArray(d.extras) ? [...d.extras].sort((a, b) => a - b) : [];
-  return { draw: d, numbers: nums, extras: drawExtras, runs, decades, lastDigits, sum, avgSum: +avgSum.toFixed(1),
+  return { draw: d, numbers: nums, runs, decades, lastDigits, sum, avgSum: +avgSum.toFixed(1),
     sumPct: pct(allSums, sum), evens, odds: k - evens, evensPct: pct(allEvens, evens),
-    lows: nums.filter(n => n <= g.max / 2).length, similar, rep, total: draws.length,
-    expectedShared, sharedPrev, prevDate, sharedHist, histAvg };
+    lows: nums.filter(n => n <= g.max / 2).length, similar, rep, total: draws.length };
 }
 function erf(x) {  // approximation d'Abramowitz & Stegun (précision ~1e-7)
   const sign = x < 0 ? -1 : 1; x = Math.abs(x);
@@ -1481,9 +1309,7 @@ function computeAdvanced(all, win, gameKey) {
   });
   const structure = {
     avgEvens: evens / total,          expEvens: g.drawSize * Math.floor(g.max / 2) / g.max,
-    avgOdds: (g.drawSize * total - evens) / total,  expOdds: g.drawSize - g.drawSize * Math.floor(g.max / 2) / g.max,
     avgLows: lows / total,            expLows: g.drawSize * Math.floor(half) / g.max,
-    avgHighs: (g.drawSize * total - lows) / total,  expHighs: g.drawSize - g.drawSize * Math.floor(half) / g.max,
     avgSum: sum / total,              expSum: g.drawSize * (g.max + 1) / 2,
     pctConsec: withConsec / total * 100,
   };
@@ -1737,17 +1563,6 @@ function multStats(gameKey) {
   return { total: draws.length, rows: Object.entries(counts).sort((a, b) => b[1] - a[1]) };
 }
 
-/* Espérance du coefficient multiplicateur observée sur l'historique Keno.
-   Sert à montrer que l'option Multiplicateur laisse le taux de retour inchangé :
-   la mise est doublée, le gain moyen est multiplié par cette espérance (~2). */
-function multExpectation(gameKey) {
-  const ms = multStats(gameKey);
-  if (!ms) return null;
-  let sum = 0, n = 0;
-  ms.rows.forEach(([m, c]) => { const v = parseInt(m) || 1; sum += v * c; n += c; });
-  return n ? { mean: sum / n, total: n } : null;
-}
-
 function exportCsv(gameKey) {
   const g = GAMES[gameKey];
   const draws = store[gameKey];
@@ -1862,14 +1677,6 @@ const GRID_PROFILES = {
     label: "Anti-consensus",
     note: "Écarte les numéros que tout le monde joue (1–31, les dates de naissance). Ne change pas vos chances de gagner — mais réduit le risque de partager le gain.",
   },
-  markov: {
-    label: "Chaîne de Markov",
-    note: "Chaque numéro est tiré selon l'écart au précédent, réglé sur l'espacement moyen d'un vrai tirage. La grille ressemble statistiquement à un tirage réel sans en copier aucun. Effet purement descriptif : la probabilité reste identique.",
-  },
-  signature: {
-    label: "Signature",
-    note: "Une grille déterministe dérivée d'un mot de votre choix par hachage. Le même mot redonne toujours la même grille ; deux mots différents n'en donnent jamais la même. Unique et reproductible — mais aussi probable que n'importe quelle autre.",
-  },
   random: {
     label: "Au hasard pur",
     note: "Un tirage aléatoire sans aucun critère. La référence pour comparer les autres profils.",
@@ -1885,7 +1692,7 @@ function gridMetrics(nums, gameKey) {
   const gaps = stats ? nums.map(n => stats[n - 1].currentGap) : [];
   return {
     sum: nums.reduce((a, b) => a + b, 0),
-    targetSum: nums.length * (g.max + 1) / 2,
+    targetSum: g.drawSize * (g.max + 1) / 2,
     evens: nums.filter(n => n % 2 === 0).length,
     lows: nums.filter(n => n <= half).length,
     consec,
@@ -1893,9 +1700,9 @@ function gridMetrics(nums, gameKey) {
   };
 }
 
-function smartGrid(gameKey, profile = "balanced", size = null) {
+function smartGrid(gameKey, profile = "balanced") {
   const g = GAMES[gameKey];
-  const k = size || g.drawSize;
+  const k = g.drawSize;
   const half = g.max / 2;
   const draws = store[gameKey];
   const stats = draws.length ? computeStats(draws, windowSize, gameKey).stats : null;
@@ -1917,32 +1724,6 @@ function smartGrid(gameKey, profile = "balanced", size = null) {
     const above = Array.from({ length: g.max }, (_, i) => i + 1).filter(n => n > 31);
     const pool = above.length >= k ? above : Array.from({ length: g.max }, (_, i) => i + 1).filter(n => n > Math.floor(g.max / 3));
     numbers = shuffle([...pool]).slice(0, k);
-  } else if (profile === "markov") {
-    // Tirage par sauts : écart préférentiel autour de l'espacement moyen (max/drawSize)
-    const step = g.max / k;
-    numbers = [];
-    let last = 1 + Math.floor(Math.random() * g.max);
-    numbers.push(last);
-    let guard = 0;
-    while (numbers.length < k && guard++ < 500) {
-      // saut ~ espacement moyen ±50 %, replié modulo max
-      const jump = Math.max(1, Math.round(step * (0.5 + Math.random())));
-      const cand = ((last - 1 + jump) % g.max) + 1;
-      if (!numbers.includes(cand)) { numbers.push(cand); last = cand; }
-      else last = 1 + Math.floor(Math.random() * g.max);
-    }
-  } else if (profile === "signature") {
-    // Hachage FNV-1a du mot → LCG déterministe → k numéros + extras
-    const seed = (window.__sigWord || "statirage").toLowerCase();
-    let h = 2166136261 >>> 0;
-    for (let i = 0; i < seed.length; i++) { h ^= seed.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
-    let x = h >>> 0;
-    const next = () => { x = (Math.imul(x, 1103515245) + 12345) >>> 0; return x; };
-    const picked = new Set();
-    let guard = 0;
-    while (picked.size < k && guard++ < 500) picked.add((next() % g.max) + 1);
-    numbers = [...picked];
-    window.__sigSeed = next;   // réutilisé pour les extras déterministes
   } else if (profile === "random") {
     numbers = shuffle(Array.from({ length: g.max }, (_, i) => i + 1)).slice(0, k);
   } else {
@@ -1964,100 +1745,9 @@ function smartGrid(gameKey, profile = "balanced", size = null) {
   const extras = [];
   if (g.extraMax) {
     const cnt = gameKey === "euromillions" ? 2 : 1;
-    if (profile === "signature" && window.__sigSeed) {
-      const pickedX = new Set();
-      let guard = 0;
-      while (pickedX.size < cnt && guard++ < 200) pickedX.add((window.__sigSeed() % g.extraMax) + 1);
-      extras.push(...[...pickedX].sort((a, b) => a - b));
-    } else {
-      extras.push(...shuffle(Array.from({ length: g.extraMax }, (_, i) => i + 1)).slice(0, cnt).sort((a, b) => a - b));
-    }
+    extras.push(...shuffle(Array.from({ length: g.extraMax }, (_, i) => i + 1)).slice(0, cnt).sort((a, b) => a - b));
   }
   return { numbers, extras, profile, metrics: gridMetrics(numbers, gameKey) };
-}
-
-/* Générateur avancé : lit les filtres cochés et génère par rejet.
-   Aucun filtre ne modifie la probabilité — ils sélectionnent un profil de grille. */
-function readAdvFilters(gameKey) {
-  const on = id => $("#" + id) && $("#" + id).checked;
-  const num = id => { const v = parseInt($("#" + id) && $("#" + id).value); return Number.isFinite(v) ? v : null; };
-  const parseList = id => {
-    const raw = ($("#" + id) && $("#" + id).value || "").split(/[^0-9]+/).map(x => parseInt(x)).filter(Number.isFinite);
-    return raw;
-  };
-  return {
-    sum: on("fSum") ? [num("fSumMin"), num("fSumMax")] : null,
-    even: on("fEven") ? num("fEven2") : null,
-    low: on("fLow") ? num("fLow2") : null,
-    gapMax: on("fGap") ? num("fGapMax") : null,
-    decadeMax: on("fDecade") ? num("fDecadeMax") : null,
-    consecMax: on("fConsec") ? num("fConsecMax") : null,
-    endingMax: on("fEnding") ? num("fEndingMax") : null,
-    freqType: on("fFreq") ? ($("#fFreqType") && $("#fFreqType").value) : null,
-    include: on("fInclude") ? parseList("fIncludeVal") : [],
-    exclude: on("fExclude") ? parseList("fExcludeVal") : [],
-    unseen: on("fUnseen"),
-  };
-}
-
-function gridPasses(nums, f, gameKey, stats, seenSet, half) {
-  if (f.sum) { const s = nums.reduce((a, b) => a + b, 0); if (s < f.sum[0] || s > f.sum[1]) return false; }
-  if (f.even != null) { const e = nums.filter(n => n % 2 === 0).length; if (e !== f.even) return false; }
-  if (f.low != null) { const l = nums.filter(n => n <= half).length; if (l !== f.low) return false; }
-  if (f.gapMax != null && stats) { if (nums.some(n => (stats[n - 1].currentGap || 0) > f.gapMax)) return false; }
-  if (f.decadeMax != null) {
-    const dec = {}; nums.forEach(n => { const d = Math.floor((n - 1) / 10); dec[d] = (dec[d] || 0) + 1; });
-    if (Object.values(dec).some(c => c > f.decadeMax)) return false;
-  }
-  if (f.consecMax != null) {
-    const s = [...nums].sort((a, b) => a - b); let c = 0;
-    for (let i = 1; i < s.length; i++) if (s[i] === s[i - 1] + 1) c++;
-    if (c > f.consecMax) return false;
-  }
-  if (f.endingMax != null) {
-    const end = {}; nums.forEach(n => { const e = n % 10; end[e] = (end[e] || 0) + 1; });
-    if (Object.values(end).some(c => c > f.endingMax)) return false;
-  }
-  if (f.unseen && seenSet) { const key = [...nums].sort((a, b) => a - b).join(","); if (seenSet.has(key)) return false; }
-  return true;
-}
-
-function generateAdvanced(gameKey, count) {
-  const g = GAMES[gameKey];
-  const half = g.max / 2;
-  const draws = store[gameKey];
-  const stats = draws.length ? computeStats(draws, windowSize, gameKey).stats : null;
-  const f = readAdvFilters(gameKey);
-
-  // pool de départ : tous les numéros, moins les exclus
-  let pool = Array.from({ length: g.max }, (_, i) => i + 1).filter(n => !f.exclude.includes(n));
-  // inclusions obligatoires validées
-  const forced = f.include.filter(n => n >= 1 && n <= g.max && !f.exclude.includes(n));
-  if (forced.length > count) return { fail: `Tu imposes ${forced.length} numéros mais la grille n'en compte que ${count}.` };
-
-  // biais fréquence : on ordonne le pool selon chaud/froid, puis on tire dans une tranche
-  if (f.freqType && stats) {
-    const sorted = [...pool].sort((a, b) => stats[b - 1].freq - stats[a - 1].freq);
-    if (f.freqType === "hot") pool = sorted.slice(0, Math.max(count * 2, Math.ceil(g.max * 0.5)));
-    else if (f.freqType === "cold") pool = sorted.slice(-Math.max(count * 2, Math.ceil(g.max * 0.5)));
-    else { const q = Math.floor(g.max * 0.25); pool = sorted.slice(q, g.max - q); }
-    // garder les forcés dans le pool même s'ils sont hors tranche
-    forced.forEach(n => { if (!pool.includes(n)) pool.push(n); });
-  }
-
-  const seenSet = f.unseen ? new Set(draws.map(d => [...d.numbers].sort((a, b) => a - b).join(","))) : null;
-  const shuffle = arr => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; };
-
-  const MAX_TRIES = 8000;
-  for (let t = 0; t < MAX_TRIES; t++) {
-    const rest = shuffle(pool.filter(n => !forced.includes(n))).slice(0, count - forced.length);
-    const nums = [...forced, ...rest].sort((a, b) => a - b);
-    if (nums.length !== count) continue;
-    if (gridPasses(nums, f, gameKey, stats, seenSet, half)) {
-      return { numbers: nums, tries: t + 1, metrics: gridMetrics(nums, gameKey) };
-    }
-  }
-  return { fail: "Aucune grille ne satisfait tous ces critères — ils sont trop stricts ensemble. Décoche-en un ou élargis une fourchette." };
 }
 
 
@@ -2153,7 +1843,7 @@ function compareGames() {
 function nextDraws() {
   // Jours de tirage : 0=dimanche … 6=samedi
   const schedule = {
-    keno: { days: [0,1,2,3,4,5,6], hours: [21], label: "tous les jours, résultats vers 21h" },
+    keno: { days: [0,1,2,3,4,5,6], hours: [13, 21], label: "tous les jours, midi et soir" },
     loto: { days: [1,3,6], hours: [20], label: "lundi, mercredi, samedi" },
     euromillions: { days: [2,5], hours: [21], label: "mardi et vendredi" },
     eurodreams: { days: [1,4], hours: [21], label: "lundi et jeudi" },
@@ -2275,9 +1965,7 @@ function render() {
     $("#structSub").textContent = "Moyennes par tirage sur " + winLabel;
     $("#structBody").innerHTML =
       `<tr><td>Numéros pairs</td><td>${st.avgEvens.toFixed(2)}</td><td>${st.expEvens.toFixed(2)}</td></tr>` +
-      `<tr><td>Numéros impairs</td><td>${st.avgOdds.toFixed(2)}</td><td>${st.expOdds.toFixed(2)}</td></tr>` +
       `<tr><td>Petits numéros (≤ ${Math.floor(g.max / 2)})</td><td>${st.avgLows.toFixed(2)}</td><td>${st.expLows.toFixed(2)}</td></tr>` +
-      `<tr><td>Grands numéros (> ${Math.floor(g.max / 2)})</td><td>${st.avgHighs.toFixed(2)}</td><td>${st.expHighs.toFixed(2)}</td></tr>` +
       `<tr><td>Somme du tirage</td><td>${st.avgSum.toFixed(0)}</td><td>${st.expSum.toFixed(0)}</td></tr>` +
       `<tr><td>Tirages avec consécutifs</td><td>${st.pctConsec.toFixed(0)} %</td><td>—</td></tr>`;
 
@@ -2310,10 +1998,7 @@ function render() {
     html += '<th class="msum">Somme</th>';
     if (hasExtras) html += `<th class="msum">Somme ${g.extraLabel.toLowerCase()}</th>`;
     html += `<th class="msum" title="Pairs / Impairs : combien de numéros pairs et impairs dans le tirage">P/I</th>` +
-      `<th class="msum" title="Bas / Haut : combien de numéros dans la première moitié de la grille (1–${Math.floor(half)}) et dans la seconde (${Math.floor(half) + 1}–${g.max})">Bas/Haut</th>`;
-    const showMult = currentGame === "keno";
-    if (showMult) html += `<th class="msum" title="Coefficient multiplicateur tiré au sort pour ce tirage">Mult</th>`;
-    html += `</tr></thead><tbody>`;
+      `<th class="msum" title="Bas / Haut : combien de numéros dans la première moitié de la grille (1–${Math.floor(half)}) et dans la seconde (${Math.floor(half) + 1}–${g.max})">Bas/Haut</th></tr></thead><tbody>`;
     last.forEach(d => {
       const inDraw = new Set(d.numbers);
       const nums = d.numbers;
@@ -2331,10 +2016,6 @@ function render() {
       html += `<td class="msum">${sum}</td>`;
       if (hasExtras) html += `<td class="msum">${d.extras.reduce((a, b) => a + b, 0)}</td>`;
       html += `<td class="msum">${evens}/${nums.length - evens}</td><td class="msum">${lows}/${nums.length - lows}</td>`;
-      if (showMult) {
-        const mv = (d.mult || "").replace(/[^0-9]/g, "");
-        html += `<td class="msum">${mv ? "×" + mv : "—"}</td>`;
-      }
       html += "</tr>";
     });
     html += "</tbody></table></div>";
@@ -2468,7 +2149,6 @@ async function tryAutoLoad(gameKey) {
         if (Array.isArray(data.draws) && data.draws.length ) {
           const draws = data.draws.map(d => ({
             date: parseFrDate(d.date), time: d.time || "", numbers: d.numbers, extras: d.extras || [],
-            mult: d.mult || "",
           })).filter(d => d.date);
           draws.sort((a, b) => b.date - a.date || (b.time > a.time ? 1 : -1));
           adoptDraws(gameKey, { draws, rejected: 0 },
@@ -2910,37 +2590,15 @@ function renderPortrait() {
     `<div class="pt-gauge"><i style="left:${p.evensPct}%"></i></div>` +
     `<div class="board-sub">${p.evensPct}ᵉ percentile · ${p.lows} numéros dans la moitié basse (1–${g.max / 2}).</div>`;
 
-  const curExtras = p.extras || [];
-  const simHtml = p.similar.map(s => {
-    const numsHtml = s.numbers.map(n => `<span class="${p.numbers.includes(n) ? "on" : ""}">${n}</span>`).join("");
-    const extrasHtml = (g.extraMax && s.extras && s.extras.length)
-      ? `<span class="pt-sep"></span>` + s.extras.map(n => `<span class="xtra${curExtras.includes(n) ? " on" : ""}">${n}</span>`).join("")
-      : "";
-    return `<div class="pt-line"><b>${s.shared}/${k}</b><span>${fmtDate(s.date)}</span></div>` +
-      `<div class="pt-mini">${numsHtml}${extrasHtml}</div>`;
-  }).join("") + `<div class="board-sub" style="margin-top:8px">Les tirages passés partageant le plus de numéros avec celui-ci. En couleur : les numéros communs${g.extraMax ? ` · ${g.extraLabel.toLowerCase()} à droite` : ""}.</div>`;
+  const simHtml = p.similar.map(s =>
+    `<div class="pt-line"><b>${s.shared}/${k}</b><span>${fmtDate(s.date)}</span></div>` +
+    `<div class="pt-mini">${s.numbers.map(n => `<span class="${p.numbers.includes(n) ? "on" : ""}">${n}</span>`).join("")}</div>`
+  ).join("") + `<div class="board-sub" style="margin-top:8px">Les tirages passés partageant le plus de numéros avec celui-ci. En couleur : les numéros communs.</div>`;
 
-  let commonHtml;
-  if (p.sharedPrev === null) {
-    commonHtml = `<div class="board-sub">Aucun tirage précédent dans l'historique chargé.</div>`;
-  } else {
-    const nb = p.sharedPrev.length;
-    const ecart = nb - p.expectedShared;
-    const tendance = Math.abs(ecart) < 0.75 ? "dans la moyenne"
-      : ecart > 0 ? "au-dessus de la moyenne" : "en dessous de la moyenne";
-    // mini-graphique d'historique : barres, avec la moyenne théorique en pointillés
-    const maxH = Math.max(...p.sharedHist.map(h => h.count), Math.ceil(p.expectedShared), 1);
-    const barsHtml = `<div class="pt-bars pt-hist">` + p.sharedHist.map(h =>
-      `<div class="pt-bar" title="${fmtDate(h.date)} : ${h.count} commun${h.count > 1 ? "s" : ""}">` +
-      `<i style="height:${Math.max(h.count / maxH * 100, 3)}%"></i></div>`).join("") +
-      `<u style="bottom:${p.expectedShared / maxH * 100 * 0.9}%"></u></div>`;
-    commonHtml =
-      `<div class="pt-big"><b>${nb}</b><span>/ ${k} numéros communs avec le tirage précédent${p.prevDate ? ` (${fmtDate(p.prevDate)})` : ""}</span></div>` +
-      (nb ? `<div class="pt-mini">${p.sharedPrev.map(n => `<span class="on">${n}</span>`).join("")}</div>` : "") +
-      `<div class="board-sub" style="margin:8px 0 4px">Moyenne théorique : ${p.expectedShared.toFixed(1)} — ce tirage est <b>${tendance}</b>.</div>` +
-      barsHtml +
-      `<div class="board-sub" style="margin-top:6px">Communs avec le tirage précédent sur les ${p.sharedHist.length} derniers tirages${p.histAvg !== null ? ` · moyenne observée ${p.histAvg.toFixed(1)}` : ""}. Pointillés : moyenne théorique.</div>`;
-  }
+  const repHtml = p.rep.map(r =>
+    `<div class="pt-line"><b>${r.numbers.length}/${k}</b><span>revenus depuis le tirage du ${fmtDate(r.date)} (J-${r.lag})</span></div>` +
+    (r.numbers.length ? `<div class="pt-mini">${r.numbers.map(n => `<span class="on">${n}</span>`).join("")}</div>` : "")
+  ).join("") + `<div class="board-sub" style="margin-top:8px">En moyenne, ${(k * g.drawSize / g.max).toFixed(1)} numéros se répètent d'un tirage à l'autre par le seul effet du hasard.</div>`;
 
   host.innerHTML = `<div class="portrait-grid">` +
     `<div class="pt-box"><div class="pt-h">Suites consécutives</div>${runsHtml}</div>` +
@@ -2948,17 +2606,12 @@ function renderPortrait() {
     `<div class="pt-box"><div class="pt-h">Dernier chiffre</div>${digHtml}</div>` +
     `<div class="pt-box"><div class="pt-h">Rang parmi ${p.total} tirages</div>${rankHtml}</div>` +
     `<div class="pt-box"><div class="pt-h">Tirages les plus ressemblants</div>${simHtml}</div>` +
-    `<div class="pt-box"><div class="pt-h">Communs avec le tirage précédent</div>${commonHtml}</div>` +
+    `<div class="pt-box"><div class="pt-h">Numéros revenus</div>${repHtml}</div>` +
     `</div>`;
 }
 
 function renderSmart() {
-  if (activeProfile === "signature") {
-    const w = $("#sigWord");
-    window.__sigWord = (w && w.value.trim()) ? w.value.trim() : "statirage";
-  }
-  const kenoSize = (currentGame === "keno" && $("#kenoSize")) ? parseInt($("#kenoSize").value) : null;
-  const grid = smartGrid(currentGame, activeProfile, kenoSize);
+  const grid = smartGrid(currentGame, activeProfile);
   const m = grid.metrics;
   const p = GRID_PROFILES[activeProfile];
   const k = grid.numbers.length;
@@ -2980,132 +2633,7 @@ function renderSmart() {
     `<p class="profile-note">Cette grille a exactement les mêmes chances qu'une grille prise au hasard.</p>`;
 }
 
-/* ---------- Système de complémentarité (méthode Roig) ---------- */
-let compState = null;   // { series: [...], awaited: [...] } pour le générateur de grille
-function computeComplement(gameKey, depth) {
-  const draws = store[gameKey];   // draws[0] = tirage le plus récent
-  if (!draws || draws.length < 2) return null;
-  // curseur N = le couple de tirages situé N crans en arrière.
-  // N=1 -> (draws[1], draws[0]) les deux derniers ; N=2 -> (draws[2], draws[1]) ; etc.
-  const N = Math.max(1, Math.min(depth || 1, draws.length - 1));
-  const older = draws[N];        // le plus ancien du couple
-  const newer = draws[N - 1];    // le plus récent du couple
-  const prevNums = [...older.numbers].sort((a, b) => a - b);
-  const lastNums = [...newer.numbers].sort((a, b) => a - b);
-  const olderSet = new Set(older.numbers), newerSet = new Set(newer.numbers);
-
-  // binômes = numéros répétitifs présents dans LES DEUX tirages du couple -> bornes
-  const bornes = [...new Set(older.numbers.filter(n => newerSet.has(n)))].sort((a, b) => a - b);
-
-  // complétion : numéros sortis dans les tirages POSTÉRIEURS au couple (draws[0 .. N-2])
-  const outAfter = new Set();
-  for (let i = 0; i <= N - 2; i++) draws[i].numbers.forEach(n => outAfter.add(n));
-  const nAfter = Math.max(0, N - 1);   // nombre de tirages après le couple
-
-  // séries = intervalles entre bornes consécutives ayant un intérieur
-  const series = [];
-  for (let i = 0; i < bornes.length - 1; i++) {
-    const lo = bornes[i], hi = bornes[i + 1];
-    if (hi - lo < 2) continue;
-    const interior = [];
-    for (let n = lo + 1; n < hi; n++) interior.push({ n, livre: outAfter.has(n) });
-    series.push({ lo, hi, interior });
-  }
-
-  // numéros en attente = union des intérieurs non encore livrés
-  const awaitedSet = new Set();
-  series.forEach(s => s.interior.forEach(x => { if (!x.livre) awaitedSet.add(x.n); }));
-  const awaited = [...awaitedSet].sort((a, b) => a - b);
-
-  return { last: lastNums, prev: prevNums, lastSet: newerSet, prevSet: olderSet,
-    bornes, series, awaited, dateLast: newer.date, datePrev: older.date,
-    depth: N, nAfter };
-}
-
-function compDepth() {
-  const el = $("#compDepth");
-  return el ? parseInt(el.value) : 1;
-}
-
-function renderComplement() {
-  const host = $("#compBody");
-  if (!host) return;
-  const depth = compDepth();
-  const dv = $("#compDepthVal");
-  const c = computeComplement(currentGame, depth);
-  compState = c;
-  if (!c) { host.innerHTML = `<div class="board-sub">Pas assez de tirages chargés pour analyser les répétitifs.</div>`;
-    const gb = $("#compGridBtn"); if (gb) gb.style.display = "none"; $("#compGrid").innerHTML = ""; return; }
-  if (dv) dv.textContent = c.depth === 1 ? "couple le plus récent" : "couple n-" + c.depth;
-
-  const numCell = (n) =>
-    `<div class="comp-n ${c.bornes.includes(n) ? "borne" : ""}">${n}</div>`;
-
-  const drawHtml =
-    `<div class="board-sub" style="margin-bottom:6px">Binômes lus sur ce couple de deux tirages consécutifs :</div>` +
-    `<div class="comp-draw"><div class="comp-label">${fmtDate(c.datePrev)}</div><div class="comp-nums">` +
-      c.prev.map(numCell).join("") + `</div></div>` +
-    `<div class="comp-draw"><div class="comp-label">${fmtDate(c.dateLast)}</div><div class="comp-nums">` +
-      c.last.map(numCell).join("") + `</div></div>` +
-    `<div class="board-sub" style="margin-top:4px">Complétion mesurée sur les <b>${c.nAfter}</b> tirage${c.nAfter > 1 ? "s" : ""} survenu${c.nAfter > 1 ? "s" : ""} depuis ce couple.</div>`;
-
-  const legend =
-    `<div class="comp-legend">` +
-    `<span><i class="comp-dot borne"></i> borne (répétitif)</span>` +
-    `<span><i class="comp-dot livre"></i> livré par la série</span>` +
-    `<span><i class="comp-dot attente"></i> en attente</span></div>`;
-
-  let seriesHtml;
-  if (!c.series.length) {
-    seriesHtml = `<div class="board-sub">Aucune série exploitable sur cette profondeur — aucun couple de numéros répétitifs n'encadre d'intervalle. Élargis la fenêtre avec le curseur.</div>`;
-  } else {
-    const head = `<div class="board-sub" style="margin:2px 0 4px"><b>${c.series.length} série${c.series.length > 1 ? "s" : ""}</b> ouverte${c.series.length > 1 ? "s" : ""} par les bornes ${c.bornes.join(", ")}.</div>`;
-    seriesHtml = head + c.series.map(s => {
-      const total = s.interior.length;
-      const done = s.interior.filter(x => x.livre).length;
-      const pct = total ? Math.round(done / total * 100) : 0;
-      const cells = `<div class="comp-n borne">${s.lo}</div>` +
-        s.interior.map(x => `<div class="comp-n ${x.livre ? "livre" : "attente"}">${x.n}</div>`).join("") +
-        `<div class="comp-n borne">${s.hi}</div>`;
-      return `<div class="comp-serie">` +
-        `<div class="comp-serie-title">Série ${s.lo} → ${s.hi}</div>` +
-        `<div class="comp-interval">${cells}</div>` +
-        `<div class="comp-prog-label"><span>Complétion</span><span>${done} / ${total} · ${pct}%</span></div>` +
-        `<div class="comp-prog-bar"><div class="comp-prog-fill" style="width:${pct}%"></div></div>` +
-        `</div>`;
-    }).join("");
-  }
-
-  host.innerHTML = drawHtml + legend + seriesHtml;
-  const gb = $("#compGridBtn");
-  if (gb) gb.style.display = c.awaited.length ? "" : "none";
-  $("#compGrid").innerHTML = "";
-}
-
-function renderComplementGrid() {
-  if (!compState || !compState.awaited.length) return;
-  const g = GAMES[currentGame];
-  const k = currentGame === "keno" ? 10 : g.drawSize;   // grille Keno à 10 numéros
-  const shuffle = (arr) => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; };
-  let pool = [...compState.awaited];
-  // repli si la série ne fournit pas assez de numéros
-  if (pool.length < k) {
-    const rest = Array.from({ length: g.max }, (_, i) => i + 1).filter(n => !pool.includes(n));
-    pool = pool.concat(shuffle(rest));
-  }
-  const nums = shuffle([...pool]).slice(0, k).sort((a, b) => a - b);
-  const extras = [];
-  if (g.extraMax) {
-    const cnt = currentGame === "euromillions" ? 2 : 1;
-    extras.push(...shuffle(Array.from({ length: g.extraMax }, (_, i) => i + 1)).slice(0, cnt).sort((a, b) => a - b));
-  }
-  $("#compGrid").innerHTML =
-    `<div class="smart-grid" style="margin-top:14px">` +
-    nums.map(n => `<span class="ball">${n}</span>`).join("") +
-    extras.map(n => `<span class="ball star">${n}</span>`).join("") +
-    `</div>` +
-    `<p class="profile-note">Grille de ${nums.length} numéros piochés dans la série en attente de complétion. Elle a exactement les mêmes chances qu'une grille prise au hasard.</p>`;
-}
+$("#nextNum") && $("#nextNum").addEventListener("change", renderNext);
 document.querySelectorAll("[data-next]").forEach(b => b.addEventListener("click", () => {
   document.querySelectorAll("[data-next]").forEach(x => x.classList.remove("active"));
   b.classList.add("active");
@@ -3118,101 +2646,9 @@ document.querySelectorAll("#profileTabs .chip").forEach(c => c.addEventListener(
   document.querySelectorAll("#profileTabs .chip").forEach(x => x.classList.remove("active"));
   c.classList.add("active");
   activeProfile = c.dataset.profile;
-  const sr = $("#sigRow"); if (sr) sr.style.display = activeProfile === "signature" ? "" : "none";
   renderSmart();
 }));
-$("#sigWord") && $("#sigWord").addEventListener("input", () => { if (activeProfile === "signature") renderSmart(); });
-$("#kenoSize") && $("#kenoSize").addEventListener("change", renderSmart);
 $("#smartBtn") && $("#smartBtn").addEventListener("click", renderSmart);
-$("#compGridBtn") && $("#compGridBtn").addEventListener("click", renderComplementGrid);
-$("#compDepth") && $("#compDepth").addEventListener("input", renderComplement);
-
-/* ---------- Générateur avancé ---------- */
-function fillGenCount() {
-  const sel = $("#genCount");
-  if (!sel) return;
-  const g = GAMES[currentGame];
-  // Keno : on peut jouer de 2 à 10 numéros ; autres jeux : taille fixe du tirage.
-  const opts = currentGame === "keno"
-    ? Array.from({ length: 9 }, (_, i) => i + 2)
-    : [g.drawSize];
-  const prev = sel.value;
-  sel.innerHTML = opts.map(o => `<option${String(o) === prev ? " selected" : (o === (currentGame === "keno" ? 7 : g.drawSize) ? " selected" : "")}>${o}</option>`).join("");
-  syncGenBounds();
-}
-
-// Adapte les bornes des curseurs (pairs, bas, dizaines…) au nombre de numéros joués,
-// et met à jour toutes les valeurs affichées.
-function syncGenBounds() {
-  const g = GAMES[currentGame];
-  const count = parseInt($("#genCount") && $("#genCount").value) || g.drawSize;
-  // pairs et bas : de 0 à count
-  [["fEven2", "fEvenV"], ["fLow2", "fLowV"]].forEach(([r, v]) => {
-    const el = $("#" + r); if (!el) return;
-    el.max = count;
-    if (+el.value > count) el.value = count;
-    if ($("#" + v)) $("#" + v).textContent = el.value;
-  });
-  // dizaines / consécutifs / terminaisons : plafonnés par count aussi
-  [["fDecadeMax", "fDecadeV"], ["fConsecMax", "fConsecV"], ["fEndingMax", "fEndingV"]].forEach(([r, v]) => {
-    const el = $("#" + r); if (!el) return;
-    el.max = count;
-    if (+el.value > count) el.value = count;
-    if ($("#" + v)) $("#" + v).textContent = el.value;
-  });
-  // somme : bornes théoriques min/max pour la taille de grille
-  const sMin = count * (count + 1) / 2;                       // 1+2+...+count
-  const sMax = count * (2 * g.max - count + 1) / 2;           // les count plus grands
-  ["fSumMin", "fSumMax"].forEach(r => { const el = $("#" + r); if (el) { el.min = sMin; el.max = sMax; } });
-  if ($("#fGapMax")) $("#fGapMax").max = Math.max(20, store[currentGame].length || 40);
-  updateGenLabels();
-}
-
-// Rafraîchit toutes les valeurs affichées à côté des curseurs.
-function updateGenLabels() {
-  const map = { fSumMin: "fSumMinV", fSumMax: "fSumMaxV", fEven2: "fEvenV", fLow2: "fLowV",
-    fGapMax: "fGapV", fDecadeMax: "fDecadeV", fConsecMax: "fConsecV", fEndingMax: "fEndingV" };
-  for (const [r, v] of Object.entries(map)) {
-    if ($("#" + r) && $("#" + v)) $("#" + v).textContent = $("#" + r).value;
-  }
-  // garantir min <= max sur la somme
-  const mn = $("#fSumMin"), mx = $("#fSumMax");
-  if (mn && mx && +mn.value > +mx.value) {
-    // on pousse l'autre poignée pour rester cohérent
-    if (document.activeElement === mn) mx.value = mn.value; else mn.value = mx.value;
-    if ($("#fSumMinV")) $("#fSumMinV").textContent = mn.value;
-    if ($("#fSumMaxV")) $("#fSumMaxV").textContent = mx.value;
-  }
-}
-
-// Câblage temps réel des curseurs.
-["fSumMin", "fSumMax", "fEven2", "fLow2", "fGapMax", "fDecadeMax", "fConsecMax", "fEndingMax"].forEach(id => {
-  const el = $("#" + id);
-  if (el) el.addEventListener("input", updateGenLabels);
-});
-$("#genCount") && $("#genCount").addEventListener("change", syncGenBounds);
-
-function renderGenAdv() {
-  const count = parseInt($("#genCount") && $("#genCount").value) || GAMES[currentGame].drawSize;
-  const res = generateAdvanced(currentGame, count);
-  const host = $("#genAdvBody");
-  if (!host) return;
-  if (res.fail) { host.innerHTML = `<p class="genadv-fail">${res.fail}</p>`; return; }
-  const m = res.metrics, k = res.numbers.length;
-  host.innerHTML =
-    `<div class="genadv-result">` +
-    `<div class="genadv-balls">${res.numbers.map(n => `<span class="genadv-ball">${n}</span>`).join("")}</div>` +
-    `<div class="metrics-row">` +
-    `<div class="metric-box"><div class="m-label">Somme</div><div class="m-val">${m.sum}</div></div>` +
-    `<div class="metric-box"><div class="m-label">Pairs / impairs</div><div class="m-val">${m.evens} / ${k - m.evens}</div></div>` +
-    `<div class="metric-box"><div class="m-label">Bas / haut</div><div class="m-val">${m.lows} / ${k - m.lows}</div></div>` +
-    `<div class="metric-box"><div class="m-label">Consécutifs</div><div class="m-val">${m.consec}</div></div>` +
-    (m.avgGap !== null ? `<div class="metric-box"><div class="m-label">Écart moyen</div><div class="m-val">${m.avgGap.toFixed(1)}</div></div>` : "") +
-    `</div>` +
-    `<p class="profile-note">Grille trouvée en ${res.tries} essai${res.tries > 1 ? "s" : ""}. Elle respecte les critères cochés, mais a <b>exactement les mêmes chances</b> de sortir que n'importe quelle autre.</p>` +
-    `</div>`;
-}
-$("#genAdvBtn") && $("#genAdvBtn").addEventListener("click", renderGenAdv);
 
 /* ---------- Sélecteur de numéros dépliable (grille cliquable) ---------- */
 const PICKERS = [
@@ -3519,34 +2955,17 @@ function renderMyNums() {
   const payable = currentGame === "keno" && !!KENO_PAY[saved.length];
   const mise = payable ? +$("#myMise").value : 0;
   const useMult = payable && $("#myMult").checked;
-
-  // On prépare toutes les lignes avec leur gain, puis on ne garde que les
-  // tirages gagnants (gain > 0) — plus le tirage le plus récent, toujours affiché.
-  const rows = draws.map((d, i) => {
+  let html = draws.slice(0, 7).map((d, i) => {
     const hits = saved.filter(n => d.numbers.includes(n));
-    const g = payable ? kenoGain(saved.length, hits.length, mise) * (useMult ? (parseInt(d.mult) || 1) : 1) : 0;
-    return { d, i, hits, g };
-  });
-  const shown = payable ? rows.filter(r => r.g > 0 || r.i === 0) : rows;
-
-  const lineHtml = ({ d, i, hits, g }) => {
     let euro = "";
     if (payable) {
+      const g = kenoGain(saved.length, hits.length, mise) * (useMult ? (parseInt(d.mult) || 1) : 1);
       euro = `<span class="draw-date" style="min-width:auto;margin-left:4px;${g > 0 ? "color:var(--accent);font-weight:700" : "opacity:.55"}">${g > 0 ? "+ " + fmtEuro(g) : "0 €"}</span>`;
     }
     return `<div class="draw-line"><span class="draw-date">${fmtDate(d.date)}${d.time && d.time !== "unique" ? " · " + d.time : ""}</span>` +
       saved.map(n => `<span class="ball" style="${hits.includes(n) ? "background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700" : "opacity:.45"}">${n}</span>`).join("") +
       `<span class="draw-date" style="min-width:auto;margin-left:6px">${hits.length}/${saved.length}${i === 0 ? " ce tirage" : ""}</span>${euro}</div>`;
-  };
-
-  let html = "";
-  if (payable) {
-    const wins = shown.filter(r => r.g > 0).length;
-    html += `<div class="board-sub" style="margin:4px 0 8px">${wins > 0
-      ? `Tirages gagnants uniquement (${wins} sur ${draws.length}) — plus le dernier tirage.`
-      : `Aucun tirage gagnant sur les ${draws.length} chargés avec cette grille. Seul le dernier tirage est affiché.`}</div>`;
-  }
-  html += `<div class="mynums-scroll">` + shown.map(lineHtml).join("") + `</div>`;
+  }).join("");
   if (payable) html += euroSummaryHtml(kenoLedger(saved, mise, useMult, draws), mise, useMult);
   else if (currentGame === "keno") html += `<div class="board-sub" style="margin-top:8px">Les gains en euros s'affichent pour une grille Keno de 4 à 10 numéros.</div>`;
   out.innerHTML = html;
@@ -3685,26 +3104,11 @@ function renderProba() {
   const foot = $("#probaFoot");
   if (payable) {
     const trj = esperance / mise * 100;
-    let multLine = "";
-    const mx = multExpectation("keno");
-    if (mx) {
-      // La FDJ calibre l'option pour un coefficient moyen proche de 2 : mise doublée,
-      // gain moyen doublé, donc taux de retour inchangé. On affiche la moyenne OBSERVÉE
-      // à titre illustratif, sans en tirer un TRJ figé (échantillon parfois réduit).
-      multLine =
-        `<br><br><strong>Avec l'option Multiplicateur :</strong> la mise passe à ${fmtEuro(mise * 2)} ` +
-        `et chaque gain est multiplié par un coefficient tiré au sort à chaque tirage. Sur les ${mx.total} tirages chargés, ` +
-        `ce coefficient vaut <strong>${mx.mean.toFixed(2)}×</strong> en moyenne. ` +
-        `L'option est calibrée pour doubler à la fois la mise et le gain moyen : elle ` +
-        `<strong>ne change donc pas le taux de retour</strong>. Elle augmente seulement l'amplitude ` +
-        `des gains — et des pertes. Jouer avec Multiplicateur ne rend pas le Keno plus rentable, ` +
-        `seulement plus volatil.`;
-    }
     foot.innerHTML = `<div class="board-sub" style="margin-top:10px">` +
       `<strong>Espérance de gain :</strong> ${esperance.toFixed(3)} € pour ${mise} € misé, soit un retour de <strong>${trj.toFixed(1)} %</strong>. ` +
       `Autrement dit, sur un grand nombre de grilles, il rentre en moyenne ${trj.toFixed(1)} centimes par euro joué — l'écart va à la FDJ et à l'État. ` +
-      `Ce taux est le même quels que soient les numéros choisis.` + multLine + `<br>` +
-      `Rapports officiels FDJ depuis le 3 nov. 2025 — montants indicatifs, le règlement fait foi.</div>`;
+      `Ce taux est le même quels que soient les numéros choisis.<br>` +
+      `Rapports officiels FDJ depuis le 3 nov. 2025, hors option Multiplicateur — montants indicatifs, le règlement fait foi.</div>`;
   } else foot.innerHTML = "";
 }
 
@@ -3718,31 +3122,8 @@ function renderMult() {
   const ms = multStats(currentGame);
   $("#multPanel").classList.toggle("hidden", !ms);
   if (!ms) return;
-  // Probabilités officielles FDJ du coefficient multiplicateur Keno (x2/x3/x5).
-  const MULT_THEO = { "2": 1 / 1.49, "3": 1 / 3.70, "5": 1 / 16.67 };
-  const MULT_ODDS = { "2": "1,49", "3": "3,70", "5": "16,67" };
-  $("#multBody").innerHTML = ms.rows.map(([m, c]) => {
-    const theo = MULT_THEO[m];
-    const theoTxt = theo != null ? (theo * 100).toFixed(1) + " %" : "—";
-    const oddsTxt = MULT_ODDS[m] != null ? "1 sur " + MULT_ODDS[m] : "—";
-    return `<tr><td>${m}</td><td>${c}×</td><td>${(c / ms.total * 100).toFixed(1)} %</td><td>${theoTxt}</td><td>${oddsTxt}</td></tr>`;
-  }).join("");
-  // Espérance observée vs théorique + effet sur le taux de retour.
-  let sumObs = 0, nObs = 0;
-  ms.rows.forEach(([m, c]) => { sumObs += (parseInt(m) || 0) * c; nObs += c; });
-  const eObs = nObs ? sumObs / nObs : 0;
-  let sT = 0, pT = 0;
-  for (const [m, p] of Object.entries(MULT_THEO)) { sT += (parseInt(m) || 0) * p; pT += p; }
-  const eTheo = pT ? sT / pT : 0;
-  const foot = $("#multFoot");
-  if (foot) foot.innerHTML =
-    `<div class="board-sub" style="margin-top:10px">` +
-    `Coefficient moyen : <b>${eObs.toFixed(2)}×</b> observé, <b>${eTheo.toFixed(2)}×</b> en théorie. ` +
-    `Comme ce coefficient moyen dépasse 2 alors que l'option ne fait que doubler la mise, ` +
-    `l'option Multiplicateur <b>augmente le taux de retour</b> d'environ ` +
-    `<b>${((eTheo / 2 - 1) * 100).toFixed(0)} %</b> : c'est l'une des rares options FDJ ` +
-    `légèrement favorable au joueur. En contrepartie, elle accroît la variance — les gains ` +
-    `comme les pertes sont plus amples.</div>`;
+  $("#multBody").innerHTML = ms.rows.map(([m, c]) =>
+    `<tr><td>${m}</td><td>${c}×</td><td>${(c / ms.total * 100).toFixed(1)} %</td></tr>`).join("");
 }
 
 
@@ -3856,49 +3237,6 @@ function renderCharts() {
       ]},
     options: chartBase,
   });
-
-  // --- 4. Cloche des communs : chevauchement avec le tirage précédent ---
-  // Nombre de numéros partagés entre deux tirages consécutifs : loi hypergéométrique
-  // P(X=j) = C(K,j)·C(N-K, K-j) / C(N,K)  avec N=g.max, K=g.drawSize.
-  const K = g.drawSize, N = g.max;
-  const logFact = (() => {
-    const t = [0];
-    for (let i = 1; i <= N; i++) t[i] = t[i - 1] + Math.log(i);
-    return t;
-  })();
-  const logC = (n, r) => (r < 0 || r > n) ? -Infinity : logFact[n] - logFact[r] - logFact[n - r];
-  const logDen = logC(N, K);
-  const sharedObs = new Array(K + 1).fill(0);
-  let sharedPairs = 0, sharedSum = 0;
-  for (let i = 0; i + 1 < scope.length; i++) {
-    const cur = scope[i].numbers, prev = scope[i + 1].numbers;
-    const c = cur.filter(n => prev.includes(n)).length;
-    sharedObs[c]++; sharedPairs++; sharedSum += c;
-  }
-  const sharedTheo = sharedObs.map((_, j) =>
-    sharedPairs * Math.exp(logC(K, j) + logC(N - K, K - j) - logDen));
-  const sharedMu = K * K / N;                    // espérance = 4.57 au Keno
-  const obsAvg = sharedPairs ? sharedSum / sharedPairs : 0;
-  // ne garder que les colonnes où la théorie ou l'observé est visible
-  let jMax = K; while (jMax > 0 && sharedTheo[jMax] < 0.3 && sharedObs[jMax] === 0) jMax--;
-  const labels4 = [], obs4 = [], theo4 = [];
-  for (let j = 0; j <= jMax; j++) { labels4.push(j); obs4.push(sharedObs[j]); theo4.push(sharedTheo[j]); }
-  killChart("shared");
-  charts.shared = new Chart($("#chartShared"), {
-    type: "bar",
-    data: { labels: labels4,
-      datasets: [
-        { data: obs4, backgroundColor: "rgba(51,97,158,.55)" },
-        { data: theo4, type: "line", borderColor: INK, pointRadius: 0, borderWidth: 2, tension: .35 },
-      ]},
-    options: chartBase,
-  });
-  const noteEl = $("#sharedNote");
-  if (noteEl) noteEl.innerHTML =
-    `Sur ${sharedPairs} paires de tirages consécutifs, la moyenne observée est de ` +
-    `<b>${obsAvg.toFixed(2)}</b> numéros communs, pour une espérance théorique de ` +
-    `<b>${sharedMu.toFixed(2)}</b>. Un tirage qui partage beaucoup — ou aucun — numéro ` +
-    `avec le précédent reste dans la marge du hasard : rien à en déduire pour la suite.`;
   } catch (e) {
     console.error("Erreur graphiques :", e);
     $("#trackSub").textContent = "Graphiques indisponibles : " + e.message;
@@ -3914,14 +3252,12 @@ function renderExtras2() {
   safe("proba", renderProba);
   safe("weekday", renderWeekday);
   safe("mult", renderMult);
-  safe("gencount", fillGenCount);
   safe("backtest", renderBacktest);
   safe("compare", renderCompare);
   safe("decades", renderDecades);
   safe("next", () => { mcResult = null; renderNext(); });
   safe("fact", renderFact);
   safe("portrait", renderPortrait);
-  safe("complement", renderComplement);
   safe("pickers", refreshPickers);
   safe("rank", renderRank);
   safe("cal", () => { calCursor = null; renderCal(); });
@@ -4135,6 +3471,101 @@ restoreSession();
 applyGates();
 
 switchGame("keno");
+
+/* ---------- Réorganisation en sections (n'altère aucun panneau, les déplace seulement) ---------- */
+(function organizeSections() {
+  const app = document.getElementById("app");
+  const nav = document.getElementById("sectionNav");
+  if (!app || !nav) return;
+
+  // Un panneau est rangé par un mot-clé trouvé dans son titre (h2 ou .board-title).
+  // Les entrées "fold: true" deviennent des accordéons repliés.
+  const PLAN = {
+    "sec-tirage":    { title: "Le tirage du soir", sub: "ce qui vient de sortir",
+      match: ["Le portrait du tirage", "Derniers tirages", "Prochains tirages", "Multiplicateurs Keno"] },
+    "sec-numeros":   { title: "Explorer les numéros", sub: "fréquences, écarts, tendances",
+      match: ["La grille", "Le classement des numéros", "Les courbes", "Numéros chauds", "Plus gros retards",
+              "Structure des tirages", "Numéros complices", "Le verdict du statisticien", "Répartition par dizaines",
+              "Le numéro suivant", "Le calendrier des sorties", "Retrouver un tirage", "Les records"] },
+    "sec-grilles":   { title: "Mes grilles", sub: "composer et vérifier",
+      match: ["Le générateur statistique", "L'atelier des grilles", "Mes numéros", "Testeur de grille",
+              "Comparateur de numéros", "Probabilités exactes", "Les quatre jeux comparés"] },
+    "sec-comprendre":{ title: "Comprendre", sub: "pourquoi le hasard est imbattable",
+      match: ["Le contexte des retards"],
+      fold: ["Comprendre les statistiques des tirages", "Le hasard n'a pas de mémoire",
+             "Fréquences et écarts", "La structure d'un tirage", "Le Z-score",
+             "Le test du chi-carré", "Les systèmes réducteurs", "En résumé"] },
+  };
+
+  const titleOf = el => {
+    const t = el.querySelector(":scope > h2, :scope > .board-title");
+    return t ? t.textContent.trim() : "";
+  };
+  const findPanel = kw => {
+    for (const el of app.querySelectorAll(".panel, .board-card")) {
+      if (el.closest(".section-block")) continue;      // déjà rangé
+      if (titleOf(el).startsWith(kw) || titleOf(el).includes(kw)) return el;
+    }
+    return null;
+  };
+
+  // Point d'insertion : juste après la barre + les contrôles
+  const controls = app.querySelector(".controls");
+  let anchor = controls || nav;
+
+  for (const [id, cfg] of Object.entries(PLAN)) {
+    const head = document.createElement("div");
+    head.className = "section-head";
+    head.id = id;
+    head.innerHTML = `<h2>${cfg.title}</h2><span>${cfg.sub}</span>`;
+    const block = document.createElement("div");
+    block.className = "section-block";
+    anchor.after(head); head.after(block); anchor = block;
+
+    (cfg.match || []).forEach(kw => { const p = findPanel(kw); if (p) block.appendChild(p); });
+
+    (cfg.fold || []).forEach(kw => {
+      const p = findPanel(kw);
+      if (!p) return;
+      const t = titleOf(p);
+      const h2 = p.querySelector(":scope > h2"); if (h2) h2.remove();
+      const det = document.createElement("details");
+      det.className = "foldable";
+      const sum = document.createElement("summary");
+      sum.textContent = t;
+      det.appendChild(sum);
+      det.appendChild(p);
+      block.appendChild(det);
+    });
+  }
+
+  // Défilement doux + surlignage de la section active
+  const links = [...nav.querySelectorAll("a")];
+  const heads = links.map(a => document.getElementById(a.dataset.sec));
+  links.forEach(a => a.addEventListener("click", e => {
+    e.preventDefault();
+    const el = document.getElementById(a.dataset.sec);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }));
+  const spy = () => {
+    let cur = 0;
+    heads.forEach((h, i) => { if (h && h.getBoundingClientRect().top < 130) cur = i; });
+    links.forEach((a, i) => a.classList.toggle("active", i === cur));
+  };
+  window.addEventListener("scroll", spy, { passive: true });
+  spy();
+
+  // Filet de sécurité : tout panneau non prévu par le plan est rattaché à « Explorer ».
+  const leftover = [...app.querySelectorAll(".panel, .board-card")].filter(el => !el.closest(".section-block"));
+  if (leftover.length) {
+    const fallback = document.querySelector("#sec-numeros + .section-block") ||
+                     document.querySelector(".section-block");
+    leftover.forEach(el => fallback && fallback.appendChild(el));
+    console.warn("[sections] panneaux rattachés par défaut :", leftover.map(titleOf));
+  }
+  // Retirer les .row désormais vides
+  app.querySelectorAll(".row").forEach(r => { if (!r.querySelector(".panel, .board-card")) r.remove(); });
+})();
 </script>
 </body>
 </html>
