@@ -740,6 +740,21 @@
         <h3 class="chart-h3" style="margin-top:14px">Quatuors</h3>
         <table><thead><tr><th>Quatuor</th><th>Ensemble</th><th>Attendu</th><th>Ratio</th></tr></thead>
         <tbody id="quadsBody"></tbody></table>
+        <h3 class="chart-h3" style="margin-top:14px" id="quintsH">Quintets</h3>
+        <table id="quintsT"><thead><tr><th>Quintet</th><th>Ensemble</th><th>Attendu</th><th>Ratio</th></tr></thead>
+        <tbody id="quintsBody"></tbody></table>
+        <h3 class="chart-h3" style="margin-top:14px" id="sextsH">Sextuors</h3>
+        <table id="sextsT"><thead><tr><th>Sextuor</th><th>Ensemble</th><th>Attendu</th><th>Ratio</th></tr></thead>
+        <tbody id="sextsBody"></tbody></table>
+        <h3 class="chart-h3" style="margin-top:18px" id="bigH">Grands groupes (7 à 10)</h3>
+        <p class="board-sub" id="bigNote">Calcul lourd, à la demande : choisis une taille et lance. À ces tailles, les combinaisons ne se répètent quasiment jamais plus de 2 fois — c'est une curiosité, pas un signal.</p>
+        <div class="atelier-tools" id="bigTools">
+          <span class="label">Taille</span>
+          <select id="bigSize" class="select"><option>7</option><option>8</option><option>9</option><option>10</option></select>
+          <button class="btn" type="button" id="bigRun">Afficher les grands groupes</button>
+        </div>
+        <table id="bigT" style="display:none"><thead><tr><th id="bigLabel">Groupe</th><th>Ensemble</th><th>Attendu</th><th>Ratio</th></tr></thead>
+        <tbody id="bigBody"></tbody></table>
       </div>
     </div>
 
@@ -1519,12 +1534,15 @@ function computeAdvanced(all, win, gameKey) {
     .map(([k, c]) => ({ a: Math.floor(k / 100), b: k % 100, obs: c, exp: expPair, ratio: c / expPair }))
     .sort((x, y) => y.obs - x.obs).slice(0, 12);
 
-  // --- Trios et quatuors complices (clés numériques compactes) ---
+  // --- Trios, quatuors, quintets, sextuors complices (clés numériques compactes) ---
   const D = g.drawSize, M = g.max;
-  const trioP = D * (D - 1) * (D - 2) / (M * (M - 1) * (M - 2));
-  const quadP = D >= 4 ? D * (D - 1) * (D - 2) * (D - 3) / (M * (M - 1) * (M - 2) * (M - 3)) : 0;
-  const expTrio = total * trioP, expQuad = total * quadP;
-  const trioCount = new Map(), quadCount = new Map();
+  const combP = (r) => { let num = 1, den = 1; for (let i = 0; i < r; i++) { num *= (D - i); den *= (M - i); } return num / den; };
+  const trioP = combP(3);
+  const quadP = D >= 4 ? combP(4) : 0;
+  const quintP = D >= 5 ? combP(5) : 0;
+  const sextP = D >= 6 ? combP(6) : 0;
+  const expTrio = total * trioP, expQuad = total * quadP, expQuint = total * quintP, expSext = total * sextP;
+  const trioCount = new Map(), quadCount = new Map(), quintCount = new Map(), sextCount = new Map();
   scope.forEach(d => {
     const n = d.numbers, L = n.length;
     for (let i = 0; i < L; i++)
@@ -1535,6 +1553,14 @@ function computeAdvanced(all, win, gameKey) {
           for (let q = l + 1; q < L; q++) {
             const kq = kt * 100 + n[q];
             quadCount.set(kq, (quadCount.get(kq) || 0) + 1);
+            for (let p = q + 1; p < L; p++) {
+              const k5 = kq * 100 + n[p];
+              quintCount.set(k5, (quintCount.get(k5) || 0) + 1);
+              for (let s = p + 1; s < L; s++) {
+                const k6 = k5 * 100 + n[s];
+                sextCount.set(k6, (sextCount.get(k6) || 0) + 1);
+              }
+            }
           }
         }
   });
@@ -1543,19 +1569,20 @@ function computeAdvanced(all, win, gameKey) {
     for (let i = 0; i < size; i++) { out.unshift(key % 100); key = Math.floor(key / 100); }
     return out;
   };
-  const trios = [...trioCount.entries()]
-    .map(([k, c]) => ({ nums: unpack(k, 3), obs: c, exp: expTrio, ratio: expTrio > 0 ? c / expTrio : 0 }))
+  const topN = (map, size, exp) => [...map.entries()]
+    .map(([k, c]) => ({ nums: unpack(k, size), obs: c, exp, ratio: exp > 0 ? c / exp : 0 }))
     .sort((x, y) => y.obs - x.obs).slice(0, 8);
-  const quads = [...quadCount.entries()]
-    .map(([k, c]) => ({ nums: unpack(k, 4), obs: c, exp: expQuad, ratio: expQuad > 0 ? c / expQuad : 0 }))
-    .sort((x, y) => y.obs - x.obs).slice(0, 8);
+  const trios = topN(trioCount, 3, expTrio);
+  const quads = topN(quadCount, 4, expQuad);
+  const quints = quintP ? topN(quintCount, 5, expQuint) : [];
+  const sexts = sextP ? topN(sextCount, 6, expSext) : [];
 
   // --- Extrêmes du Z ---
   const zRank = [];
   for (let n = 1; n <= g.max; n++) zRank.push({ n, z: z[n], freq: freq[n] });
   zRank.sort((a, b) => Math.abs(b.z) - Math.abs(a.z));
 
-  return { total, z, chi2, df, pValue, structure, pairs, trios, quads, zTop: zRank.slice(0, 6), expected: mu };
+  return { total, z, chi2, df, pValue, structure, pairs, trios, quads, quints, sexts, zTop: zRank.slice(0, 6), expected: mu };
 }
 
 
@@ -2305,6 +2332,26 @@ function render() {
     $("#quadsBody").innerHTML = adv.quads.length ? adv.quads.map(qd =>
       `<tr><td>${qd.nums.join(" & ")}</td><td>${qd.obs}×</td><td>${qd.exp.toFixed(3)}×</td><td>${qd.exp > 0 ? "×" + qd.ratio.toFixed(0) : "—"}</td></tr>`).join("")
       : '<tr><td colspan="4">Pas assez de numéros par tirage</td></tr>';
+    const showQuints = adv.quints && adv.quints.length;
+    const showSexts = adv.sexts && adv.sexts.length;
+    ["quintsH", "quintsT"].forEach(id => { const el = $("#" + id); if (el) el.style.display = showQuints ? "" : "none"; });
+    ["sextsH", "sextsT"].forEach(id => { const el = $("#" + id); if (el) el.style.display = showSexts ? "" : "none"; });
+    if (showQuints) $("#quintsBody").innerHTML = adv.quints.map(qi =>
+      `<tr><td>${qi.nums.join(" & ")}</td><td>${qi.obs}×</td><td>${qi.exp.toFixed(4)}×</td><td>${qi.exp > 0 ? "×" + qi.ratio.toFixed(0) : "—"}</td></tr>`).join("");
+    if (showSexts) $("#sextsBody").innerHTML = adv.sexts.map(sx =>
+      `<tr><td>${sx.nums.join(" & ")}</td><td>${sx.obs}×</td><td>${sx.exp.toFixed(5)}×</td><td>${sx.exp > 0 ? "×" + sx.ratio.toFixed(0) : "—"}</td></tr>`).join("");
+
+    // grands groupes : réinitialiser (résultat périmé) + limiter les tailles au jeu
+    const bt = $("#bigT"); if (bt) bt.style.display = "none";
+    const bbody = $("#bigBody"); if (bbody) bbody.innerHTML = "";
+    const bsel = $("#bigSize");
+    if (bsel) {
+      const opts = [7, 8, 9, 10].filter(s => s <= GAMES[currentGame].drawSize);
+      const bh = $("#bigH"), btools = $("#bigTools"), bnote = $("#bigNote");
+      const showBig = opts.length > 0;
+      [bh, btools, bnote].forEach(el => { if (el) el.style.display = showBig ? "" : "none"; });
+      if (showBig) bsel.innerHTML = opts.map(s => `<option>${s}</option>`).join("");
+    }
 
     const conforme = adv.pValue > 0.05;
     $("#verdictText").innerHTML =
@@ -3620,6 +3667,58 @@ function renderGapCtx() {
   const top = [...stats].sort((a, b) => b.currentGap - a.currentGap)[0];
   $("#gapCtx").innerHTML = `<p class="modal-text">Plus gros retard actuel : <strong>N°${top.n}, ${top.currentGap} tirages</strong> (fenêtre : ${scope} tirages).</p><div class="board-sub" id="gapCtxRes">Clique pour estimer si c'est banal.</div>`;
 }
+
+/* Grands groupes (7–10) : calcul à la demande, une taille à la fois. */
+function renderBigGroups() {
+  const g = GAMES[currentGame];
+  const size = parseInt($("#bigSize").value);
+  const body = $("#bigBody"), table = $("#bigT");
+  if (size > g.drawSize) {
+    body.innerHTML = `<tr><td colspan="4">Ce jeu ne sort que ${g.drawSize} numéros par tirage.</td></tr>`;
+    table.style.display = ""; return;
+  }
+  // fenêtre active
+  const draws = store[currentGame];
+  const scope = windowSize > 0 ? draws.slice(0, windowSize) : draws;
+  const total = scope.length;
+  if (!total) { body.innerHTML = ""; table.style.display = "none"; return; }
+
+  // probabilité combinatoire d'un groupe précis de `size` numéros dans un tirage
+  let num = 1, den = 1;
+  for (let i = 0; i < size; i++) { num *= (g.drawSize - i); den *= (g.max - i); }
+  const exp = total * (num / den);
+
+  // comptage à la demande (clé = combinaison jointe, join natif rapide)
+  const count = new Map();
+  const idx = new Array(size), buf = new Array(size);
+  scope.forEach(d => {
+    const n = d.numbers, L = n.length;
+    for (let i = 0; i < size; i++) idx[i] = i;
+    while (true) {
+      for (let i = 0; i < size; i++) buf[i] = n[idx[i]];
+      const key = buf.join(",");
+      count.set(key, (count.get(key) || 0) + 1);
+      let p = size - 1;
+      while (p >= 0 && idx[p] === L - size + p) p--;
+      if (p < 0) break;
+      idx[p]++;
+      for (let i = p + 1; i < size; i++) idx[i] = idx[i - 1] + 1;
+    }
+  });
+
+  let maxObs = 0, nbMax = 0;
+  count.forEach(v => { if (v > maxObs) { maxObs = v; nbMax = 1; } else if (v === maxObs) nbMax++; });
+  const top = [...count.entries()]
+    .map(([k, c]) => ({ nums: k, obs: c }))
+    .sort((a, b) => b.obs - a.obs).slice(0, 8);
+
+  const labels = { 7: "Groupe de 7", 8: "Groupe de 8", 9: "Groupe de 9", 10: "Groupe de 10" };
+  $("#bigLabel").textContent = labels[size] || "Groupe";
+  body.innerHTML = top.map(t =>
+    `<tr><td>${t.nums.replace(/,/g, " & ")}</td><td>${t.obs}×</td><td>${exp < 0.01 ? exp.toExponential(1) : exp.toFixed(3)}×</td><td>${exp > 0 ? "×" + Math.round(t.obs / exp) : "—"}</td></tr>`).join("") +
+    `<tr><td colspan="4" class="board-sub" style="padding-top:8px">Fréquence maximale : ${maxObs}× · ${nbMax} groupe${nbMax > 1 ? "s" : ""} à égalité. Sur ${total} tirages, ${count.size.toLocaleString("fr-FR")} groupes de ${size} distincts sont apparus.</td></tr>`;
+  table.style.display = "";
+}
 function runGapCtx() {
   const draws = store[currentGame];
   if (!draws.length) return;
@@ -3992,6 +4091,18 @@ $("#cmpRand") && $("#cmpRand").addEventListener("click", () => {
   renderCompare();
 });
 $("#gapCtxBtn").addEventListener("click", runGapCtx);
+$("#bigRun") && $("#bigRun").addEventListener("click", () => {
+  const btn = $("#bigRun"), table = $("#bigT"), body = $("#bigBody");
+  const size = parseInt($("#bigSize").value);
+  btn.disabled = true; btn.textContent = "Calcul en cours…";
+  body.innerHTML = `<tr><td colspan="4" class="board-sub">Calcul des groupes de ${size} sur tout l'historique… quelques secondes.</td></tr>`;
+  table.style.display = "";
+  // laisser l'UI peindre l'état "en cours" avant le calcul lourd
+  setTimeout(() => {
+    try { renderBigGroups(); }
+    finally { btn.disabled = false; btn.textContent = "Afficher les grands groupes"; }
+  }, 30);
+});
 $("#probaM").addEventListener("change", renderProba);
 $("#probaMise") && $("#probaMise").addEventListener("change", renderProba);
 $("#exportBtn").addEventListener("click", () => exportCsv(currentGame));
