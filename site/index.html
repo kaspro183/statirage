@@ -962,7 +962,15 @@
         <div class="atelier-tools">
           <input type="text" id="btInput" class="modal-input" style="max-width:260px;margin:0" placeholder="Ex : 3 7 12 24 41">
           <button class="chip" type="button" id="btPick">Choisir sur la grille</button>
+          <button class="chip" type="button" id="btRand">Numéros aléatoires</button>
           <button class="btn" type="button" id="btRun">Tester</button>
+        </div>
+        <div class="atelier-tools kenoOnly" id="btSizeRow">
+          <span class="label">Numéros joués</span>
+          <select id="btSize" class="select">
+            <option>4</option><option>5</option><option>6</option><option>7</option>
+            <option selected>8</option><option>9</option><option>10</option>
+          </select>
         </div>
         <div class="picker" id="btPicker"></div>
         <div class="atelier-tools kenoOnly">
@@ -979,7 +987,15 @@
         <div class="atelier-tools">
           <input type="text" id="cmpInput" class="modal-input" style="max-width:260px;margin:0" placeholder="Ex : 7 13 41 56">
           <button class="chip" type="button" id="cmpPick">Choisir sur la grille</button>
+          <button class="chip" type="button" id="cmpRand">Numéros aléatoires</button>
           <button class="btn" type="button" id="cmpRun">Comparer</button>
+        </div>
+        <div class="atelier-tools kenoOnly" id="cmpSizeRow">
+          <span class="label">Numéros</span>
+          <select id="cmpSize" class="select">
+            <option>4</option><option>5</option><option>6</option><option>7</option>
+            <option selected>8</option>
+          </select>
         </div>
         <div class="picker" id="cmpPicker"></div>
         <div id="cmpOut"></div>
@@ -3108,11 +3124,18 @@ function renderComplementGrid() {
     const cnt = currentGame === "euromillions" ? 2 : 1;
     extras.push(...shuffle(Array.from({ length: g.extraMax }, (_, i) => i + 1)).slice(0, cnt).sort((a, b) => a - b));
   }
+  const m = gridMetrics(nums, currentGame);
   $("#compGrid").innerHTML =
     `<div class="smart-grid" style="margin-top:14px">` +
     nums.map(n => `<span class="ball">${n}</span>`).join("") +
     extras.map(n => `<span class="ball star">${n}</span>`).join("") +
     `</div>` +
+    '<div class="metrics-row">' +
+    `<div class="metric-box"><div class="m-label">Pairs / impairs</div><div class="m-val">${m.evens} / ${nums.length - m.evens}</div></div>` +
+    `<div class="metric-box"><div class="m-label">Bas / haut</div><div class="m-val">${m.lows} / ${nums.length - m.lows}</div></div>` +
+    `<div class="metric-box"><div class="m-label">Consécutifs</div><div class="m-val">${m.consec}</div></div>` +
+    (m.avgGap !== null ? `<div class="metric-box"><div class="m-label">Écart moyen</div><div class="m-val">${m.avgGap.toFixed(1)}</div></div>` : "") +
+    '</div>' +
     `<p class="profile-note">Grille de ${nums.length} numéros piochés dans la série en attente de complétion. Elle a exactement les mêmes chances qu'une grille prise au hasard.</p>`;
 }
 document.querySelectorAll("[data-next]").forEach(b => b.addEventListener("click", () => {
@@ -3951,6 +3974,23 @@ $("#btMise").addEventListener("change", renderBacktest);
 $("#btMult").addEventListener("change", renderBacktest);
 $("#btRun").addEventListener("click", renderBacktest);
 $("#cmpRun").addEventListener("click", renderCompare);
+// Numéros aléatoires : Keno = taille choisie (4–10), autres jeux = taille fixe du jeu
+function randomNums(count) {
+  const g = GAMES[currentGame];
+  const pool = Array.from({ length: g.max }, (_, i) => i + 1);
+  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  return pool.slice(0, count).sort((a, b) => a - b);
+}
+$("#btRand") && $("#btRand").addEventListener("click", () => {
+  const count = currentGame === "keno" && $("#btSize") ? parseInt($("#btSize").value) : GAMES[currentGame].drawSize;
+  $("#btInput").value = randomNums(count).join(" ");
+  renderBacktest();
+});
+$("#cmpRand") && $("#cmpRand").addEventListener("click", () => {
+  const count = currentGame === "keno" && $("#cmpSize") ? parseInt($("#cmpSize").value) : Math.min(GAMES[currentGame].drawSize, 8);
+  $("#cmpInput").value = randomNums(count).join(" ");
+  renderCompare();
+});
 $("#gapCtxBtn").addEventListener("click", runGapCtx);
 $("#probaM").addEventListener("change", renderProba);
 $("#probaMise") && $("#probaMise").addEventListener("change", renderProba);
