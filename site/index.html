@@ -734,14 +734,8 @@
         <h3 class="chart-h3">Paires</h3>
         <table><thead><tr><th>Paire</th><th>Ensemble</th><th>Attendu</th><th>Ratio</th></tr></thead>
         <tbody id="pairsBody"></tbody></table>
-        <h3 class="chart-h3" style="margin-top:14px">Trios</h3>
-        <table><thead><tr><th>Trio</th><th>Ensemble</th><th>Attendu</th><th>Ratio</th></tr></thead>
-        <tbody id="triosBody"></tbody></table>
-        <h3 class="chart-h3" style="margin-top:14px">Quatuors</h3>
-        <table id="quadsT"><thead><tr><th>Quatuor</th><th>Ensemble</th><th>Attendu</th><th>Ratio</th></tr></thead>
-        <tbody id="quadsBody"></tbody></table>
-        <h3 class="chart-h3" style="margin-top:18px" id="bigH">Grands groupes</h3>
-        <p class="board-sub" id="bigNote">Calcul lourd, sur tout l'historique et à la demande : choisis une taille et lance. Plus le groupe est grand, plus les répétitions sont rares — c'est une curiosité, pas un signal.</p>
+        <h3 class="chart-h3" style="margin-top:18px" id="bigH">Groupes plus larges</h3>
+        <p class="board-sub" id="bigNote">Trios, quatuors et plus, calculés à la demande sur tout l'historique : choisis une taille et lance. Plus le groupe est grand, plus les répétitions sont rares — c'est une curiosité, pas un signal.</p>
         <div class="atelier-tools" id="bigTools">
           <span class="label">Taille</span>
           <select id="bigSize" class="select"></select>
@@ -1526,44 +1520,15 @@ function computeAdvanced(all, win, gameKey) {
   });
   const pairs = [...pairCount.entries()]
     .map(([k, c]) => ({ a: Math.floor(k / 100), b: k % 100, obs: c, exp: expPair, ratio: c / expPair }))
-    .sort((x, y) => y.obs - x.obs).slice(0, 12);
+    .sort((x, y) => y.obs - x.obs).slice(0, 20);
 
-  // --- Trios et quatuors complices (clés numériques compactes) ---
-  const D = g.drawSize, M = g.max;
-  const trioP = D >= 3 ? D * (D - 1) * (D - 2) / (M * (M - 1) * (M - 2)) : 0;
-  const quadP = D >= 4 ? D * (D - 1) * (D - 2) * (D - 3) / (M * (M - 1) * (M - 2) * (M - 3)) : 0;
-  const expTrio = total * trioP, expQuad = total * quadP;
-  const trioCount = new Map(), quadCount = new Map();
-  scope.forEach(d => {
-    const n = d.numbers, L = n.length;
-    for (let i = 0; i < L; i++)
-      for (let j = i + 1; j < L; j++)
-        for (let l = j + 1; l < L; l++) {
-          const kt = (n[i] * 100 + n[j]) * 100 + n[l];
-          trioCount.set(kt, (trioCount.get(kt) || 0) + 1);
-          for (let q = l + 1; q < L; q++) {
-            const kq = kt * 100 + n[q];
-            quadCount.set(kq, (quadCount.get(kq) || 0) + 1);
-          }
-        }
-  });
-  const unpack = (key, size) => {
-    const out = [];
-    for (let i = 0; i < size; i++) { out.unshift(key % 100); key = Math.floor(key / 100); }
-    return out;
-  };
-  const topN = (map, size, exp) => [...map.entries()]
-    .map(([k, c]) => ({ nums: unpack(k, size), obs: c, exp, ratio: exp > 0 ? c / exp : 0 }))
-    .sort((x, y) => y.obs - x.obs).slice(0, 8);
-  const trios = trioP ? topN(trioCount, 3, expTrio) : [];
-  const quads = quadP ? topN(quadCount, 4, expQuad) : [];
 
   // --- Extrêmes du Z ---
   const zRank = [];
   for (let n = 1; n <= g.max; n++) zRank.push({ n, z: z[n], freq: freq[n] });
   zRank.sort((a, b) => Math.abs(b.z) - Math.abs(a.z));
 
-  return { total, z, chi2, df, pValue, structure, pairs, trios, quads, zTop: zRank.slice(0, 6), expected: mu };
+  return { total, z, chi2, df, pValue, structure, pairs, zTop: zRank.slice(0, 6), expected: mu };
 }
 
 
@@ -2308,27 +2273,15 @@ function render() {
     $("#pairsSub").textContent = "Combinaisons sorties ensemble le plus souvent sur " + winLabel;
     $("#pairsBody").innerHTML = adv.pairs.map(pr =>
       `<tr><td>${pr.a} & ${pr.b}</td><td>${pr.obs}×</td><td>${pr.exp.toFixed(1)}×</td><td>×${pr.ratio.toFixed(2)}</td></tr>`).join("");
-    $("#triosBody").innerHTML = adv.trios.map(tr =>
-      `<tr><td>${tr.nums.join(" & ")}</td><td>${tr.obs}×</td><td>${tr.exp.toFixed(2)}×</td><td>${tr.exp > 0 ? "×" + tr.ratio.toFixed(1) : "—"}</td></tr>`).join("");
-    // Quatuors : auto pour le Keno seulement ; pour les autres jeux, 4+ passe à la demande
-    const showQuadsAuto = currentGame === "keno";
-    const quadsT = $("#quadsT"), quadsH = quadsT ? quadsT.previousElementSibling : null;
-    if (quadsT) quadsT.style.display = showQuadsAuto ? "" : "none";
-    if (quadsH && quadsH.classList.contains("chart-h3")) quadsH.style.display = showQuadsAuto ? "" : "none";
-    if (showQuadsAuto) $("#quadsBody").innerHTML = adv.quads.length ? adv.quads.map(qd =>
-      `<tr><td>${qd.nums.join(" & ")}</td><td>${qd.obs}×</td><td>${qd.exp.toFixed(3)}×</td><td>${qd.exp > 0 ? "×" + qd.ratio.toFixed(0) : "—"}</td></tr>`).join("")
-      : '<tr><td colspan="4">Pas assez de numéros par tirage</td></tr>';
 
-    // grands groupes à la demande : réinitialiser + tailles selon le jeu
-    // Keno : 5→10 · autres jeux : 4→drawSize
+    // groupes plus larges (trios et au-delà) à la demande, sur tout l'historique
     const bigTbl = $("#bigT"); if (bigTbl) bigTbl.style.display = "none";
     const bbody = $("#bigBody"); if (bbody) bbody.innerHTML = "";
     const bsel = $("#bigSize");
     if (bsel) {
       const g2 = GAMES[currentGame];
-      const startSize = currentGame === "keno" ? 5 : 4;
       const opts = [];
-      for (let s = startSize; s <= Math.min(10, g2.drawSize); s++) opts.push(s);
+      for (let s = 3; s <= Math.min(10, g2.drawSize); s++) opts.push(s);
       const bh = $("#bigH"), btools = $("#bigTools"), bnote = $("#bigNote");
       const showBig = opts.length > 0;
       [bh, btools, bnote].forEach(el => { if (el) el.style.display = showBig ? "" : "none"; });
@@ -3691,9 +3644,9 @@ function renderBigGroups() {
   count.forEach(v => { if (v > maxObs) { maxObs = v; nbMax = 1; } else if (v === maxObs) nbMax++; });
   const top = [...count.entries()]
     .map(([k, c]) => ({ nums: k, obs: c }))
-    .sort((a, b) => b.obs - a.obs).slice(0, 8);
+    .sort((a, b) => b.obs - a.obs).slice(0, 20);
 
-  const labels = { 4: "Quatuor", 5: "Quintet", 6: "Sextuor", 7: "Groupe de 7", 8: "Groupe de 8", 9: "Groupe de 9", 10: "Groupe de 10" };
+  const labels = { 3: "Trio", 4: "Quatuor", 5: "Quintet", 6: "Sextuor", 7: "Groupe de 7", 8: "Groupe de 8", 9: "Groupe de 9", 10: "Groupe de 10" };
   $("#bigLabel").textContent = labels[size] || "Groupe";
   body.innerHTML = top.map(t =>
     `<tr><td>${t.nums.replace(/,/g, " & ")}</td><td>${t.obs}×</td><td>${exp < 0.01 ? exp.toExponential(1) : exp.toFixed(3)}×</td><td>${exp > 0 ? "×" + Math.round(t.obs / exp) : "—"}</td></tr>`).join("") +
