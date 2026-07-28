@@ -1481,7 +1481,9 @@ function computeAdvanced(all, win, gameKey) {
   });
   const structure = {
     avgEvens: evens / total,          expEvens: g.drawSize * Math.floor(g.max / 2) / g.max,
+    avgOdds: (g.drawSize * total - evens) / total,  expOdds: g.drawSize - g.drawSize * Math.floor(g.max / 2) / g.max,
     avgLows: lows / total,            expLows: g.drawSize * Math.floor(half) / g.max,
+    avgHighs: (g.drawSize * total - lows) / total,  expHighs: g.drawSize - g.drawSize * Math.floor(half) / g.max,
     avgSum: sum / total,              expSum: g.drawSize * (g.max + 1) / 2,
     pctConsec: withConsec / total * 100,
   };
@@ -2273,7 +2275,9 @@ function render() {
     $("#structSub").textContent = "Moyennes par tirage sur " + winLabel;
     $("#structBody").innerHTML =
       `<tr><td>Numéros pairs</td><td>${st.avgEvens.toFixed(2)}</td><td>${st.expEvens.toFixed(2)}</td></tr>` +
+      `<tr><td>Numéros impairs</td><td>${st.avgOdds.toFixed(2)}</td><td>${st.expOdds.toFixed(2)}</td></tr>` +
       `<tr><td>Petits numéros (≤ ${Math.floor(g.max / 2)})</td><td>${st.avgLows.toFixed(2)}</td><td>${st.expLows.toFixed(2)}</td></tr>` +
+      `<tr><td>Grands numéros (> ${Math.floor(g.max / 2)})</td><td>${st.avgHighs.toFixed(2)}</td><td>${st.expHighs.toFixed(2)}</td></tr>` +
       `<tr><td>Somme du tirage</td><td>${st.avgSum.toFixed(0)}</td><td>${st.expSum.toFixed(0)}</td></tr>` +
       `<tr><td>Tirages avec consécutifs</td><td>${st.pctConsec.toFixed(0)} %</td><td>—</td></tr>`;
 
