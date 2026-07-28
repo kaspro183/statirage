@@ -801,7 +801,12 @@
 
     <div class="panel gate-panel" id="compPanel">
       <h2>Le système de complémentarité</h2>
-      <p class="atelier-note">Repère les numéros « répétitifs » entre les deux derniers tirages : ils deviennent des <b>bornes</b> qui définissent une <b>série</b> (l'intervalle entre elles). Les tirages suivants « complètent » cette série. Une lecture descriptive — elle ne modifie pas la probabilité du prochain tirage.</p>
+      <p class="atelier-note">Repère les numéros « répétitifs » entre tirages consécutifs : ils deviennent des <b>bornes</b> qui définissent une <b>série</b> (l'intervalle entre elles). Le curseur choisit sur combien de tirages remonter : à 2, on suit la série tout juste ouverte ; en élargissant, on suit une série plus ancienne et on voit sa complétion progresser. Une lecture descriptive — elle ne modifie pas la probabilité du prochain tirage.</p>
+      <div class="atelier-tools" id="compDepthRow">
+        <span class="label">Profondeur</span>
+        <input type="range" id="compDepth" min="2" max="20" value="2" step="1" style="flex:1;min-width:120px;accent-color:var(--accent)">
+        <span class="label" id="compDepthVal" style="min-width:120px">2 derniers tirages</span>
+      </div>
       <div id="compBody"></div>
       <div class="atelier-tools" style="margin-top:14px">
         <button class="btn" type="button" id="compGridBtn">Générer une grille depuis la série</button>
@@ -2973,58 +2978,80 @@ function renderSmart() {
 
 /* ---------- Système de complémentarité (méthode Roig) ---------- */
 let compState = null;   // { series: [...], awaited: [...] } pour le générateur de grille
-function computeComplement(gameKey) {
+function computeComplement(gameKey, depth) {
   const draws = store[gameKey];
   if (!draws || draws.length < 2) return null;
-  const last = [...draws[0].numbers].sort((a, b) => a - b);
-  const prev = [...draws[1].numbers].sort((a, b) => a - b);
-  const lastSet = new Set(last), prevSet = new Set(prev);
-  const outSet = new Set([...last, ...prev]);
-  // bornes = numéros répétitifs (présents dans les deux tirages)
-  const bornes = [...new Set(prev.filter(n => lastSet.has(n)))].sort((a, b) => a - b);
-  // séries = intervalles entre bornes successives ; on note ce qui est livré / attendu
-  const series = [];
-  for (let i = 0; i < bornes.length - 1; i++) {
-    const lo = bornes[i], hi = bornes[i + 1];
-    if (hi - lo < 2) continue;   // pas d'intérieur
-    const interior = [];
-    for (let n = lo + 1; n < hi; n++) interior.push({ n, livre: outSet.has(n) });
-    series.push({ lo, hi, interior });
+  depth = Math.max(2, Math.min(depth || 2, draws.length));
+  // fenêtre = les `depth` derniers tirages, du plus ancien au plus récent
+  const win = draws.slice(0, depth).map(d => ({ date: d.date, set: new Set(d.numbers), nums: [...d.numbers].sort((a, b) => a - b) })).reverse();
+  // parcours des tirages consécutifs : chaque binôme (répétitif) ouvre des séries.
+  // on garde la série ouverte LA PLUS ANCIENNE de la fenêtre, et on suit sa complétion
+  // sur tous les tirages depuis son ouverture (plus la fenêtre est large, plus elle avance).
+  let chosen = null;   // { lo, hi, openedAt }
+  for (let t = 1; t < win.length && !chosen; t++) {
+    const rep = [...win[t - 1].set].filter(n => win[t].set.has(n)).sort((a, b) => a - b);
+    for (let i = 0; i < rep.length - 1; i++) {
+      const lo = rep[i], hi = rep[i + 1];
+      if (hi - lo >= 2) { chosen = { lo, hi, openedAt: t }; break; }   // première série trouvée
+    }
   }
-  const awaited = [];
-  series.forEach(s => s.interior.forEach(x => { if (!x.livre) awaited.push(x.n); }));
-  return { last, prev, lastSet, prevSet, bornes, series, awaited,
-    dateLast: draws[0].date, datePrev: draws[1].date };
+  // dernier tirage & précédent pour l'affichage des bornes
+  const last = win[win.length - 1].nums, prev = win[win.length - 2].nums;
+  const lastSet = win[win.length - 1].set, prevSet = win[win.length - 2].set;
+  if (!chosen) {
+    return { win, last, prev, lastSet, prevSet, bornes: [], series: [], awaited: [],
+      dateLast: win[win.length - 1].date, datePrev: win[win.length - 2].date, depth };
+  }
+  // complétion : un numéro interne est "livré" s'il est sorti depuis l'ouverture de la série
+  const outSince = new Set();
+  for (let t = chosen.openedAt; t < win.length; t++) win[t].set.forEach(n => outSince.add(n));
+  const interior = [];
+  for (let n = chosen.lo + 1; n < chosen.hi; n++) interior.push({ n, livre: outSince.has(n) });
+  const awaited = interior.filter(x => !x.livre).map(x => x.n);
+  const series = [{ lo: chosen.lo, hi: chosen.hi, interior }];
+  const bornes = [chosen.lo, chosen.hi];
+  // les deux tirages dont le chevauchement a ouvert la série (pour l'affichage des bornes)
+  const dOpenPrev = win[chosen.openedAt - 1], dOpenLast = win[chosen.openedAt];
+  return { win, last: dOpenLast.nums, prev: dOpenPrev.nums,
+    lastSet: dOpenLast.set, prevSet: dOpenPrev.set, bornes, series, awaited,
+    dateLast: dOpenLast.date, datePrev: dOpenPrev.date, depth,
+    nSince: win.length - chosen.openedAt };
+}
+
+function compDepth() {
+  const el = $("#compDepth");
+  return el ? parseInt(el.value) : 2;
 }
 
 function renderComplement() {
   const host = $("#compBody");
   if (!host) return;
-  const c = computeComplement(currentGame);
+  const depth = compDepth();
+  const dv = $("#compDepthVal");
+  if (dv) dv.textContent = depth === 2 ? "2 derniers tirages" : depth + " derniers tirages";
+  const c = computeComplement(currentGame, depth);
   compState = c;
   if (!c) { host.innerHTML = `<div class="board-sub">Pas assez de tirages chargés pour analyser les répétitifs.</div>`;
     const gb = $("#compGridBtn"); if (gb) gb.style.display = "none"; $("#compGrid").innerHTML = ""; return; }
 
-  const numCell = (n, set, extraCls = "") =>
-    `<div class="comp-n ${c.bornes.includes(n) ? "borne" : ""} ${extraCls}">${n}</div>`;
+  const numCell = (n) =>
+    `<div class="comp-n ${c.bornes.includes(n) ? "borne" : ""}">${n}</div>`;
 
   const drawHtml =
     `<div class="comp-draw"><div class="comp-label">${fmtDate(c.datePrev)}</div><div class="comp-nums">` +
-      c.prev.map(n => numCell(n, c.prevSet)).join("") + `</div></div>` +
+      c.prev.map(numCell).join("") + `</div></div>` +
     `<div class="comp-draw"><div class="comp-label">${fmtDate(c.dateLast)}</div><div class="comp-nums">` +
-      c.last.map(n => numCell(n, c.lastSet)).join("") + `</div></div>`;
+      c.last.map(numCell).join("") + `</div></div>`;
 
   const legend =
     `<div class="comp-legend">` +
-    `<span><i class="comp-dot borne"></i> répétitif (borne)</span>` +
+    `<span><i class="comp-dot borne"></i> borne de la série active</span>` +
     `<span><i class="comp-dot livre"></i> livré par la série</span>` +
     `<span><i class="comp-dot attente"></i> en attente</span></div>`;
 
   let seriesHtml;
-  if (!c.bornes.length) {
-    seriesHtml = `<div class="board-sub">Aucun numéro répétitif entre ces deux tirages — aucune série n'est amorcée aujourd'hui. Le système est en veille jusqu'au prochain répétitif.</div>`;
-  } else if (!c.series.length) {
-    seriesHtml = `<div class="board-sub">${c.bornes.length} répétitif${c.bornes.length > 1 ? "s" : ""} (${c.bornes.join(", ")}), mais aucun intervalle exploitable entre eux.</div>`;
+  if (!c.series.length) {
+    seriesHtml = `<div class="board-sub">Aucune série exploitable sur cette profondeur — aucun couple de numéros répétitifs n'encadre d'intervalle. Élargis la fenêtre avec le curseur.</div>`;
   } else {
     seriesHtml = c.series.map(s => {
       const total = s.interior.length;
@@ -3034,7 +3061,7 @@ function renderComplement() {
         s.interior.map(x => `<div class="comp-n ${x.livre ? "livre" : "attente"}">${x.n}</div>`).join("") +
         `<div class="comp-n borne">${s.hi}</div>`;
       return `<div class="comp-serie">` +
-        `<div class="comp-serie-title">Série ${s.lo} → ${s.hi}</div>` +
+        `<div class="comp-serie-title">Série active ${s.lo} → ${s.hi}${c.nSince ? ` · suivie sur ${c.nSince} tirage${c.nSince > 1 ? "s" : ""}` : ""}</div>` +
         `<div class="comp-interval">${cells}</div>` +
         `<div class="comp-prog-label"><span>Complétion</span><span>${done} / ${total} · ${pct}%</span></div>` +
         `<div class="comp-prog-bar"><div class="comp-prog-fill" style="width:${pct}%"></div></div>` +
@@ -3051,7 +3078,7 @@ function renderComplement() {
 function renderComplementGrid() {
   if (!compState || !compState.awaited.length) return;
   const g = GAMES[currentGame];
-  const k = currentGame === "keno" && $("#kenoSize") ? parseInt($("#kenoSize").value) : g.drawSize;
+  const k = currentGame === "keno" ? 10 : g.drawSize;   // grille Keno à 10 numéros
   const shuffle = (arr) => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; };
   let pool = [...compState.awaited];
   // repli si la série ne fournit pas assez de numéros
@@ -3070,7 +3097,7 @@ function renderComplementGrid() {
     nums.map(n => `<span class="ball">${n}</span>`).join("") +
     extras.map(n => `<span class="ball star">${n}</span>`).join("") +
     `</div>` +
-    `<p class="profile-note">Numéros piochés dans les séries en attente de complétion. Cette grille a exactement les mêmes chances qu'une grille prise au hasard.</p>`;
+    `<p class="profile-note">Grille de ${nums.length} numéros piochés dans la série en attente de complétion. Elle a exactement les mêmes chances qu'une grille prise au hasard.</p>`;
 }
 document.querySelectorAll("[data-next]").forEach(b => b.addEventListener("click", () => {
   document.querySelectorAll("[data-next]").forEach(x => x.classList.remove("active"));
@@ -3091,6 +3118,7 @@ $("#sigWord") && $("#sigWord").addEventListener("input", () => { if (activeProfi
 $("#kenoSize") && $("#kenoSize").addEventListener("change", renderSmart);
 $("#smartBtn") && $("#smartBtn").addEventListener("click", renderSmart);
 $("#compGridBtn") && $("#compGridBtn").addEventListener("click", renderComplementGrid);
+$("#compDepth") && $("#compDepth").addEventListener("input", renderComplement);
 
 /* ---------- Générateur avancé ---------- */
 function fillGenCount() {
