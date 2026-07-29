@@ -242,13 +242,14 @@
   @media (max-width: 620px) { .portrait-grid { grid-template-columns: 1fr; gap: 9px; } }
   #board { display: grid; gap: 8px; }
   .cell {
-    position: relative; aspect-ratio: 1; border-radius: 10px; border: 1px solid var(--ligne);
+    position: relative; aspect-ratio: 1; max-width: 62px; margin: 0 auto; width: 100%;
+    border-radius: 9px; border: 1px solid var(--ligne);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     cursor: pointer; transition: transform .08s; text-decoration: none;
   }
   .cell:hover { transform: scale(1.07); z-index: 2; box-shadow: 0 3px 10px rgba(0,0,0,.18); }
   .cell:focus-visible { outline: 2px solid var(--encre); outline-offset: 2px; z-index: 2; }
-  .cell .num { font: 600 17px 'IBM Plex Mono', monospace; }
+  .cell .num { font: 600 15px 'IBM Plex Mono', monospace; }
   .cell .val { font: 400 10.5px 'IBM Plex Mono', monospace; opacity: .85; }
   .cell .tip {
     display: none; position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
@@ -314,6 +315,27 @@
   .metric-box .m-label { font-size: 11px; color: var(--muted); }
   .metric-box .m-val { font: 600 15px 'IBM Plex Mono', monospace; }
   .profile-note { font-size: 12.5px; color: var(--muted); margin-top: 12px; line-height: 1.55; max-width: 75ch; }
+  /* Section système de complémentarité */
+  .comp-draw { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
+  .comp-label { width: 92px; flex: none; font: 600 12px 'IBM Plex Mono', monospace; color: var(--muted); text-align: right; }
+  .comp-nums { display: flex; gap: 4px; flex-wrap: wrap; }
+  .comp-n { width: 29px; height: 29px; border-radius: 8px; background: var(--papier-2); border: 1.5px solid var(--ligne);
+    display: flex; align-items: center; justify-content: center; font: 600 12px 'IBM Plex Mono', monospace; color: var(--encre); transition: all .3s ease; }
+  .comp-n.borne { background: var(--laiton); border-color: var(--laiton); color: #fff; font-weight: 700; }
+  .comp-n.livre { background: #2E8B57; border-color: #2E8B57; color: #fff; }
+  .comp-n.attente { background: #fff; border-style: dashed; opacity: .55; }
+  .comp-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin: 12px 0; }
+  .comp-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .comp-dot { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
+  .comp-dot.borne { background: var(--laiton); }
+  .comp-dot.livre { background: #2E8B57; }
+  .comp-dot.attente { background: #fff; border: 1.5px dashed var(--ligne); }
+  .comp-serie { margin: 12px 0; padding: 12px 14px; background: var(--papier-2); border-radius: 10px; }
+  .comp-serie-title { font: 600 12.5px 'Poppins', sans-serif; color: var(--encre); margin-bottom: 8px; }
+  .comp-interval { display: flex; gap: 3px; flex-wrap: wrap; align-items: center; }
+  .comp-prog-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin: 10px 0 5px; }
+  .comp-prog-bar { height: 9px; border-radius: 6px; background: var(--papier); overflow: hidden; border: 1px solid var(--ligne); }
+  .comp-prog-fill { height: 100%; background: linear-gradient(90deg, var(--laiton), #2E8B57); border-radius: 6px; transition: width .5s ease; }
   .genadv-grid { display: grid; gap: 16px; margin-top: 14px; }
   .genadv-row { display: grid; grid-template-columns: 20px 1fr; align-items: start; gap: 9px; font-size: 13.5px; color: var(--encre); line-height: 1.5; }
   .genadv-row > input[type="checkbox"] { accent-color: var(--accent); width: 17px; height: 17px; margin-top: 2px; }
@@ -378,11 +400,11 @@
   .rank-head .rank-cols { font: inherit; }
   .rank-cols b.near { color: var(--hot); }
   .rank-cols b.far { color: var(--accent); }
-  .rank-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--papier2); }
+  .rank-row { display: flex; align-items: center; gap: 10px; padding: 3px 0; border-bottom: 1px solid var(--papier2); }
   .rank-row:last-child { border-bottom: none; }
   .rank-pos { font: 600 11px 'IBM Plex Mono', monospace; color: var(--muted); min-width: 26px; }
-  .rank-n { width: 31px; height: 31px; border-radius: 50%; background: #fff; border: 1px solid var(--ligne);
-    display: flex; align-items: center; justify-content: center; font: 600 13px 'IBM Plex Mono', monospace;
+  .rank-n { width: 26px; height: 26px; border-radius: 50%; background: #fff; border: 1px solid var(--ligne);
+    display: flex; align-items: center; justify-content: center; font: 600 12px 'IBM Plex Mono', monospace;
     text-decoration: none; color: var(--encre); flex-shrink: 0; }
   .rank-n:hover { border-color: var(--accent); color: var(--accent); }
   .rank-bar { flex: 1; height: 9px; background: var(--papier2); border-radius: 999px; overflow: hidden; position: relative; min-width: 40px; }
@@ -617,12 +639,6 @@
       </div>
     </div>
 
-    <div class="panel" id="portraitPanel">
-      <h2>Le portrait du tirage</h2>
-      <p class="atelier-note">Cinq lectures descriptives du dernier tirage, comparées à l'ensemble de l'historique. Ce sont des constats sur ce qui vient de se produire — ils ne disent rien du tirage suivant.</p>
-      <div id="portraitBody"></div>
-    </div>
-
     <div class="board-card">
       <div class="board-title">La grille</div>
       <div class="board-sub" id="boardSub"></div>
@@ -632,6 +648,12 @@
         <span class="label" id="extrasLabel"></span>
         <div class="extras-row" id="extrasRow"></div>
       </div>
+    </div>
+
+    <div class="panel" id="portraitPanel">
+      <h2>Le portrait du tirage</h2>
+      <p class="atelier-note">Cinq lectures descriptives du dernier tirage, comparées à l'ensemble de l'historique. Ce sont des constats sur ce qui vient de se produire — ils ne disent rien du tirage suivant.</p>
+      <div id="portraitBody"></div>
     </div>
 
     <div class="panel chart-panel">
@@ -713,12 +735,16 @@
         <h3 class="chart-h3">Paires</h3>
         <table><thead><tr><th>Paire</th><th>Ensemble</th><th>Attendu</th><th>Ratio</th></tr></thead>
         <tbody id="pairsBody"></tbody></table>
-        <h3 class="chart-h3" style="margin-top:14px">Trios</h3>
-        <table><thead><tr><th>Trio</th><th>Ensemble</th><th>Attendu</th><th>Ratio</th></tr></thead>
-        <tbody id="triosBody"></tbody></table>
-        <h3 class="chart-h3" style="margin-top:14px">Quatuors</h3>
-        <table><thead><tr><th>Quatuor</th><th>Ensemble</th><th>Attendu</th><th>Ratio</th></tr></thead>
-        <tbody id="quadsBody"></tbody></table>
+        <button type="button" id="pairsMore" class="chip" style="margin-top:10px; display:none"></button>
+        <h3 class="chart-h3" style="margin-top:18px" id="bigH">Groupes plus larges</h3>
+        <p class="board-sub" id="bigNote">Trios, quatuors et plus, calculés à la demande sur tout l'historique : choisis une taille et lance. Plus le groupe est grand, plus les répétitions sont rares — c'est une curiosité, pas un signal.</p>
+        <div class="atelier-tools" id="bigTools">
+          <span class="label">Taille</span>
+          <select id="bigSize" class="select"></select>
+          <button class="btn" type="button" id="bigRun">Calculer</button>
+        </div>
+        <table id="bigT" style="display:none"><thead><tr><th id="bigLabel">Groupe</th><th>Ensemble</th><th>Attendu</th><th>Ratio</th></tr></thead>
+        <tbody id="bigBody"></tbody></table>
       </div>
     </div>
 
@@ -751,18 +777,46 @@
 
     <div class="panel gate-panel">
       <h2>Le générateur statistique</h2>
-      <p class="atelier-note">Cinq profils, cinq façons de composer une grille à partir de critères explicites. Aucun ne modifie vos chances — ils structurent le choix.</p>
+      <p class="atelier-note">Sept profils, sept façons de composer une grille à partir de critères explicites. Aucun ne modifie vos chances — ils structurent le choix.</p>
       <div class="atelier-tools" id="profileTabs">
         <button class="chip active" data-profile="balanced">Équilibrée</button>
         <button class="chip" data-profile="cold">Les retardataires</button>
         <button class="chip" data-profile="hot">Les habituées</button>
         <button class="chip" data-profile="contrarian">Anti-consensus</button>
+        <button class="chip" data-profile="markov">Chaîne de Markov</button>
+        <button class="chip" data-profile="signature">Signature</button>
         <button class="chip" data-profile="random">Au hasard pur</button>
+      </div>
+      <div class="atelier-tools" id="sigRow" style="display:none">
+        <span class="label">Ton mot</span>
+        <input type="text" id="sigWord" class="select" placeholder="ex : Marley" maxlength="32" style="min-width:160px" value="Marley">
+      </div>
+      <div class="atelier-tools" id="kenoSizeRow" style="display:none">
+        <span class="label">Numéros joués</span>
+        <select id="kenoSize" class="select">
+          <option>4</option><option>5</option><option>6</option><option>7</option>
+          <option selected>8</option><option>9</option><option>10</option>
+        </select>
       </div>
       <div class="atelier-tools">
         <button class="btn" type="button" id="smartBtn">Générer la grille</button>
       </div>
       <div id="smartBody"></div>
+    </div>
+
+    <div class="panel gate-panel" id="compPanel">
+      <h2>Le système de complémentarité</h2>
+      <p class="atelier-note">Repère les numéros « répétitifs » d'un couple de deux tirages consécutifs : ils deviennent des <b>bornes</b> qui découpent l'espace en <b>séries</b> (une par intervalle entre bornes voisines). Chaque série se « complète » à mesure que ses numéros internes sortent lors des tirages suivants. Le curseur choisit quel couple observer : le plus récent, ou un couple plus ancien qui a déjà eu le temps de se compléter. Une lecture descriptive — elle ne modifie pas la probabilité du prochain tirage.</p>
+      <div class="atelier-tools" id="compDepthRow">
+        <span class="label">Profondeur</span>
+        <input type="range" id="compDepth" min="1" max="20" value="1" step="1" style="flex:1;min-width:120px;accent-color:var(--accent)">
+        <span class="label" id="compDepthVal" style="min-width:150px">couple le plus récent</span>
+      </div>
+      <div id="compBody"></div>
+      <div class="atelier-tools" style="margin-top:14px">
+        <button class="btn" type="button" id="compGridBtn">Générer une grille depuis la série</button>
+      </div>
+      <div id="compGrid"></div>
     </div>
 
     <div class="panel atelier-panel">
@@ -913,7 +967,15 @@
         <div class="atelier-tools">
           <input type="text" id="btInput" class="modal-input" style="max-width:260px;margin:0" placeholder="Ex : 3 7 12 24 41">
           <button class="chip" type="button" id="btPick">Choisir sur la grille</button>
+          <button class="chip" type="button" id="btRand">Numéros aléatoires</button>
           <button class="btn" type="button" id="btRun">Tester</button>
+        </div>
+        <div class="atelier-tools kenoOnly" id="btSizeRow">
+          <span class="label">Numéros joués</span>
+          <select id="btSize" class="select">
+            <option>4</option><option>5</option><option>6</option><option>7</option>
+            <option selected>8</option><option>9</option><option>10</option>
+          </select>
         </div>
         <div class="picker" id="btPicker"></div>
         <div class="atelier-tools kenoOnly">
@@ -930,7 +992,15 @@
         <div class="atelier-tools">
           <input type="text" id="cmpInput" class="modal-input" style="max-width:260px;margin:0" placeholder="Ex : 7 13 41 56">
           <button class="chip" type="button" id="cmpPick">Choisir sur la grille</button>
+          <button class="chip" type="button" id="cmpRand">Numéros aléatoires</button>
           <button class="btn" type="button" id="cmpRun">Comparer</button>
+        </div>
+        <div class="atelier-tools kenoOnly" id="cmpSizeRow">
+          <span class="label">Numéros</span>
+          <select id="cmpSize" class="select">
+            <option>4</option><option>5</option><option>6</option><option>7</option>
+            <option selected>8</option>
+          </select>
         </div>
         <div class="picker" id="cmpPicker"></div>
         <div id="cmpOut"></div>
@@ -1178,6 +1248,8 @@ function applyGameTheme(gameKey) {
   r.setProperty("--accent-soft", t.soft);
   r.setProperty("--bg1", t.bg1);
   r.setProperty("--bg2", t.bg2);
+  const ksr = document.getElementById("kenoSizeRow");
+  if (ksr) ksr.style.display = gameKey === "keno" ? "" : "none";
 }
 
 /* MODE TEST : true = tout est débloqué (pas de paywall). Passer à false au lancement. */
@@ -1357,7 +1429,7 @@ function drawPortrait(gameKey, index = 0) {
       shared: i === index ? -1 : x.numbers.filter(n => nums.includes(n)).length }))
     .filter(x => x.shared >= 0)
     .sort((a, b) => b.shared - a.shared || a.i - b.i)
-    .slice(0, 5);
+    .slice(0, 3);
 
   // 5. Répétitions depuis les tirages précédents
   const rep = [];
@@ -1430,7 +1502,9 @@ function computeAdvanced(all, win, gameKey) {
   });
   const structure = {
     avgEvens: evens / total,          expEvens: g.drawSize * Math.floor(g.max / 2) / g.max,
+    avgOdds: (g.drawSize * total - evens) / total,  expOdds: g.drawSize - g.drawSize * Math.floor(g.max / 2) / g.max,
     avgLows: lows / total,            expLows: g.drawSize * Math.floor(half) / g.max,
+    avgHighs: (g.drawSize * total - lows) / total,  expHighs: g.drawSize - g.drawSize * Math.floor(half) / g.max,
     avgSum: sum / total,              expSum: g.drawSize * (g.max + 1) / 2,
     pctConsec: withConsec / total * 100,
   };
@@ -1448,45 +1522,15 @@ function computeAdvanced(all, win, gameKey) {
   });
   const pairs = [...pairCount.entries()]
     .map(([k, c]) => ({ a: Math.floor(k / 100), b: k % 100, obs: c, exp: expPair, ratio: c / expPair }))
-    .sort((x, y) => y.obs - x.obs).slice(0, 12);
+    .sort((x, y) => y.obs - x.obs).slice(0, 20);
 
-  // --- Trios et quatuors complices (clés numériques compactes) ---
-  const D = g.drawSize, M = g.max;
-  const trioP = D * (D - 1) * (D - 2) / (M * (M - 1) * (M - 2));
-  const quadP = D >= 4 ? D * (D - 1) * (D - 2) * (D - 3) / (M * (M - 1) * (M - 2) * (M - 3)) : 0;
-  const expTrio = total * trioP, expQuad = total * quadP;
-  const trioCount = new Map(), quadCount = new Map();
-  scope.forEach(d => {
-    const n = d.numbers, L = n.length;
-    for (let i = 0; i < L; i++)
-      for (let j = i + 1; j < L; j++)
-        for (let l = j + 1; l < L; l++) {
-          const kt = (n[i] * 100 + n[j]) * 100 + n[l];
-          trioCount.set(kt, (trioCount.get(kt) || 0) + 1);
-          for (let q = l + 1; q < L; q++) {
-            const kq = kt * 100 + n[q];
-            quadCount.set(kq, (quadCount.get(kq) || 0) + 1);
-          }
-        }
-  });
-  const unpack = (key, size) => {
-    const out = [];
-    for (let i = 0; i < size; i++) { out.unshift(key % 100); key = Math.floor(key / 100); }
-    return out;
-  };
-  const trios = [...trioCount.entries()]
-    .map(([k, c]) => ({ nums: unpack(k, 3), obs: c, exp: expTrio, ratio: expTrio > 0 ? c / expTrio : 0 }))
-    .sort((x, y) => y.obs - x.obs).slice(0, 8);
-  const quads = [...quadCount.entries()]
-    .map(([k, c]) => ({ nums: unpack(k, 4), obs: c, exp: expQuad, ratio: expQuad > 0 ? c / expQuad : 0 }))
-    .sort((x, y) => y.obs - x.obs).slice(0, 8);
 
   // --- Extrêmes du Z ---
   const zRank = [];
   for (let n = 1; n <= g.max; n++) zRank.push({ n, z: z[n], freq: freq[n] });
   zRank.sort((a, b) => Math.abs(b.z) - Math.abs(a.z));
 
-  return { total, z, chi2, df, pValue, structure, pairs, trios, quads, zTop: zRank.slice(0, 6), expected: mu };
+  return { total, z, chi2, df, pValue, structure, pairs, zTop: zRank.slice(0, 6), expected: mu };
 }
 
 
@@ -1809,6 +1853,14 @@ const GRID_PROFILES = {
     label: "Anti-consensus",
     note: "Écarte les numéros que tout le monde joue (1–31, les dates de naissance). Ne change pas vos chances de gagner — mais réduit le risque de partager le gain.",
   },
+  markov: {
+    label: "Chaîne de Markov",
+    note: "Chaque numéro est tiré selon l'écart au précédent, réglé sur l'espacement moyen d'un vrai tirage. La grille ressemble statistiquement à un tirage réel sans en copier aucun. Effet purement descriptif : la probabilité reste identique.",
+  },
+  signature: {
+    label: "Signature",
+    note: "Une grille déterministe dérivée d'un mot de votre choix par hachage. Le même mot redonne toujours la même grille ; deux mots différents n'en donnent jamais la même. Unique et reproductible — mais aussi probable que n'importe quelle autre.",
+  },
   random: {
     label: "Au hasard pur",
     note: "Un tirage aléatoire sans aucun critère. La référence pour comparer les autres profils.",
@@ -1824,7 +1876,7 @@ function gridMetrics(nums, gameKey) {
   const gaps = stats ? nums.map(n => stats[n - 1].currentGap) : [];
   return {
     sum: nums.reduce((a, b) => a + b, 0),
-    targetSum: g.drawSize * (g.max + 1) / 2,
+    targetSum: nums.length * (g.max + 1) / 2,
     evens: nums.filter(n => n % 2 === 0).length,
     lows: nums.filter(n => n <= half).length,
     consec,
@@ -1832,9 +1884,9 @@ function gridMetrics(nums, gameKey) {
   };
 }
 
-function smartGrid(gameKey, profile = "balanced") {
+function smartGrid(gameKey, profile = "balanced", size = null) {
   const g = GAMES[gameKey];
-  const k = g.drawSize;
+  const k = size || g.drawSize;
   const half = g.max / 2;
   const draws = store[gameKey];
   const stats = draws.length ? computeStats(draws, windowSize, gameKey).stats : null;
@@ -1856,6 +1908,32 @@ function smartGrid(gameKey, profile = "balanced") {
     const above = Array.from({ length: g.max }, (_, i) => i + 1).filter(n => n > 31);
     const pool = above.length >= k ? above : Array.from({ length: g.max }, (_, i) => i + 1).filter(n => n > Math.floor(g.max / 3));
     numbers = shuffle([...pool]).slice(0, k);
+  } else if (profile === "markov") {
+    // Tirage par sauts : écart préférentiel autour de l'espacement moyen (max/drawSize)
+    const step = g.max / k;
+    numbers = [];
+    let last = 1 + Math.floor(Math.random() * g.max);
+    numbers.push(last);
+    let guard = 0;
+    while (numbers.length < k && guard++ < 500) {
+      // saut ~ espacement moyen ±50 %, replié modulo max
+      const jump = Math.max(1, Math.round(step * (0.5 + Math.random())));
+      const cand = ((last - 1 + jump) % g.max) + 1;
+      if (!numbers.includes(cand)) { numbers.push(cand); last = cand; }
+      else last = 1 + Math.floor(Math.random() * g.max);
+    }
+  } else if (profile === "signature") {
+    // Hachage FNV-1a du mot → LCG déterministe → k numéros + extras
+    const seed = (window.__sigWord || "statirage").toLowerCase();
+    let h = 2166136261 >>> 0;
+    for (let i = 0; i < seed.length; i++) { h ^= seed.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+    let x = h >>> 0;
+    const next = () => { x = (Math.imul(x, 1103515245) + 12345) >>> 0; return x; };
+    const picked = new Set();
+    let guard = 0;
+    while (picked.size < k && guard++ < 500) picked.add((next() % g.max) + 1);
+    numbers = [...picked];
+    window.__sigSeed = next;   // réutilisé pour les extras déterministes
   } else if (profile === "random") {
     numbers = shuffle(Array.from({ length: g.max }, (_, i) => i + 1)).slice(0, k);
   } else {
@@ -1877,7 +1955,14 @@ function smartGrid(gameKey, profile = "balanced") {
   const extras = [];
   if (g.extraMax) {
     const cnt = gameKey === "euromillions" ? 2 : 1;
-    extras.push(...shuffle(Array.from({ length: g.extraMax }, (_, i) => i + 1)).slice(0, cnt).sort((a, b) => a - b));
+    if (profile === "signature" && window.__sigSeed) {
+      const pickedX = new Set();
+      let guard = 0;
+      while (pickedX.size < cnt && guard++ < 200) pickedX.add((window.__sigSeed() % g.extraMax) + 1);
+      extras.push(...[...pickedX].sort((a, b) => a - b));
+    } else {
+      extras.push(...shuffle(Array.from({ length: g.extraMax }, (_, i) => i + 1)).slice(0, cnt).sort((a, b) => a - b));
+    }
   }
   return { numbers, extras, profile, metrics: gridMetrics(numbers, gameKey) };
 }
@@ -2181,18 +2266,41 @@ function render() {
     $("#structSub").textContent = "Moyennes par tirage sur " + winLabel;
     $("#structBody").innerHTML =
       `<tr><td>Numéros pairs</td><td>${st.avgEvens.toFixed(2)}</td><td>${st.expEvens.toFixed(2)}</td></tr>` +
+      `<tr><td>Numéros impairs</td><td>${st.avgOdds.toFixed(2)}</td><td>${st.expOdds.toFixed(2)}</td></tr>` +
       `<tr><td>Petits numéros (≤ ${Math.floor(g.max / 2)})</td><td>${st.avgLows.toFixed(2)}</td><td>${st.expLows.toFixed(2)}</td></tr>` +
+      `<tr><td>Grands numéros (> ${Math.floor(g.max / 2)})</td><td>${st.avgHighs.toFixed(2)}</td><td>${st.expHighs.toFixed(2)}</td></tr>` +
       `<tr><td>Somme du tirage</td><td>${st.avgSum.toFixed(0)}</td><td>${st.expSum.toFixed(0)}</td></tr>` +
       `<tr><td>Tirages avec consécutifs</td><td>${st.pctConsec.toFixed(0)} %</td><td>—</td></tr>`;
 
     $("#pairsSub").textContent = "Combinaisons sorties ensemble le plus souvent sur " + winLabel;
-    $("#pairsBody").innerHTML = adv.pairs.map(pr =>
+    const PAIRS_CAP = 6;
+    const pairsShown = pairsExpanded ? adv.pairs : adv.pairs.slice(0, PAIRS_CAP);
+    $("#pairsBody").innerHTML = pairsShown.map(pr =>
       `<tr><td>${pr.a} & ${pr.b}</td><td>${pr.obs}×</td><td>${pr.exp.toFixed(1)}×</td><td>×${pr.ratio.toFixed(2)}</td></tr>`).join("");
-    $("#triosBody").innerHTML = adv.trios.map(tr =>
-      `<tr><td>${tr.nums.join(" & ")}</td><td>${tr.obs}×</td><td>${tr.exp.toFixed(2)}×</td><td>${tr.exp > 0 ? "×" + tr.ratio.toFixed(1) : "—"}</td></tr>`).join("");
-    $("#quadsBody").innerHTML = adv.quads.length ? adv.quads.map(qd =>
-      `<tr><td>${qd.nums.join(" & ")}</td><td>${qd.obs}×</td><td>${qd.exp.toFixed(3)}×</td><td>${qd.exp > 0 ? "×" + qd.ratio.toFixed(0) : "—"}</td></tr>`).join("")
-      : '<tr><td colspan="4">Pas assez de numéros par tirage</td></tr>';
+    const pMore = $("#pairsMore");
+    if (pMore) {
+      if (adv.pairs.length > PAIRS_CAP) {
+        pMore.style.display = "";
+        pMore.textContent = pairsExpanded ? "Réduire" : `Afficher les ${adv.pairs.length - PAIRS_CAP} autres paires`;
+        pMore.onclick = () => { pairsExpanded = !pairsExpanded; render(); };
+      } else {
+        pMore.style.display = "none";
+      }
+    }
+
+    // groupes plus larges (trios et au-delà) à la demande, sur tout l'historique
+    const bigTbl = $("#bigT"); if (bigTbl) bigTbl.style.display = "none";
+    const bbody = $("#bigBody"); if (bbody) bbody.innerHTML = "";
+    const bsel = $("#bigSize");
+    if (bsel) {
+      const g2 = GAMES[currentGame];
+      const opts = [];
+      for (let s = 3; s <= Math.min(10, g2.drawSize); s++) opts.push(s);
+      const bh = $("#bigH"), btools = $("#bigTools"), bnote = $("#bigNote");
+      const showBig = opts.length > 0;
+      [bh, btools, bnote].forEach(el => { if (el) el.style.display = showBig ? "" : "none"; });
+      if (showBig) bsel.innerHTML = opts.map(s => `<option>${s}</option>`).join("");
+    }
 
     const conforme = adv.pValue > 0.05;
     $("#verdictText").innerHTML =
@@ -2399,6 +2507,8 @@ async function tryAutoLoad(gameKey) {
 
 async function switchGame(gameKey) {
   currentGame = gameKey;
+  pairsExpanded = false;
+  rankExpanded = false;
   applyGameTheme(gameKey);
   $("#learnPage") && $("#learnPage").classList.add("hidden");
   $("#learnTab") && $("#learnTab").classList.remove("active");
@@ -2660,6 +2770,8 @@ function renderNext() {
 
 let calCursor = null;   // calendrier : premier jour du mois affiché
 let rankMode = "freq";
+let rankExpanded = false;
+let pairsExpanded = false;
 function renderRank() {
   const host = $("#rankBody");
   if (!host) return;
@@ -2695,11 +2807,15 @@ function renderRank() {
     return { v: s.freq, scale: maxFreq, ref: expected };
   };
 
+  const RANK_CAP = 20;
+  const showAll = rankExpanded || rankMode === "num" || stats.length <= RANK_CAP;
+  const shown = showAll ? stats : stats.slice(0, RANK_CAP);
+
   host.innerHTML = `<div class="rank-head">` +
     `<span class="rank-pos"></span><span class="rank-n-h">N°</span><span class="rank-bar-h">` +
     (rankMode === "gap" ? "Écart actuel" : rankMode === "maxgap" ? "Record d'absence" : "Fréquence") +
     `</span><span class="rank-cols">Sorties · Écart · Max · Z</span></div>` +
-    stats.map((s, i) => {
+    shown.map((s, i) => {
       const b = barOf(s);
       const z = zOf(s);
       const tension = s.maxGap > 0 ? s.currentGap / s.maxGap : 0;
@@ -2715,6 +2831,8 @@ function renderRank() {
         `<b class="${Math.abs(z) >= 2 ? "far" : ""}" title="Z-score">${(z >= 0 ? "+" : "") + z.toFixed(1)}</b>` +
         `</span></div>`;
     }).join("") +
+    (showAll ? "" : `<button type="button" id="rankMore" class="chip" style="margin-top:10px">Afficher les ${stats.length - RANK_CAP} autres numéros</button>`) +
+    (rankExpanded && stats.length > RANK_CAP ? `<button type="button" id="rankLess" class="chip" style="margin-top:10px">Réduire</button>` : "") +
     `<div class="board-sub" style="margin-top:12px">` +
     `<strong>Comment lire :</strong> <b>Sorties</b> = nombre d'apparitions sur ${total} tirages (attendu ${expected.toFixed(1)}). ` +
     `<b>Écart</b> = tirages depuis la dernière sortie. <b>Max</b> = plus longue absence jamais observée ; ` +
@@ -2722,12 +2840,19 @@ function renderRank() {
     `<b>Z</b> = distance à la moyenne en écarts-types : au-delà de ±2, l'écart est notable ; au-delà de ±3, il devient rare. ` +
     `Sur ${total} tirages, des Z entre −2 et +2 sont le comportement normal du hasard. Le trait vertical marque la valeur attendue.` +
     `</div>`;
+
+  const more = $("#rankMore");
+  if (more) more.addEventListener("click", () => { rankExpanded = true; renderRank(); });
+  const less = $("#rankLess");
+  if (less) less.addEventListener("click", () => { rankExpanded = false; renderRank();
+    document.getElementById("rankBody").scrollIntoView({ block: "nearest" }); });
 }
 
 document.querySelectorAll("[data-rank]").forEach(b => b.addEventListener("click", () => {
   document.querySelectorAll("[data-rank]").forEach(x => x.classList.remove("active"));
   b.classList.add("active");
   rankMode = b.dataset.rank;
+  rankExpanded = false;
   renderRank();
 }));
 
@@ -2857,7 +2982,12 @@ function renderPortrait() {
 }
 
 function renderSmart() {
-  const grid = smartGrid(currentGame, activeProfile);
+  if (activeProfile === "signature") {
+    const w = $("#sigWord");
+    window.__sigWord = (w && w.value.trim()) ? w.value.trim() : "statirage";
+  }
+  const kenoSize = (currentGame === "keno" && $("#kenoSize")) ? parseInt($("#kenoSize").value) : null;
+  const grid = smartGrid(currentGame, activeProfile, kenoSize);
   const m = grid.metrics;
   const p = GRID_PROFILES[activeProfile];
   const k = grid.numbers.length;
@@ -2879,7 +3009,148 @@ function renderSmart() {
     `<p class="profile-note">Cette grille a exactement les mêmes chances qu'une grille prise au hasard.</p>`;
 }
 
-$("#nextNum") && $("#nextNum").addEventListener("change", renderNext);
+/* ---------- Système de complémentarité (méthode Roig) ---------- */
+let compState = null;   // { series: [...], awaited: [...] } pour le générateur de grille
+function computeComplement(gameKey, depth) {
+  const draws = store[gameKey];   // draws[0] = tirage le plus récent
+  if (!draws || draws.length < 2) return null;
+  // curseur N = le couple de tirages situé N crans en arrière.
+  // N=1 -> (draws[1], draws[0]) les deux derniers ; N=2 -> (draws[2], draws[1]) ; etc.
+  const N = Math.max(1, Math.min(depth || 1, draws.length - 1));
+  const older = draws[N];        // le plus ancien du couple
+  const newer = draws[N - 1];    // le plus récent du couple
+  const prevNums = [...older.numbers].sort((a, b) => a - b);
+  const lastNums = [...newer.numbers].sort((a, b) => a - b);
+  const olderSet = new Set(older.numbers), newerSet = new Set(newer.numbers);
+
+  // binômes = numéros répétitifs présents dans LES DEUX tirages du couple -> bornes
+  const bornes = [...new Set(older.numbers.filter(n => newerSet.has(n)))].sort((a, b) => a - b);
+
+  // complétion : numéros sortis dans les tirages POSTÉRIEURS au couple (draws[0 .. N-2])
+  const outAfter = new Set();
+  for (let i = 0; i <= N - 2; i++) draws[i].numbers.forEach(n => outAfter.add(n));
+  const nAfter = Math.max(0, N - 1);   // nombre de tirages après le couple
+
+  // séries = intervalles entre bornes consécutives ayant un intérieur
+  const series = [];
+  for (let i = 0; i < bornes.length - 1; i++) {
+    const lo = bornes[i], hi = bornes[i + 1];
+    if (hi - lo < 2) continue;
+    const interior = [];
+    for (let n = lo + 1; n < hi; n++) interior.push({ n, livre: outAfter.has(n) });
+    series.push({ lo, hi, interior });
+  }
+
+  // numéros en attente = union des intérieurs non encore livrés
+  const awaitedSet = new Set();
+  series.forEach(s => s.interior.forEach(x => { if (!x.livre) awaitedSet.add(x.n); }));
+  const awaited = [...awaitedSet].sort((a, b) => a - b);
+
+  return { last: lastNums, prev: prevNums, lastSet: newerSet, prevSet: olderSet,
+    bornes, series, awaited, dateLast: newer.date, datePrev: older.date,
+    depth: N, nAfter };
+}
+
+function compDepth() {
+  const el = $("#compDepth");
+  return el ? parseInt(el.value) : 1;
+}
+
+function renderComplement() {
+  const host = $("#compBody");
+  if (!host) return;
+  // portée du curseur : 20 couples pour le Keno, 40 pour les autres jeux
+  // (répétitifs bien plus rares hors Keno, il faut pouvoir remonter plus loin)
+  const sl = $("#compDepth");
+  if (sl) {
+    const maxDepth = currentGame === "keno" ? 20 : 40;
+    const cap = Math.min(maxDepth, Math.max(1, (store[currentGame] || []).length - 1));
+    if (parseInt(sl.max) !== cap) sl.max = cap;
+    if (parseInt(sl.value) > cap) sl.value = cap;
+  }
+  const depth = compDepth();
+  const dv = $("#compDepthVal");
+  const c = computeComplement(currentGame, depth);
+  compState = c;
+  if (!c) { host.innerHTML = `<div class="board-sub">Pas assez de tirages chargés pour analyser les répétitifs.</div>`;
+    const gb = $("#compGridBtn"); if (gb) gb.style.display = "none"; $("#compGrid").innerHTML = ""; return; }
+  if (dv) dv.textContent = c.depth === 1 ? "couple le plus récent" : "couple n-" + c.depth;
+
+  const numCell = (n) =>
+    `<div class="comp-n ${c.bornes.includes(n) ? "borne" : ""}">${n}</div>`;
+
+  const drawHtml =
+    `<div class="board-sub" style="margin-bottom:6px">Binômes lus sur ce couple de deux tirages consécutifs :</div>` +
+    `<div class="comp-draw"><div class="comp-label">${fmtDate(c.datePrev)}</div><div class="comp-nums">` +
+      c.prev.map(numCell).join("") + `</div></div>` +
+    `<div class="comp-draw"><div class="comp-label">${fmtDate(c.dateLast)}</div><div class="comp-nums">` +
+      c.last.map(numCell).join("") + `</div></div>` +
+    `<div class="board-sub" style="margin-top:4px">Complétion mesurée sur les <b>${c.nAfter}</b> tirage${c.nAfter > 1 ? "s" : ""} survenu${c.nAfter > 1 ? "s" : ""} depuis ce couple.</div>`;
+
+  const legend =
+    `<div class="comp-legend">` +
+    `<span><i class="comp-dot borne"></i> borne (répétitif)</span>` +
+    `<span><i class="comp-dot livre"></i> livré par la série</span>` +
+    `<span><i class="comp-dot attente"></i> en attente</span></div>`;
+
+  let seriesHtml;
+  if (!c.series.length) {
+    seriesHtml = `<div class="board-sub">Aucune série sur ce couple : il faut au moins deux numéros répétitifs qui encadrent un intervalle, et ce couple n'en a pas.${currentGame !== "keno" ? " Sur ce jeu, peu de numéros sortent par tirage, donc les répétitifs sont rares — <b>déplace le curseur</b> pour trouver un couple qui en contient." : " Déplace le curseur pour choisir un autre couple."}</div>`;
+  } else {
+    const head = `<div class="board-sub" style="margin:2px 0 4px"><b>${c.series.length} série${c.series.length > 1 ? "s" : ""}</b> ouverte${c.series.length > 1 ? "s" : ""} par les bornes ${c.bornes.join(", ")}.</div>`;
+    seriesHtml = head + c.series.map(s => {
+      const total = s.interior.length;
+      const done = s.interior.filter(x => x.livre).length;
+      const pct = total ? Math.round(done / total * 100) : 0;
+      const cells = `<div class="comp-n borne">${s.lo}</div>` +
+        s.interior.map(x => `<div class="comp-n ${x.livre ? "livre" : "attente"}">${x.n}</div>`).join("") +
+        `<div class="comp-n borne">${s.hi}</div>`;
+      return `<div class="comp-serie">` +
+        `<div class="comp-serie-title">Série ${s.lo} → ${s.hi}</div>` +
+        `<div class="comp-interval">${cells}</div>` +
+        `<div class="comp-prog-label"><span>Complétion</span><span>${done} / ${total} · ${pct}%</span></div>` +
+        `<div class="comp-prog-bar"><div class="comp-prog-fill" style="width:${pct}%"></div></div>` +
+        `</div>`;
+    }).join("");
+  }
+
+  host.innerHTML = drawHtml + legend + seriesHtml;
+  const gb = $("#compGridBtn");
+  if (gb) gb.style.display = c.awaited.length ? "" : "none";
+  $("#compGrid").innerHTML = "";
+}
+
+function renderComplementGrid() {
+  if (!compState || !compState.awaited.length) return;
+  const g = GAMES[currentGame];
+  const k = currentGame === "keno" ? 10 : g.drawSize;   // grille Keno à 10 numéros
+  const shuffle = (arr) => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; };
+  let pool = [...compState.awaited];
+  // repli si la série ne fournit pas assez de numéros
+  if (pool.length < k) {
+    const rest = Array.from({ length: g.max }, (_, i) => i + 1).filter(n => !pool.includes(n));
+    pool = pool.concat(shuffle(rest));
+  }
+  const nums = shuffle([...pool]).slice(0, k).sort((a, b) => a - b);
+  const extras = [];
+  if (g.extraMax) {
+    const cnt = currentGame === "euromillions" ? 2 : 1;
+    extras.push(...shuffle(Array.from({ length: g.extraMax }, (_, i) => i + 1)).slice(0, cnt).sort((a, b) => a - b));
+  }
+  const m = gridMetrics(nums, currentGame);
+  $("#compGrid").innerHTML =
+    `<div class="smart-grid" style="margin-top:14px">` +
+    nums.map(n => `<span class="ball">${n}</span>`).join("") +
+    extras.map(n => `<span class="ball star">${n}</span>`).join("") +
+    `</div>` +
+    '<div class="metrics-row">' +
+    `<div class="metric-box"><div class="m-label">Pairs / impairs</div><div class="m-val">${m.evens} / ${nums.length - m.evens}</div></div>` +
+    `<div class="metric-box"><div class="m-label">Bas / haut</div><div class="m-val">${m.lows} / ${nums.length - m.lows}</div></div>` +
+    `<div class="metric-box"><div class="m-label">Consécutifs</div><div class="m-val">${m.consec}</div></div>` +
+    (m.avgGap !== null ? `<div class="metric-box"><div class="m-label">Écart moyen</div><div class="m-val">${m.avgGap.toFixed(1)}</div></div>` : "") +
+    '</div>' +
+    `<p class="profile-note">Grille de ${nums.length} numéros piochés dans la série en attente de complétion. Elle a exactement les mêmes chances qu'une grille prise au hasard.</p>`;
+}
 document.querySelectorAll("[data-next]").forEach(b => b.addEventListener("click", () => {
   document.querySelectorAll("[data-next]").forEach(x => x.classList.remove("active"));
   b.classList.add("active");
@@ -2892,9 +3163,14 @@ document.querySelectorAll("#profileTabs .chip").forEach(c => c.addEventListener(
   document.querySelectorAll("#profileTabs .chip").forEach(x => x.classList.remove("active"));
   c.classList.add("active");
   activeProfile = c.dataset.profile;
+  const sr = $("#sigRow"); if (sr) sr.style.display = activeProfile === "signature" ? "" : "none";
   renderSmart();
 }));
+$("#sigWord") && $("#sigWord").addEventListener("input", () => { if (activeProfile === "signature") renderSmart(); });
+$("#kenoSize") && $("#kenoSize").addEventListener("change", renderSmart);
 $("#smartBtn") && $("#smartBtn").addEventListener("click", renderSmart);
+$("#compGridBtn") && $("#compGridBtn").addEventListener("click", renderComplementGrid);
+$("#compDepth") && $("#compDepth").addEventListener("input", renderComplement);
 
 /* ---------- Générateur avancé ---------- */
 function fillGenCount() {
@@ -3357,6 +3633,57 @@ function renderGapCtx() {
   const top = [...stats].sort((a, b) => b.currentGap - a.currentGap)[0];
   $("#gapCtx").innerHTML = `<p class="modal-text">Plus gros retard actuel : <strong>N°${top.n}, ${top.currentGap} tirages</strong> (fenêtre : ${scope} tirages).</p><div class="board-sub" id="gapCtxRes">Clique pour estimer si c'est banal.</div>`;
 }
+
+/* Grands groupes (7–10) : calcul à la demande, une taille à la fois. */
+function renderBigGroups() {
+  const g = GAMES[currentGame];
+  const size = parseInt($("#bigSize").value);
+  const body = $("#bigBody"), table = $("#bigT");
+  if (size > g.drawSize) {
+    body.innerHTML = `<tr><td colspan="4">Ce jeu ne sort que ${g.drawSize} numéros par tirage.</td></tr>`;
+    table.style.display = ""; return;
+  }
+  // tout l'historique (pas la fenêtre active) : les co-sorties ont besoin de volume
+  const scope = store[currentGame];
+  const total = scope.length;
+  if (!total) { body.innerHTML = ""; table.style.display = "none"; return; }
+
+  // probabilité combinatoire d'un groupe précis de `size` numéros dans un tirage
+  let num = 1, den = 1;
+  for (let i = 0; i < size; i++) { num *= (g.drawSize - i); den *= (g.max - i); }
+  const exp = total * (num / den);
+
+  // comptage à la demande (clé = combinaison jointe, join natif rapide)
+  const count = new Map();
+  const idx = new Array(size), buf = new Array(size);
+  scope.forEach(d => {
+    const n = d.numbers, L = n.length;
+    for (let i = 0; i < size; i++) idx[i] = i;
+    while (true) {
+      for (let i = 0; i < size; i++) buf[i] = n[idx[i]];
+      const key = buf.join(",");
+      count.set(key, (count.get(key) || 0) + 1);
+      let p = size - 1;
+      while (p >= 0 && idx[p] === L - size + p) p--;
+      if (p < 0) break;
+      idx[p]++;
+      for (let i = p + 1; i < size; i++) idx[i] = idx[i - 1] + 1;
+    }
+  });
+
+  let maxObs = 0, nbMax = 0;
+  count.forEach(v => { if (v > maxObs) { maxObs = v; nbMax = 1; } else if (v === maxObs) nbMax++; });
+  const top = [...count.entries()]
+    .map(([k, c]) => ({ nums: k, obs: c }))
+    .sort((a, b) => b.obs - a.obs).slice(0, 20);
+
+  const labels = { 3: "Trio", 4: "Quatuor", 5: "Quintet", 6: "Sextuor", 7: "Groupe de 7", 8: "Groupe de 8", 9: "Groupe de 9", 10: "Groupe de 10" };
+  $("#bigLabel").textContent = labels[size] || "Groupe";
+  body.innerHTML = top.map(t =>
+    `<tr><td>${t.nums.replace(/,/g, " & ")}</td><td>${t.obs}×</td><td>${exp < 0.01 ? exp.toExponential(1) : exp.toFixed(3)}×</td><td>${exp > 0 ? "×" + Math.round(t.obs / exp) : "—"}</td></tr>`).join("") +
+    `<tr><td colspan="4" class="board-sub" style="padding-top:8px">Fréquence maximale : ${maxObs}× · ${nbMax} groupe${nbMax > 1 ? "s" : ""} à égalité. Sur ${total} tirages, ${count.size.toLocaleString("fr-FR")} groupes de ${size} distincts sont apparus.</td></tr>`;
+  table.style.display = "";
+}
 function runGapCtx() {
   const draws = store[currentGame];
   if (!draws.length) return;
@@ -3690,6 +4017,7 @@ function renderExtras2() {
   safe("next", () => { mcResult = null; renderNext(); });
   safe("fact", renderFact);
   safe("portrait", renderPortrait);
+  safe("complement", renderComplement);
   safe("pickers", refreshPickers);
   safe("rank", renderRank);
   safe("cal", () => { calCursor = null; renderCal(); });
@@ -3710,7 +4038,36 @@ $("#btMise").addEventListener("change", renderBacktest);
 $("#btMult").addEventListener("change", renderBacktest);
 $("#btRun").addEventListener("click", renderBacktest);
 $("#cmpRun").addEventListener("click", renderCompare);
+// Numéros aléatoires : Keno = taille choisie (4–10), autres jeux = taille fixe du jeu
+function randomNums(count) {
+  const g = GAMES[currentGame];
+  const pool = Array.from({ length: g.max }, (_, i) => i + 1);
+  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  return pool.slice(0, count).sort((a, b) => a - b);
+}
+$("#btRand") && $("#btRand").addEventListener("click", () => {
+  const count = currentGame === "keno" && $("#btSize") ? parseInt($("#btSize").value) : GAMES[currentGame].drawSize;
+  $("#btInput").value = randomNums(count).join(" ");
+  renderBacktest();
+});
+$("#cmpRand") && $("#cmpRand").addEventListener("click", () => {
+  const count = currentGame === "keno" && $("#cmpSize") ? parseInt($("#cmpSize").value) : Math.min(GAMES[currentGame].drawSize, 8);
+  $("#cmpInput").value = randomNums(count).join(" ");
+  renderCompare();
+});
 $("#gapCtxBtn").addEventListener("click", runGapCtx);
+$("#bigRun") && $("#bigRun").addEventListener("click", () => {
+  const btn = $("#bigRun"), table = $("#bigT"), body = $("#bigBody");
+  const size = parseInt($("#bigSize").value);
+  btn.disabled = true; btn.textContent = "Calcul en cours…";
+  body.innerHTML = `<tr><td colspan="4" class="board-sub">Calcul des groupes de ${size} sur tout l'historique… quelques secondes.</td></tr>`;
+  table.style.display = "";
+  // laisser l'UI peindre l'état "en cours" avant le calcul lourd
+  setTimeout(() => {
+    try { renderBigGroups(); }
+    finally { btn.disabled = false; btn.textContent = "Afficher les grands groupes"; }
+  }, 30);
+});
 $("#probaM").addEventListener("change", renderProba);
 $("#probaMise") && $("#probaMise").addEventListener("change", renderProba);
 $("#exportBtn").addEventListener("click", () => exportCsv(currentGame));
