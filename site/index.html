@@ -400,11 +400,11 @@
   .rank-head .rank-cols { font: inherit; }
   .rank-cols b.near { color: var(--hot); }
   .rank-cols b.far { color: var(--accent); }
-  .rank-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--papier2); }
+  .rank-row { display: flex; align-items: center; gap: 10px; padding: 3px 0; border-bottom: 1px solid var(--papier2); }
   .rank-row:last-child { border-bottom: none; }
   .rank-pos { font: 600 11px 'IBM Plex Mono', monospace; color: var(--muted); min-width: 26px; }
-  .rank-n { width: 31px; height: 31px; border-radius: 50%; background: #fff; border: 1px solid var(--ligne);
-    display: flex; align-items: center; justify-content: center; font: 600 13px 'IBM Plex Mono', monospace;
+  .rank-n { width: 26px; height: 26px; border-radius: 50%; background: #fff; border: 1px solid var(--ligne);
+    display: flex; align-items: center; justify-content: center; font: 600 12px 'IBM Plex Mono', monospace;
     text-decoration: none; color: var(--encre); flex-shrink: 0; }
   .rank-n:hover { border-color: var(--accent); color: var(--accent); }
   .rank-bar { flex: 1; height: 9px; background: var(--papier2); border-radius: 999px; overflow: hidden; position: relative; min-width: 40px; }
@@ -2755,6 +2755,7 @@ function renderNext() {
 
 let calCursor = null;   // calendrier : premier jour du mois affiché
 let rankMode = "freq";
+let rankExpanded = false;
 function renderRank() {
   const host = $("#rankBody");
   if (!host) return;
@@ -2790,11 +2791,15 @@ function renderRank() {
     return { v: s.freq, scale: maxFreq, ref: expected };
   };
 
+  const RANK_CAP = 20;
+  const showAll = rankExpanded || rankMode === "num" || stats.length <= RANK_CAP;
+  const shown = showAll ? stats : stats.slice(0, RANK_CAP);
+
   host.innerHTML = `<div class="rank-head">` +
     `<span class="rank-pos"></span><span class="rank-n-h">N°</span><span class="rank-bar-h">` +
     (rankMode === "gap" ? "Écart actuel" : rankMode === "maxgap" ? "Record d'absence" : "Fréquence") +
     `</span><span class="rank-cols">Sorties · Écart · Max · Z</span></div>` +
-    stats.map((s, i) => {
+    shown.map((s, i) => {
       const b = barOf(s);
       const z = zOf(s);
       const tension = s.maxGap > 0 ? s.currentGap / s.maxGap : 0;
@@ -2810,6 +2815,8 @@ function renderRank() {
         `<b class="${Math.abs(z) >= 2 ? "far" : ""}" title="Z-score">${(z >= 0 ? "+" : "") + z.toFixed(1)}</b>` +
         `</span></div>`;
     }).join("") +
+    (showAll ? "" : `<button type="button" id="rankMore" class="chip" style="margin-top:10px">Afficher les ${stats.length - RANK_CAP} autres numéros</button>`) +
+    (rankExpanded && stats.length > RANK_CAP ? `<button type="button" id="rankLess" class="chip" style="margin-top:10px">Réduire</button>` : "") +
     `<div class="board-sub" style="margin-top:12px">` +
     `<strong>Comment lire :</strong> <b>Sorties</b> = nombre d'apparitions sur ${total} tirages (attendu ${expected.toFixed(1)}). ` +
     `<b>Écart</b> = tirages depuis la dernière sortie. <b>Max</b> = plus longue absence jamais observée ; ` +
@@ -2817,12 +2824,19 @@ function renderRank() {
     `<b>Z</b> = distance à la moyenne en écarts-types : au-delà de ±2, l'écart est notable ; au-delà de ±3, il devient rare. ` +
     `Sur ${total} tirages, des Z entre −2 et +2 sont le comportement normal du hasard. Le trait vertical marque la valeur attendue.` +
     `</div>`;
+
+  const more = $("#rankMore");
+  if (more) more.addEventListener("click", () => { rankExpanded = true; renderRank(); });
+  const less = $("#rankLess");
+  if (less) less.addEventListener("click", () => { rankExpanded = false; renderRank();
+    document.getElementById("rankBody").scrollIntoView({ block: "nearest" }); });
 }
 
 document.querySelectorAll("[data-rank]").forEach(b => b.addEventListener("click", () => {
   document.querySelectorAll("[data-rank]").forEach(x => x.classList.remove("active"));
   b.classList.add("active");
   rankMode = b.dataset.rank;
+  rankExpanded = false;
   renderRank();
 }));
 
