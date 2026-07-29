@@ -151,7 +151,7 @@ def number_page(game_key, g, n, st, last_date):
         verdict = "en dessous de sa fréquence théorique — un « numéro en retard »"
     else:
         verdict = "conforme à sa fréquence théorique — dans la norme du hasard"
-    title = f"Numéro {n} au {label} — statistiques, fréquence et écart | Statirage"
+    title = f"Numéro {n} au {label} : fréquence, retard et sorties | Statirage"
     desc = (f"Le numéro {n} au {label} : {st['freq']} sorties sur {st['total']} tirages "
             f"(attendu ≈ {st['expected']:.1f}), écart actuel {st['current_gap']}, record {st['max_gap']}. "
             f"Statistiques à jour du {fmt_date(last_date)}.")
@@ -180,7 +180,7 @@ def number_page(game_key, g, n, st, last_date):
     html += f"""<div class="card">
 <div class="crumb"><a href="{BASE_URL}/">Statirage</a> › <a href="{BASE_URL}/{game_key}/numeros/">Numéros {label}</a> › {n}</div>
 <span class="bigball">{n}</span>
-<h1>Le numéro {n} au {label} : ses statistiques complètes</h1>
+<h1>Le numéro {n} au {label} : ses statistiques complètes<span style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0"> — fréquence de sortie, numéro chaud ou froid, retard et compagnons</span></h1>
 <p>Au {label} ({g['desc']}), voici tout ce que l'historique des tirages dit du numéro <strong>{n}</strong>.
 Sur les <strong>{st['total']} tirages</strong> analysés, il est {verdict}.</p>
 
@@ -224,7 +224,7 @@ def hub_page(game_key, g, draws, last_date, stats_all):
     url = f"{BASE_URL}/{game_key}/numeros/"
     hot = max(range(1, g["max"] + 1), key=lambda n: stats_all[n]["freq"])
     late = max(range(1, g["max"] + 1), key=lambda n: stats_all[n]["current_gap"])
-    title = f"Statistiques de chaque numéro du {label} (1 à {g['max']}) | Statirage"
+    title = f"{label} : les numéros qui sortent le plus | Statirage"
     desc = (f"Fréquence, écart et historique de sortie de chacun des {g['max']} numéros du {label}, "
             f"sur {len(draws)} tirages. Données officielles FDJ à jour du {fmt_date(last_date)}.")
     links = "".join(
@@ -233,7 +233,7 @@ def hub_page(game_key, g, draws, last_date, stats_all):
     html = head(title, desc, url, page_css(g))
     html += f"""<div class="card">
 <div class="crumb"><a href="{BASE_URL}/">Statirage</a> › Numéros {label}</div>
-<h1>Les {g['max']} numéros du {label}, un par un</h1>
+<h1>Les {g['max']} numéros du {label}, un par un<span style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0"> : numéros chauds, froids, fréquences et retards de sortie</span></h1>
 <p>Le {label} : {g['desc']}. Choisis un numéro pour consulter sa fiche complète —
 fréquence de sortie, écart actuel, record d'absence, dernières apparitions et compagnons de tirage —
 calculée sur les <strong>{len(draws)} tirages</strong> de notre historique.</p>
