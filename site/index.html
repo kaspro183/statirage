@@ -160,6 +160,15 @@
   .hero-mynums .score b { color: var(--accent-soft); font: 700 13px 'IBM Plex Mono', monospace; }
   .hero-mynums a { color: var(--accent-soft); font-size: 12.5px; text-decoration: none; font-weight: 600; margin-left: auto; }
   .hero-mynums a:hover { text-decoration: underline; }
+  .hero-mynums-light {
+    border-top-color: var(--ligne); margin-top: 18px; padding-top: 16px;
+  }
+  .hero-mynums-light .label { color: var(--muted); }
+  .hero-mynums-light .orb-mini { border-color: var(--ligne); color: var(--muted); background: #fff; }
+  .hero-mynums-light .orb-mini.hit { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .hero-mynums-light .score { color: var(--encre); }
+  .hero-mynums-light .score b { color: var(--accent); }
+  .hero-mynums-light a { color: var(--accent); }
 
   /* ---- Chargement / erreur ---- */
   #loader { padding: 26px 4px 12px; }
@@ -1116,6 +1125,7 @@
     <div class="panel draws-panel">
       <h2>Derniers tirages</h2>
       <div id="drawsList"></div>
+      <div class="hero-mynums hero-mynums-light hidden" id="drawsMyNums"></div>
     </div>
   </div>
 
@@ -1400,24 +1410,27 @@ function renderHero() {
   renderHeroMyNums(d);
 }
 
-// Petit résumé "mes numéros" affiché sous le dernier tirage : reprend le
-// cookie déjà utilisé par le panneau "Mes numéros" plus bas sur la page.
+// Petit résumé "mes numéros" affiché sous le dernier tirage (héros) et sous
+// le tableau "Derniers tirages" : reprend le cookie déjà utilisé par le
+// panneau "Mes numéros" plus bas sur la page.
 function renderHeroMyNums(d) {
-  const host = $("#heroMyNums");
-  if (!host) return;
+  const hosts = ["#heroMyNums", "#drawsMyNums"].map(sel => $(sel)).filter(Boolean);
+  if (!hosts.length) return;
   const saved = parseNums(readCookie(myNumsKey()) || "", currentGame);
-  if (!saved.length) {
-    host.innerHTML = `<span class="label">Enregistre tes numéros pour voir ton score ici à chaque tirage.</span>` +
-      `<a href="#myNumsInput">Ajouter mes numéros →</a>`;
+  hosts.forEach(host => {
+    if (!saved.length) {
+      host.innerHTML = `<span class="label">Enregistre tes numéros pour voir ton score ici à chaque tirage.</span>` +
+        `<a href="#myNumsInput">Ajouter mes numéros →</a>`;
+      host.classList.remove("hidden");
+      return;
+    }
+    const hits = saved.filter(n => d.numbers.includes(n));
+    host.innerHTML = `<span class="label">Mes numéros</span>` +
+      saved.map(n => `<span class="orb-mini${hits.includes(n) ? " hit" : ""}">${n}</span>`).join("") +
+      `<span class="score">${hits.length}/${saved.length} sortis sur ce tirage</span>` +
+      `<a href="#myNumsInput">Modifier →</a>`;
     host.classList.remove("hidden");
-    return;
-  }
-  const hits = saved.filter(n => d.numbers.includes(n));
-  host.innerHTML = `<span class="label">Mes numéros</span>` +
-    saved.map(n => `<span class="orb-mini${hits.includes(n) ? " hit" : ""}">${n}</span>`).join("") +
-    `<span class="score">${hits.length}/${saved.length} sortis sur ce tirage</span>` +
-    `<a href="#myNumsInput">Modifier →</a>`;
-  host.classList.remove("hidden");
+  });
 }
 
 
