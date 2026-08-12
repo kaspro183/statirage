@@ -146,6 +146,20 @@
   }
   .hero-mult b { font: 700 17px 'IBM Plex Mono', monospace; color: var(--accent-soft); }
   .hero-mult span { color: rgba(247,243,232,.68); font-size: 12.5px; }
+  .hero-mynums {
+    margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(247,243,232,.16);
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .hero-mynums .label { font-size: 12.5px; color: rgba(247,243,232,.65); white-space: nowrap; }
+  .hero-mynums .orb-mini {
+    width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font: 600 12px 'IBM Plex Mono', monospace; border: 1px solid rgba(247,243,232,.3); color: rgba(247,243,232,.55);
+  }
+  .hero-mynums .orb-mini.hit { background: var(--accent-soft); border-color: var(--accent-soft); color: #1a1206; font-weight: 700; }
+  .hero-mynums .score { font-size: 12.5px; color: rgba(247,243,232,.85); margin-left: 2px; }
+  .hero-mynums .score b { color: var(--accent-soft); font: 700 13px 'IBM Plex Mono', monospace; }
+  .hero-mynums a { color: var(--accent-soft); font-size: 12.5px; text-decoration: none; font-weight: 600; margin-left: auto; }
+  .hero-mynums a:hover { text-decoration: underline; }
 
   /* ---- Chargement / erreur ---- */
   #loader { padding: 26px 4px 12px; }
@@ -336,8 +350,7 @@
   .comp-prog-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin: 10px 0 5px; }
   .comp-prog-bar { height: 9px; border-radius: 6px; background: var(--papier); overflow: hidden; border: 1px solid var(--ligne); }
   .comp-prog-fill { height: 100%; background: linear-gradient(90deg, var(--laiton), #2E8B57); border-radius: 6px; transition: width .5s ease; }
-  .genadv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 26px; margin-top: 14px; align-items: start; }
-  @media (max-width: 720px) { .genadv-grid { grid-template-columns: 1fr; } }
+  .genadv-grid { display: grid; gap: 16px; margin-top: 14px; }
   .genadv-row { display: grid; grid-template-columns: 20px 1fr; align-items: start; gap: 9px; font-size: 13.5px; color: var(--encre); line-height: 1.5; }
   .genadv-row > input[type="checkbox"] { accent-color: var(--accent); width: 17px; height: 17px; margin-top: 2px; }
   .genadv-text { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
@@ -606,6 +619,7 @@
     <div class="rail"><div class="balls" id="heroBalls"></div></div>
     <div class="hero-mult hidden" id="heroMult"></div>
     <div class="hero-meta" id="heroMeta"></div>
+    <div class="hero-mynums hidden" id="heroMyNums"></div>
   </section>
 
   <div id="factBox" class="fact-box hidden"></div>
@@ -825,7 +839,7 @@
       <p class="atelier-note">Coche les critères que tu veux imposer à la grille. Les filtres non cochés sont ignorés. <b>Rappel : aucun réglage ne change tes chances de gagner</b> — chaque grille reste aussi probable qu'une autre. Ces filtres servent à composer une grille au profil choisi, rien de plus.</p>
 
       <div class="genadv-grid">
-        <div class="genadv-slider" style="grid-column: 1 / -1"><input type="checkbox" id="fSum">
+        <div class="genadv-slider"><input type="checkbox" id="fSum">
           <div class="genadv-sliderbody">
             <div class="genadv-sliderlabel">Somme entre <b id="fSumMinV">380</b> et <b id="fSumMaxV">530</b></div>
             <div class="genadv-rangepair">
@@ -1383,6 +1397,27 @@ function renderHero() {
   }
 
   $("#hero").classList.remove("hidden");
+  renderHeroMyNums(d);
+}
+
+// Petit résumé "mes numéros" affiché sous le dernier tirage : reprend le
+// cookie déjà utilisé par le panneau "Mes numéros" plus bas sur la page.
+function renderHeroMyNums(d) {
+  const host = $("#heroMyNums");
+  if (!host) return;
+  const saved = parseNums(readCookie(myNumsKey()) || "", currentGame);
+  if (!saved.length) {
+    host.innerHTML = `<span class="label">Enregistre tes numéros pour voir ton score ici à chaque tirage.</span>` +
+      `<a href="#myNumsInput">Ajouter mes numéros →</a>`;
+    host.classList.remove("hidden");
+    return;
+  }
+  const hits = saved.filter(n => d.numbers.includes(n));
+  host.innerHTML = `<span class="label">Mes numéros</span>` +
+    saved.map(n => `<span class="orb-mini${hits.includes(n) ? " hit" : ""}">${n}</span>`).join("") +
+    `<span class="score">${hits.length}/${saved.length} sortis sur ce tirage</span>` +
+    `<a href="#myNumsInput">Modifier →</a>`;
+  host.classList.remove("hidden");
 }
 
 
