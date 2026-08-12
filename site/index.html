@@ -963,24 +963,31 @@
       <div id="wheelGrids"></div>
     </div>
 
-    <div class="panel mynums-panel">
-      <h2>Mes numéros</h2>
-      <p class="atelier-note">Enregistre tes numéros fétiches : à chaque visite, ton score sur le dernier tirage
-      et les précédents s'affiche ici. (Sauvegardé dans ce navigateur.)</p>
+    <div class="panel" id="btPanel">
+      <h2>Testeur de grille</h2>
+      <p class="atelier-note">Ta grille face à tout l'historique chargé : combien de fois elle aurait trouvé
+      0, 1, 2… bons numéros, comparé à ce que le hasard prévoit.</p>
       <div class="atelier-tools">
-        <input type="text" id="myNumsInput" class="modal-input" style="max-width:300px;margin:0" placeholder="Ex : 3 7 12 24 41 56">
-        <button class="chip" type="button" id="myNumsPick">Choisir sur la grille</button>
-        <button class="btn" type="button" id="myNumsSave">Enregistrer</button>
-        <button class="chip" type="button" id="myNumsClear">Effacer</button>
+        <input type="text" id="btInput" class="modal-input" style="max-width:260px;margin:0" placeholder="Ex : 3 7 12 24 41">
+        <button class="chip" type="button" id="btPick">Choisir sur la grille</button>
+        <button class="chip" type="button" id="btRand">Numéros aléatoires</button>
+        <button class="btn" type="button" id="btRun">Tester</button>
       </div>
-      <div class="picker" id="myNumsPicker"></div>
+      <div class="atelier-tools kenoOnly" id="btSizeRow">
+        <span class="label">Numéros joués</span>
+        <select id="btSize" class="select">
+          <option>4</option><option>5</option><option>6</option><option>7</option>
+          <option selected>8</option><option>9</option><option>10</option>
+        </select>
+      </div>
+      <div class="picker" id="btPicker"></div>
       <div class="atelier-tools kenoOnly">
         <span class="label">Mise</span>
-        <select id="myMise" class="select"><option>1</option><option>2</option><option>3</option><option>5</option><option>10</option></select>
+        <select id="btMise" class="select"><option>1</option><option>2</option><option>3</option><option>5</option><option>10</option></select>
         <span class="label">€</span>
-        <label class="chip" style="display:inline-flex;align-items:center;gap:7px;cursor:pointer"><input type="checkbox" id="myMult" style="accent-color:var(--accent)"> <span>Multiplicateur (mise doublée)</span></label>
+        <label class="chip" style="display:inline-flex;align-items:center;gap:7px;cursor:pointer"><input type="checkbox" id="btMult" style="accent-color:var(--accent)"> <span>Multiplicateur (mise doublée)</span></label>
       </div>
-      <div id="myNumsScore"></div>
+      <div id="btOut"></div>
     </div>
 
     <div class="row" style="grid-template-columns:1fr">
@@ -1101,31 +1108,24 @@
       <div id="drawsList"></div>
     </div>
 
-    <div class="panel" id="btPanel">
-      <h2>Testeur de grille</h2>
-      <p class="atelier-note">Ta grille face à tout l'historique chargé : combien de fois elle aurait trouvé
-      0, 1, 2… bons numéros, comparé à ce que le hasard prévoit.</p>
+    <div class="panel mynums-panel">
+      <h2>Mes numéros</h2>
+      <p class="atelier-note">Enregistre tes numéros fétiches : à chaque visite, ton score sur le dernier tirage
+      et les précédents s'affiche ici. (Sauvegardé dans ce navigateur.)</p>
       <div class="atelier-tools">
-        <input type="text" id="btInput" class="modal-input" style="max-width:260px;margin:0" placeholder="Ex : 3 7 12 24 41">
-        <button class="chip" type="button" id="btPick">Choisir sur la grille</button>
-        <button class="chip" type="button" id="btRand">Numéros aléatoires</button>
-        <button class="btn" type="button" id="btRun">Tester</button>
+        <input type="text" id="myNumsInput" class="modal-input" style="max-width:300px;margin:0" placeholder="Ex : 3 7 12 24 41 56">
+        <button class="chip" type="button" id="myNumsPick">Choisir sur la grille</button>
+        <button class="btn" type="button" id="myNumsSave">Enregistrer</button>
+        <button class="chip" type="button" id="myNumsClear">Effacer</button>
       </div>
-      <div class="atelier-tools kenoOnly" id="btSizeRow">
-        <span class="label">Numéros joués</span>
-        <select id="btSize" class="select">
-          <option>4</option><option>5</option><option>6</option><option>7</option>
-          <option selected>8</option><option>9</option><option>10</option>
-        </select>
-      </div>
-      <div class="picker" id="btPicker"></div>
+      <div class="picker" id="myNumsPicker"></div>
       <div class="atelier-tools kenoOnly">
         <span class="label">Mise</span>
-        <select id="btMise" class="select"><option>1</option><option>2</option><option>3</option><option>5</option><option>10</option></select>
+        <select id="myMise" class="select"><option>1</option><option>2</option><option>3</option><option>5</option><option>10</option></select>
         <span class="label">€</span>
-        <label class="chip" style="display:inline-flex;align-items:center;gap:7px;cursor:pointer"><input type="checkbox" id="btMult" style="accent-color:var(--accent)"> <span>Multiplicateur (mise doublée)</span></label>
+        <label class="chip" style="display:inline-flex;align-items:center;gap:7px;cursor:pointer"><input type="checkbox" id="myMult" style="accent-color:var(--accent)"> <span>Multiplicateur (mise doublée)</span></label>
       </div>
-      <div id="btOut"></div>
+      <div id="myNumsScore"></div>
     </div>
   </div>
 
