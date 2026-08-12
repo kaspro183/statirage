@@ -983,33 +983,7 @@
       <div id="myNumsScore"></div>
     </div>
 
-    <div class="row">
-      <div class="panel">
-        <h2>Testeur de grille</h2>
-        <p class="atelier-note">Ta grille face à tout l'historique chargé : combien de fois elle aurait trouvé
-        0, 1, 2… bons numéros, comparé à ce que le hasard prévoit.</p>
-        <div class="atelier-tools">
-          <input type="text" id="btInput" class="modal-input" style="max-width:260px;margin:0" placeholder="Ex : 3 7 12 24 41">
-          <button class="chip" type="button" id="btPick">Choisir sur la grille</button>
-          <button class="chip" type="button" id="btRand">Numéros aléatoires</button>
-          <button class="btn" type="button" id="btRun">Tester</button>
-        </div>
-        <div class="atelier-tools kenoOnly" id="btSizeRow">
-          <span class="label">Numéros joués</span>
-          <select id="btSize" class="select">
-            <option>4</option><option>5</option><option>6</option><option>7</option>
-            <option selected>8</option><option>9</option><option>10</option>
-          </select>
-        </div>
-        <div class="picker" id="btPicker"></div>
-        <div class="atelier-tools kenoOnly">
-          <span class="label">Mise</span>
-          <select id="btMise" class="select"><option>1</option><option>2</option><option>3</option><option>5</option><option>10</option></select>
-          <span class="label">€</span>
-          <label class="chip" style="display:inline-flex;align-items:center;gap:7px;cursor:pointer"><input type="checkbox" id="btMult" style="accent-color:var(--accent)"> <span>Multiplicateur (mise doublée)</span></label>
-        </div>
-        <div id="btOut"></div>
-      </div>
+    <div class="row" style="grid-template-columns:1fr">
       <div class="panel">
         <h2>Comparateur de numéros</h2>
         <p class="atelier-note">Jusqu'à 8 numéros côte à côte, toutes leurs statistiques en parallèle.</p>
@@ -1125,7 +1099,33 @@
     <div class="panel draws-panel">
       <h2>Derniers tirages</h2>
       <div id="drawsList"></div>
-      <div class="hero-mynums hero-mynums-light hidden" id="drawsMyNums"></div>
+    </div>
+
+    <div class="panel" id="btPanel">
+      <h2>Testeur de grille</h2>
+      <p class="atelier-note">Ta grille face à tout l'historique chargé : combien de fois elle aurait trouvé
+      0, 1, 2… bons numéros, comparé à ce que le hasard prévoit.</p>
+      <div class="atelier-tools">
+        <input type="text" id="btInput" class="modal-input" style="max-width:260px;margin:0" placeholder="Ex : 3 7 12 24 41">
+        <button class="chip" type="button" id="btPick">Choisir sur la grille</button>
+        <button class="chip" type="button" id="btRand">Numéros aléatoires</button>
+        <button class="btn" type="button" id="btRun">Tester</button>
+      </div>
+      <div class="atelier-tools kenoOnly" id="btSizeRow">
+        <span class="label">Numéros joués</span>
+        <select id="btSize" class="select">
+          <option>4</option><option>5</option><option>6</option><option>7</option>
+          <option selected>8</option><option>9</option><option>10</option>
+        </select>
+      </div>
+      <div class="picker" id="btPicker"></div>
+      <div class="atelier-tools kenoOnly">
+        <span class="label">Mise</span>
+        <select id="btMise" class="select"><option>1</option><option>2</option><option>3</option><option>5</option><option>10</option></select>
+        <span class="label">€</span>
+        <label class="chip" style="display:inline-flex;align-items:center;gap:7px;cursor:pointer"><input type="checkbox" id="btMult" style="accent-color:var(--accent)"> <span>Multiplicateur (mise doublée)</span></label>
+      </div>
+      <div id="btOut"></div>
     </div>
   </div>
 
@@ -1414,7 +1414,7 @@ function renderHero() {
 // le tableau "Derniers tirages" : reprend le cookie déjà utilisé par le
 // panneau "Mes numéros" plus bas sur la page.
 function renderHeroMyNums(d) {
-  const hosts = ["#heroMyNums", "#drawsMyNums"].map(sel => $(sel)).filter(Boolean);
+  const hosts = ["#heroMyNums"].map(sel => $(sel)).filter(Boolean);
   if (!hosts.length) return;
   const saved = parseNums(readCookie(myNumsKey()) || "", currentGame);
   hosts.forEach(host => {
