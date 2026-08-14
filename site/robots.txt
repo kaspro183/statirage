@@ -1,5 +1,6 @@
 # Statirage — statirage.fr
 User-agent: *
 Allow: /
+Disallow: /data/
 
 Sitemap: https://statirage.fr/sitemap.xml
