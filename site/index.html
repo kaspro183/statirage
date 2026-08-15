@@ -392,6 +392,20 @@
   /* ---- Calendrier de sélection d'un tirage ---- */
   .cal { display: none; margin-top: 12px; background: var(--papier2); border-radius: 16px; padding: 14px; max-width: 420px; }
   .cal.open { display: block; }
+
+  /* ---- Panneau "Répartition des gains" sous le tirage héros ---- */
+  .hero-gains { margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(247,243,232,.16); }
+  .gains-box {
+    display: none; margin-top: 12px; background: rgba(247,243,232,.12);
+    border: 1px solid rgba(247,243,232,.2); border-radius: 12px; padding: 14px 16px;
+  }
+  .gains-box.open { display: block; }
+  .gains-box table { color: var(--papier); }
+  .gains-box th, .gains-box td { padding: 6px 8px; text-align: left; border-bottom: 1px solid rgba(247,243,232,.14); }
+  .gains-box thead th { color: rgba(247,243,232,.65); font-weight: 600; font-size: 12.5px; text-transform: uppercase; letter-spacing: .4px; }
+  .gains-box .board-sub { color: rgba(247,243,232,.75); }
+  .gains-jackpot { margin-bottom: 10px; font-size: 14px; }
+  .gains-jackpot b { color: var(--accent-soft); font-family: 'IBM Plex Mono', monospace; }
   .cal-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
   .cal-month { font-weight: 700; font-size: 15px; text-transform: capitalize; }
   .cal-nav { width: 32px; height: 32px; border-radius: 9px; border: 1px solid var(--ligne); background: #fff;
@@ -629,6 +643,10 @@
     <div class="hero-mult hidden" id="heroMult"></div>
     <div class="hero-meta" id="heroMeta"></div>
     <div class="hero-mynums hidden" id="heroMyNums"></div>
+    <div class="hero-gains hidden" id="heroGainsWrap">
+      <button class="chip" type="button" id="gainsBtn">Voir la répartition des gains</button>
+      <div class="gains-box" id="gainsBox"></div>
+    </div>
   </section>
 
   <div id="factBox" class="fact-box hidden"></div>
@@ -1282,6 +1300,9 @@ const FREE_MODE = true;
 
 let currentGame = "keno";
 let store = { keno: [], euromillions: [], loto: [], eurodreams: [] };  // tirages triés récent -> ancien
+// Montant du prochain jackpot par jeu (absent pour le Keno, pas de jackpot progressif).
+// Alimenté par data/<jeu>.json → champ "jackpot": { amount, date }, produit par tools/update_data.py.
+let jackpots = { euromillions: null, loto: null, eurodreams: null };
 let windowSize = 30, colorMode = "freq";
 
 /* ---------- Parsing CSV FDJ ---------- */
@@ -1408,7 +1429,49 @@ function renderHero() {
 
   $("#hero").classList.remove("hidden");
   renderHeroMyNums(d);
+  renderGainsPanel(d);
 }
+
+// Panneau dépliable "Répartition des gains" + montant du prochain jackpot.
+// Absent pour le Keno (pas de jackpot progressif chez FDJ sur ce jeu).
+// Données attendues dans data/<jeu>.json :
+//   "jackpot": { "amount": "37 millions €", "date": "2026-08-18" }   (au niveau racine)
+//   "gains": [ { "rank": "5", "winnersFR": 3, "winnersAll": 8, "prize": "90 666,10 €" }, ... ]  (par tirage)
+function renderGainsPanel(d) {
+  const wrap = $("#heroGainsWrap");
+  if (!wrap) return;
+  if (currentGame === "keno") { wrap.classList.add("hidden"); return; }
+  const jp = jackpots[currentGame];
+  const hasGains = d.gains && Array.isArray(d.gains) && d.gains.length;
+  if (!jp && !hasGains) { wrap.classList.add("hidden"); return; }
+  wrap.classList.remove("hidden");
+
+  const box = $("#gainsBox");
+  let html = "";
+  if (jp && jp.amount) {
+    html += `<p class="gains-jackpot">Prochain tirage${jp.date ? " (" + new Date(jp.date).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }) + ")" : ""} : <b>${jp.amount}</b></p>`;
+  }
+  if (hasGains) {
+    html += `<table><thead><tr><th>Rang</th><th>Gagnants France</th><th>Gagnants tous pays</th><th>Gain par grille</th></tr></thead><tbody>` +
+      d.gains.map(r =>
+        `<tr><td>${r.rank}</td><td>${r.winnersFR ?? "—"}</td><td>${r.winnersAll ?? r.winnersFR ?? "—"}</td><td>${r.prize ?? "—"}</td></tr>`
+      ).join("") +
+      `</tbody></table>`;
+  } else {
+    html += `<p class="board-sub">La répartition des gains de ce tirage n'est pas encore disponible.</p>`;
+  }
+  box.innerHTML = html;
+
+  // Réinitialise l'état plié à chaque changement de tirage/jeu.
+  box.classList.remove("open");
+  $("#gainsBtn").textContent = "Voir la répartition des gains";
+}
+
+$("#gainsBtn") && $("#gainsBtn").addEventListener("click", () => {
+  const box = $("#gainsBox");
+  const open = box.classList.toggle("open");
+  $("#gainsBtn").textContent = open ? "Masquer la répartition des gains" : "Voir la répartition des gains";
+});
 
 // Petit résumé "mes numéros" affiché sous le dernier tirage (héros) et sous
 // le tableau "Derniers tirages" : reprend le cookie déjà utilisé par le
@@ -2529,9 +2592,10 @@ async function tryAutoLoad(gameKey) {
         if (Array.isArray(data.draws) && data.draws.length ) {
           const draws = data.draws.map(d => ({
             date: parseFrDate(d.date), time: d.time || "", numbers: d.numbers, extras: d.extras || [],
-            mult: d.mult || "",
+            mult: d.mult || "", gains: d.gains || null,
           })).filter(d => d.date);
           draws.sort((a, b) => b.date - a.date || (b.time > a.time ? 1 : -1));
+          if (gameKey in jackpots) jackpots[gameKey] = data.jackpot || null;
           adoptDraws(gameKey, { draws, rejected: 0 },
             `automatiquement (mis à jour le ${data.updated ? new Date(data.updated).toLocaleDateString("fr-FR") : "?"})`);
           return true;
@@ -2618,8 +2682,10 @@ async function prefetchOthers() {
           if (Array.isArray(data.draws) && data.draws.length ) {
             const draws = data.draws.map(d => ({
               date: parseFrDate(d.date), time: d.time || "", numbers: d.numbers, extras: d.extras || [], mult: d.mult || "",
+              gains: d.gains || null,
             })).filter(d => d.date);
             draws.sort((a, b) => b.date - a.date || (b.time > a.time ? 1 : -1));
+            if (gk in jackpots) jackpots[gk] = data.jackpot || null;
             store[gk] = draws;
             continue;
           }
