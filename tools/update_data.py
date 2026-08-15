@@ -19,10 +19,12 @@ from __future__ import annotations
 
 import csv
 import datetime as dt
+import html as html_mod
 import io
 import json
 import re
 import sys
+import unicodedata
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -76,6 +78,87 @@ def download(url: str) -> bytes:
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     with urllib.request.urlopen(req, timeout=60) as resp:  # noqa: S310
         return resp.read()
+
+
+# ----------------------------------------------------------------------------
+# Jackpot du prochain tirage — scraping léger de la page de résultat fdj.fr
+# du dernier tirage connu (pas d'API publique disponible pour cette donnée).
+#
+# ⚠️ Contrairement aux numéros tirés, le tableau "Répartition des gains" de
+# ces pages est chargé par une requête JS après coup (React/Next.js) : il
+# n'est PAS présent dans le HTML brut renvoyé par le serveur, donc pas
+# récupérable avec une simple requête HTTP. Seul le montant du jackpot
+# (texte éditorial, lui bien présent côté serveur) est extrait ici.
+# Absent pour le Keno : pas de jackpot progressif sur ce jeu chez FDJ.
+# ----------------------------------------------------------------------------
+RESULT_SLUGS = {
+    "euromillions": "euromillions-my-million",
+    "loto": "loto",
+    "eurodreams": "eurodreams",   # à vérifier : slug supposé, non confirmé sur fdj.fr
+}
+WEEKDAYS_FR = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
+MONTHS_FR = ["janvier", "fevrier", "mars", "avril", "mai", "juin", "juillet",
+             "aout", "septembre", "octobre", "novembre", "decembre"]
+# Repère le titre du type : « Prochain tirage LOTO® prévu le samedi 15 août
+# 2026 avec un jackpot de 2 millions d'€ à gagner » (formulation observée
+# sur les pages loto/euromillions ; à revérifier si le motif ne matche plus).
+JACKPOT_RE = re.compile(
+    r"Prochain tirage.*?pr[ée]vu le ([^,.]+?) avec un jackpot de ([^,.]+?) à gagner",
+    re.IGNORECASE,
+)
+
+
+def _unaccent(s: str) -> str:
+    return "".join(c for c in unicodedata.normalize("NFD", s) if unicodedata.category(c) != "Mn")
+
+
+def date_to_slug(d: dt.date) -> str:
+    return f"{WEEKDAYS_FR[d.weekday()]}-{d.day:02d}-{MONTHS_FR[d.month - 1]}-{d.year}"
+
+
+def parse_fr_date_text(text: str) -> dt.date | None:
+    """« samedi 15 août 2026 » -> date(2026, 8, 15). None si non reconnu."""
+    plain = _unaccent(text.strip().lower())
+    m = re.search(r"(\d{1,2})\s+([a-z]+)\s+(\d{4})", plain)
+    if not m:
+        return None
+    day, month_name, year = m.groups()
+    if month_name not in MONTHS_FR:
+        return None
+    try:
+        return dt.date(int(year), MONTHS_FR.index(month_name) + 1, int(day))
+    except ValueError:
+        return None
+
+
+def strip_html(raw: bytes) -> str:
+    text = raw.decode("utf-8", errors="replace")
+    text = re.sub(r"(?is)<(script|style)[^>]*>.*?</\1>", " ", text)
+    text = re.sub(r"<[^>]+>", " ", text)
+    return re.sub(r"\s+", " ", html_mod.unescape(text))
+
+
+def fetch_jackpot(game: str, latest_draw_date: dt.date) -> dict | None:
+    """Renvoie {"amount": "...", "date": "YYYY-MM-DD"} ou None si l'extraction
+    échoue (page introuvable, mise en page changée…). Un None ne fait pas
+    échouer le run : le site affiche alors le panneau sans montant."""
+    slug = RESULT_SLUGS.get(game)
+    if not slug:
+        return None
+    url = f"https://www.fdj.fr/jeux-de-tirage/{slug}/resultats/{date_to_slug(latest_draw_date)}"
+    try:
+        text = strip_html(download(url))
+    except Exception as exc:  # noqa: BLE001
+        print(f"[{game}] jackpot : page injoignable ({url}) — {exc}")
+        return None
+    m = JACKPOT_RE.search(text)
+    if not m:
+        print(f"[{game}] jackpot : motif introuvable sur {url} (mise en page changée ?)")
+        return None
+    date_text, amount_text = (g.strip() for g in m.groups())
+    amount_clean = re.sub(r"\(\w+\)", "", amount_text).strip()  # retire les renvois (1a), (2a)…
+    parsed_date = parse_fr_date_text(date_text)
+    return {"amount": amount_clean, "date": parsed_date.isoformat() if parsed_date else None}
 
 
 CSV_HINTS = {"keno": ["keno"], "euromillions": ["euromillion", "million"],
@@ -175,34 +258,45 @@ def update_game(game: str, url: str) -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     PRIVATE_DIR.mkdir(parents=True, exist_ok=True)
 
+    # Jackpot du prochain tirage (absent pour le Keno). Best-effort : un
+    # échec de scraping ne bloque pas la mise à jour des tirages eux-mêmes.
+    jackpot = None
+    if game != "keno":
+        jackpot = fetch_jackpot(game, dt.date.fromisoformat(draws[0]["date"]))
+
     # ---- Économie de crédits Netlify ----
-    # On ne réécrit les fichiers QUE si les tirages ont réellement changé.
-    # Sinon l'horodatage "updated" suffirait à créer un faux changement,
-    # déclenchant un commit et un déploiement inutiles chaque jour.
+    # On ne réécrit les fichiers QUE si les tirages OU le jackpot ont changé.
+    # (Le jackpot seul peut évoluer sans nouveau tirage — cagnotte qui monte
+    # à l'approche du prochain tirage — donc il entre dans la comparaison.)
     public_path = OUT_DIR / f"{game}.json"
-    previous = None
+    previous_draws, previous_jackpot = None, None
     if public_path.exists():
         try:
-            previous = json.loads(public_path.read_text()).get("draws")
+            prev = json.loads(public_path.read_text())
+            previous_draws, previous_jackpot = prev.get("draws"), prev.get("jackpot")
         except (json.JSONDecodeError, OSError):
-            previous = None
+            pass
     new_public = draws if FULL_PUBLIC else draws[:FREE_DRAWS]
-    if previous == new_public:
-        print(f"[{game}] aucun nouveau tirage — fichiers inchangés")
+    if previous_draws == new_public and previous_jackpot == jackpot:
+        print(f"[{game}] aucun changement (tirages et jackpot identiques) — fichiers inchangés")
         return
 
     updated = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
     # Public : fenêtre gratuite uniquement (le paywall est côté serveur, pas en JS).
-    (OUT_DIR / f"{game}.json").write_text(json.dumps({
+    public_payload = {
         "game": game, "updated": updated, "count": len(draws),
         "free_draws": FREE_DRAWS, "draws": new_public,
-    }, ensure_ascii=False, separators=(",", ":")))
+    }
+    if jackpot is not None:
+        public_payload["jackpot"] = jackpot
+    (OUT_DIR / f"{game}.json").write_text(json.dumps(public_payload, ensure_ascii=False, separators=(",", ":")))
     # Privé : historique complet, lisible seulement par /api/premium-data.
     (PRIVATE_DIR / f"{game}-full.json").write_text(json.dumps({
         "game": game, "updated": updated, "count": len(draws), "draws": draws,
     }, ensure_ascii=False, separators=(",", ":")))
     print(f"[{game}] {len(draws)} tirages -> {FREE_DRAWS} publics + complet privé"
-          + (f" ({rejected} lignes rejetées)" if rejected else ""))
+          + (f" ({rejected} lignes rejetées)" if rejected else "")
+          + (f" · jackpot : {jackpot['amount']}" if jackpot else " · jackpot : non trouvé"))
 
 
 def main() -> int:
