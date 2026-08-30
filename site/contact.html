@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Contact — Statirage</title>
+<meta name="description" content="Contactez Statirage : question, suggestion, signalement d'un bug ou demande sur les statistiques Keno, Loto, EuroMillions, EuroDreams.">
+<link rel="canonical" href="https://statirage.fr/contact.html">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#8C2246">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='29' fill='%23F7F3E8' stroke='%23C13A66' stroke-width='5'/%3E%3Cg fill='%23C13A66'%3E%3Crect x='17' y='36' width='6.5' height='12' rx='2'/%3E%3Crect x='26' y='28' width='6.5' height='20' rx='2'/%3E%3Crect x='35' y='32' width='6.5' height='16' rx='2'/%3E%3Crect x='44' y='22' width='6.5' height='26' rx='2'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg1: #8C2246; --bg2: #4C1226;
+    --papier: #F7F3E8; --papier-2: #EFE9DA;
+    --encre: #20261F; --laiton: #C9A227;
+    --accent: #A62B52; --accent-ink: #FFFFFF; --accent-soft: #E5799B;
+    --ligne: #DDD5C2; --muted: #79806F;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: var(--bg2);
+    background-image: radial-gradient(ellipse 130% 65% at 50% -12%, var(--bg1) 0%, var(--bg2) 62%);
+    color: var(--papier);
+    font-family: 'Poppins', -apple-system, sans-serif;
+    font-size: 15.5px; line-height: 1.55;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 26px 24px 70px; }
+
+  .topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; }
+  .logo { width: 40px; height: 40px; flex: none; filter: drop-shadow(0 3px 6px rgba(0,0,0,.3)); }
+  .wordmark { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 24px; color: var(--papier); text-decoration: none; }
+  .wordmark em { font-style: italic; font-weight: 700; color: var(--accent-soft); }
+  .back-link { margin-left: auto; font: 600 13.5px 'Poppins', sans-serif; color: rgba(247,243,232,.75); text-decoration: none; border: 1px solid rgba(247,243,232,.3); border-radius: 999px; padding: 7px 16px; transition: border-color .15s; }
+  .back-link:hover { border-color: var(--laiton); }
+
+  .kicker { font: 600 12px 'Poppins', sans-serif; letter-spacing: 2.5px; text-transform: uppercase; color: var(--accent-soft); margin-bottom: 8px; }
+  h1 { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: clamp(26px, 5vw, 36px); margin-bottom: 12px; }
+  .lede { color: rgba(247,243,232,.78); font-size: 15px; margin-bottom: 32px; max-width: 46ch; }
+
+  .card {
+    background: var(--papier); color: var(--encre);
+    border-radius: 16px; padding: 30px 28px;
+    box-shadow: 0 12px 30px rgba(0,0,0,.35);
+  }
+  label { display: block; font: 600 13px 'Poppins', sans-serif; color: var(--encre); margin-bottom: 6px; }
+  .field { margin-bottom: 18px; }
+  input[type=text], input[type=email], textarea, select {
+    width: 100%; font: 400 15px 'Poppins', sans-serif; color: var(--encre);
+    background: #fff; border: 1px solid var(--ligne); border-radius: 8px;
+    padding: 11px 13px; outline: none; transition: border-color .15s;
+  }
+  input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 140px; font-family: 'Poppins', sans-serif; }
+  .hint { font-size: 12.5px; color: var(--muted); margin-top: 5px; }
+
+  /* honeypot anti-spam — invisible pour un humain */
+  .hp { position: absolute; left: -9999px; top: -9999px; }
+
+  .submit-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 100%; font: 700 15px 'Poppins', sans-serif; letter-spacing: .3px;
+    background: var(--accent); color: var(--accent-ink);
+    border: none; border-radius: 999px; padding: 13px 20px; cursor: pointer;
+    transition: filter .15s;
+  }
+  .submit-btn:hover { filter: brightness(1.08); }
+
+  .direct-mail { margin-top: 22px; font-size: 13.5px; color: rgba(247,243,232,.72); text-align: center; }
+  .direct-mail a { color: var(--accent-soft); }
+
+  .success-box {
+    display: none; background: var(--papier); color: var(--encre);
+    border-radius: 16px; padding: 40px 28px; text-align: center;
+    box-shadow: 0 12px 30px rgba(0,0,0,.35);
+  }
+  .success-box.show { display: block; }
+  .success-box h2 { font-family: 'Poppins', sans-serif; font-weight: 800; margin-bottom: 10px; }
+
+  footer { margin-top: 46px; text-align: center; font-size: 12px; color: rgba(247,243,232,.5); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <svg class="logo" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="#F7F3E8" stroke="#C13A66" stroke-width="5"/><g fill="#C13A66"><rect x="17" y="36" width="6.5" height="12" rx="2"/><rect x="26" y="28" width="6.5" height="20" rx="2"/><rect x="35" y="32" width="6.5" height="16" rx="2"/><rect x="44" y="22" width="6.5" height="26" rx="2"/></g></svg>
+    <a href="/" class="wordmark">Stat<em>irage</em></a>
+    <a href="/" class="back-link">← Retour au site</a>
+  </div>
+
+  <div class="kicker">Contact</div>
+  <h1>Une question, une suggestion ?</h1>
+  <p class="lede">Bug repéré, idée d'amélioration, question sur les statistiques ou tout simplement envie d'échanger : écrivez-moi, je réponds personnellement à chaque message.</p>
+
+  <form name="contact" method="POST" data-netlify="true" netlify-honeypot="societe" id="contactForm" class="card">
+    <input type="hidden" name="form-name" value="contact">
+    <p class="hp">
+      <label>Ne pas remplir<input name="societe"></label>
+    </p>
+
+    <div class="field">
+      <label for="nom">Nom</label>
+      <input type="text" id="nom" name="nom" required autocomplete="name">
+    </div>
+
+    <div class="field">
+      <label for="email">Votre adresse email</label>
+      <input type="email" id="email" name="email" required autocomplete="email">
+      <p class="hint">Pour que je puisse vous répondre.</p>
+    </div>
+
+    <div class="field">
+      <label for="objet">Objet</label>
+      <select id="objet" name="objet" required>
+        <option value="">— Choisir —</option>
+        <option value="Question générale">Question générale</option>
+        <option value="Bug / problème technique">Bug / problème technique</option>
+        <option value="Suggestion d'amélioration">Suggestion d'amélioration</option>
+        <option value="Question sur un abonnement">Question sur un abonnement</option>
+        <option value="Autre">Autre</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="message">Votre message</label>
+      <textarea id="message" name="message" required placeholder="Décrivez votre demande..."></textarea>
+    </div>
+
+    <button type="submit" class="submit-btn">Envoyer le message</button>
+  </form>
+
+  <div class="success-box" id="successBox">
+    <h2>Message envoyé ✓</h2>
+    <p>Merci, votre message m'est bien parvenu. Je vous réponds dès que possible.</p>
+  </div>
+
+  <p class="direct-mail">Vous préférez votre propre messagerie ? Écrivez directement à <a href="mailto:kaspro183@gmail.com">kaspro183@gmail.com</a></p>
+
+  <footer>Statirage — statistiques descriptives, aucune prédiction.</footer>
+</div>
+
+<script>
+  // Envoi en AJAX pour rester sur la page (pas de redirection Netlify par défaut)
+  const form = document.getElementById("contactForm");
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    const data = new FormData(form);
+    fetch("/", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams(data).toString(),
+    })
+      .then(() => {
+        form.style.display = "none";
+        document.getElementById("successBox").classList.add("show");
+      })
+      .catch(() => {
+        alert("L'envoi a échoué, réessayez ou écrivez directement à kaspro183@gmail.com.");
+      });
+  });
+</script>
+</body>
+</html>
