@@ -85,6 +85,12 @@
   .site-tagline { font-size: 12.5px; color: rgba(247,243,232,.7); letter-spacing: .3px; margin-top: -2px; }
   .games { display: flex; gap: 8px; flex-wrap: wrap; }
   #accountBtn.premium { border-color: var(--accent-soft); color: var(--accent-soft); }
+  #contactBtn {
+    text-decoration: none; display: inline-flex; align-items: center;
+    font-size: 15px; padding: 9px 20px;
+    background: var(--accent); border-color: var(--accent); color: var(--accent-ink);
+  }
+  #contactBtn:hover { filter: brightness(1.1); }
   .game-tab {
     font: 600 14px 'Poppins', sans-serif; letter-spacing: .3px;
     border: 1px solid rgba(247,243,232,.35); background: transparent; color: var(--papier);
@@ -612,6 +618,7 @@
         <div class="site-tagline">L'intelligence statistique au service du hasard</div>
       </div>
     </div>
+    <a href="/contact.html" class="game-tab" id="contactBtn" style="order:3">Contact</a>
     <button class="game-tab" id="accountBtn" style="order:2">Mon compte</button>
     <div class="games" role="tablist" style="order:1; margin-left:auto">
       <button class="game-tab active" data-game="keno" role="tab">Keno</button>
