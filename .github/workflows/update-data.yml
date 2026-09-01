@@ -1,81 +1,53 @@
 # Mise à jour automatique des tirages (Keno, EuroMillions, Loto, EuroDreams).
 #
-# DÉCLENCHEMENT : plusieurs tentatives par jour, heure de Paris, toute l'année.
-# Le soir entre ~21h30 et 23h30 (après tous les tirages), plus un rattrapage à
-# 8h le lendemain si les passages du soir ont sauté.
+# DÉCLENCHEMENT : plusieurs tentatives par jour (heures UTC ci-dessous),
+# toute l'année, sans filtre d'heure supplémentaire.
 #
 # POURQUOI PLUSIEURS PASSAGES : les crons GitHub Actions sont souvent retardés,
 # parfois sautés entièrement (surtout juste après un changement de planning).
 # Avec un seul cron, un passage manqué = pas de mise à jour ce jour-là. Avec
 # plusieurs tentatives, si l'une saute, les autres rattrapent.
 #
-# GitHub tourne en UTC et la France change d'heure. On programme des crons UTC
-# qui, selon la saison, tombent dans la plage du soir (ou à 8h), et un garde-fou
-# ne laisse s'exécuter que les passages dont l'heure de Paris réelle est
-# 21, 22, 23 ou 8. Les autres s'arrêtent en quelques secondes.
+# ⚠️ Un ancien garde-fou n'exécutait le script QUE si l'heure de Paris au
+# moment du déclenchement tombait pile sur 21h/22h/23h/8h. Comme les crons
+# GitHub dérivent souvent de 30 min à plusieurs heures, ce filtre bloquait
+# des journées entières de passages sans qu'aucun ne retombe dans la
+# fenêtre. Il est retiré : chaque passage programmé s'exécute réellement.
 #
-# CRÉDITS NETLIFY : le commit (et donc le déploiement) n'a lieu QUE si les
-# données ont réellement changé. Les passages qui ne trouvent aucun nouveau
-# tirage s'arrêtent sans commit -> pas de déploiement, pas de crédit consommé.
-
+# CRÉDITS NETLIFY : c'est CE mécanisme-ci qui protège des déploiements
+# inutiles (pas le filtre d'heure retiré ci-dessus) — le commit (et donc le
+# déploiement) n'a lieu QUE si les données ont réellement changé. Les
+# passages qui ne trouvent aucun nouveau tirage s'arrêtent sans commit ->
+# pas de déploiement, pas de crédit consommé.
 name: Mise à jour des tirages
-
 on:
   schedule:
     - cron: "40 19 * * *"   # Paris : 21h40 (été) / 20h40 (hiver)
     - cron: "30 20 * * *"   # Paris : 22h30 (été) / 21h30 (hiver)
     - cron: "40 20 * * *"   # Paris : 22h40 (été) / 21h40 (hiver)
     - cron: "30 21 * * *"   # Paris : 23h30 (été) / 22h30 (hiver)
-    - cron: "30 22 * * *"   # Paris : 00h30 (été, bloqué) / 23h30 (hiver)
-    - cron: "00 06 * * *"   # Paris : 08h00 (été) / 07h00 (hiver, bloqué)
-    - cron: "00 07 * * *"   # Paris : 09h00 (été, bloqué) / 08h00 (hiver)
+    - cron: "30 22 * * *"   # Paris : 00h30 (été) / 23h30 (hiver)
+    - cron: "00 06 * * *"   # Paris : 08h00 (été) / 07h00 (hiver)
+    - cron: "00 07 * * *"   # Paris : 09h00 (été) / 08h00 (hiver)
   workflow_dispatch: {}     # bouton "Run workflow" pour lancer à la main
-
 permissions:
   contents: write
-
 concurrency:
   group: update-data
   cancel-in-progress: false
-
 jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - name: Ne garder que les passages aux bonnes heures de Paris
-        id: gate
-        run: |
-          HEURE_PARIS=$(TZ=Europe/Paris date +%H)
-          case "$HEURE_PARIS" in
-            21|22|23|08) OK=1 ;;
-            *) OK=0 ;;
-          esac
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "$OK" = "1" ]; then
-            echo "run=true" >> "$GITHUB_OUTPUT"
-            echo "Passage retenu (${HEURE_PARIS}h a Paris)."
-          else
-            echo "run=false" >> "$GITHUB_OUTPUT"
-            echo "Passage hors creneau (${HEURE_PARIS}h a Paris) — on s'arrete."
-          fi
-
       - uses: actions/checkout@v4
-        if: steps.gate.outputs.run == 'true'
-
       - uses: actions/setup-python@v5
-        if: steps.gate.outputs.run == 'true'
         with:
           python-version: "3.12"
-
       - name: Régénérer les JSON de tirages
-        if: steps.gate.outputs.run == 'true'
         run: python tools/update_data.py
-
       - name: Générer les pages SEO par numéro + sitemap
-        if: steps.gate.outputs.run == 'true'
         run: python tools/generate_pages.py
-
       - name: Committer UNIQUEMENT si les données ont changé
-        if: steps.gate.outputs.run == 'true'
         run: |
           git config user.name "tirages-bot"
           git config user.email "actions@users.noreply.github.com"
