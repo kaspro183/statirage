@@ -104,6 +104,19 @@
   #accountBtn::before { display: none; }
   .game-tab:focus-visible, .chip:focus-visible, .toggle button:focus-visible, .btn:focus-visible { outline: 3px solid var(--laiton); outline-offset: 2px; }
 
+  /* ---- Bouton de soutien PayPal, dans la topbar ---- */
+  #supportLink {
+    font: 700 13.5px 'Poppins', sans-serif; letter-spacing: .2px;
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--laiton); color: #241708; border: none;
+    border-radius: 999px; padding: 8px 16px; text-decoration: none;
+    white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,.25);
+    transition: transform .12s, box-shadow .12s;
+  }
+  #supportLink:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.32); }
+  @media (max-width: 780px) { #supportLink .support-long { display: none; } }
+  @media (min-width: 781px) { #supportLink .support-short { display: none; } }
+
   /* ---- Héros : rail du dernier tirage ---- */
   #hero { margin-bottom: 26px; }
   .fact-box {
@@ -590,6 +603,12 @@
       </div>
     </div>
     <button class="game-tab" id="accountBtn" style="order:2">Mon compte</button>
+    <a id="supportLink" href="https://paypal.me/statirage" target="_blank" rel="noopener"
+       style="order:3" title="N'hésitez pas à soutenir Statirage ! Surtout si vous gagnez grâce à lui !">
+      <span aria-hidden="true">💛</span>
+      <span class="support-long">N'hésitez pas à soutenir Statirage&nbsp;! Surtout si vous gagnez grâce à lui&nbsp;!</span>
+      <span class="support-short">Soutenir Statirage</span>
+    </a>
     <div class="games" role="tablist" style="order:1; margin-left:auto">
       <button class="game-tab active" data-game="keno" role="tab">Keno</button>
       <button class="game-tab" data-game="euromillions" role="tab">EuroMillions</button>
