@@ -12,6 +12,12 @@ export default async (req) => {
   if (req.method === "GET") {
     const payload = verifyToken(bearerFrom(req));
     if (!payload) return json({ error: "non connecté" }, 401);
+    // Token émis par /api/redeem-code : pas de compte associé, on fait
+    // confiance à la signature + l'expiration du JWT (déjà vérifiées
+    // ci-dessus par verifyToken), pas besoin de chercher un utilisateur.
+    if (payload.viaCode) {
+      return json({ email: null, premium: true, admin: false, viaCode: true });
+    }
     const user = await users().get(payload.email, { type: "json" });
     if (!user) return json({ error: "compte introuvable" }, 401);
     return json({ email: payload.email, premium: !!user.premium || isAdmin(payload.email), admin: isAdmin(payload.email) });
