@@ -110,6 +110,21 @@
   #accountBtn::before { display: none; }
   .game-tab:focus-visible, .chip:focus-visible, .toggle button:focus-visible, .btn:focus-visible { outline: 3px solid var(--laiton); outline-offset: 2px; }
 
+  /* ---- Bouton de soutien PayPal, sous la tagline ---- */
+  #supportLink {
+    font: 600 12.5px 'Poppins', sans-serif; letter-spacing: .2px;
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-top: 6px;
+    background: transparent; color: var(--papier);
+    border: 1px solid rgba(247,243,232,.35); border-radius: 999px;
+    padding: 4px 12px; text-decoration: none; white-space: nowrap;
+    transition: border-color .15s, background .15s;
+  }
+  #supportLink:hover { border-color: var(--laiton); background: rgba(247,243,232,.06); }
+  #supportLink .paypal-mark { flex: none; }
+  @media (max-width: 560px) { #supportLink .support-long { display: none; } }
+  @media (min-width: 561px) { #supportLink .support-short { display: none; } }
+
   /* ---- Héros : rail du dernier tirage ---- */
   #hero { margin-bottom: 26px; }
   .fact-box {
@@ -616,6 +631,15 @@
       <div>
         <div class="wordmark">Stat<em>irage</em></div>
         <div class="site-tagline">L'intelligence statistique au service du hasard</div>
+        <a id="supportLink" href="https://paypal.me/statirage" target="_blank" rel="noopener"
+           title="N'hésitez pas à soutenir Statirage ! Surtout si vous gagnez grâce à lui !">
+          <svg class="paypal-mark" width="16" height="18" viewBox="0 0 24 28" aria-hidden="true">
+            <path fill="#E5799B" d="M8.6 24.4H4.8c-.6 0-1-.5-1-1.1L6.7 1.1C6.8.5 7.3 0 8 0h8.3c3.8 0 6.4 2.1 6 5.8-.6 5.2-4.1 8-8.7 8h-3.1c-.6 0-1.1.5-1.2 1.1l-.7 4.1v.4z"/>
+            <path fill="var(--papier)" d="M17.6 8.4c-.6 3.6-3.5 5.4-7.3 5.4H8.2c-.6 0-1.1.5-1.2 1.1l-1 6.3-.3 1.8c-.1.5.3 1 .9 1h3.4c.6 0 1-.4 1.1-1l.9-4.9c.1-.6.5-1 1.1-1h.7c3.4 0 6.2-1.6 6.9-5.5.3-1.7.1-3.1-.7-4.1-.3-.3-.7-.7-1.4-1.1z"/>
+          </svg>
+          <span class="support-long">N'hésitez pas à soutenir Statirage&nbsp;! Surtout si vous gagnez grâce à lui&nbsp;!</span>
+          <span class="support-short">Soutenir Statirage</span>
+        </a>
       </div>
     </div>
     <a href="/contact.html" class="game-tab" id="contactBtn" style="order:3">Contact</a>
