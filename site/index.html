@@ -1182,9 +1182,11 @@
         <div class="auth-tabs">
           <button class="chip active" data-auth="login">Connexion</button>
           <button class="chip" data-auth="signup">Créer un compte</button>
+          <button class="chip" data-auth="code">J'ai un code</button>
         </div>
         <label class="modal-label">Email<input type="email" id="authEmail" class="modal-input" autocomplete="email"></label>
         <label class="modal-label">Mot de passe<input type="password" id="authPass" class="modal-input" autocomplete="current-password" minlength="8"></label>
+        <label class="modal-label hidden" id="authCodeWrap">Code premium<input type="text" id="authCode" class="modal-input" placeholder="STAT-XXXX-XXXX" autocomplete="off"></label>
         <div class="modal-err" id="authErr"></div>
         <button class="btn" id="authSubmit">Se connecter</button>
       </div>
@@ -3586,6 +3588,24 @@ async function submitAuth() {
   }
 }
 
+async function submitCode() {
+  $("#authErr").textContent = "";
+  const code = $("#authCode").value.trim();
+  if (!code) { $("#authErr").textContent = "Entre ton code."; return; }
+  try {
+    const data = await api("/api/redeem-code", { method: "POST", body: JSON.stringify({ code }) });
+    session = { token: data.token, email: null, premium: true };
+    writeCookie("st_token", data.token, 30);
+    updateAccountUi();
+    closeModal();
+    loadPremiumData(currentGame);
+  } catch (e) {
+    $("#authErr").textContent = e.status === 404 ? "Code invalide."
+      : e.status === 409 ? "Ce code a déjà été utilisé."
+      : e.message;
+  }
+}
+
 async function goCheckout() {
   if (!session.token) { openModal("auth"); return; }
   try {
@@ -4324,9 +4344,16 @@ document.querySelectorAll("[data-auth]").forEach(b => b.addEventListener("click"
   document.querySelectorAll("[data-auth]").forEach(x => x.classList.remove("active"));
   b.classList.add("active");
   authMode = b.dataset.auth;
-  $("#authSubmit").textContent = authMode === "login" ? "Se connecter" : "Créer mon compte";
+  $("#authErr").textContent = "";
+  const isCode = authMode === "code";
+  $("#authEmail").closest(".modal-label").classList.toggle("hidden", isCode);
+  $("#authPass").closest(".modal-label").classList.toggle("hidden", isCode);
+  $("#authCodeWrap").classList.toggle("hidden", !isCode);
+  $("#authSubmit").textContent =
+    authMode === "login" ? "Se connecter" :
+    authMode === "signup" ? "Créer mon compte" : "Valider le code";
 }));
-$("#authSubmit").addEventListener("click", submitAuth);
+$("#authSubmit").addEventListener("click", () => authMode === "code" ? submitCode() : submitAuth());
 $("#goPremiumBtn").addEventListener("click", goCheckout);
 $("#accUpgrade").addEventListener("click", goCheckout);
 $("#accLogout").addEventListener("click", () => {
