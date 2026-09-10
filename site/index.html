@@ -131,6 +131,7 @@
   }
   #premiumBanner:hover { border-color: var(--laiton); background: rgba(247,243,232,.13); }
   #premiumBanner.hidden { display: none; }
+  #premiumBanner .premium-hint { display: block; margin-top: 4px; font-weight: 400; font-size: 12px; color: rgba(247,243,232,.62); }
   #supportLink {
     font: 600 12.5px 'Poppins', sans-serif; letter-spacing: .2px;
     display: inline-flex; align-items: center; gap: 6px;
@@ -682,12 +683,13 @@
         <div class="balls" id="aiGridBalls"></div>
         <p class="ai-grid-commentary" id="aiGridCommentary"></p>
       </div>
-      <p class="ai-grid-locked" id="aiGridLocked">Réservé aux abonnés Premium — <button class="linklike" id="aiGridUnlockBtn">débloquer</button></p>
+      <p class="ai-grid-locked" id="aiGridLocked">Réservé aux abonnés Premium — <button class="linklike" id="aiGridUnlockBtn">débloquer (4,99&nbsp;€)</button><br><span class="premium-hint">Après paiement, contacte-moi pour recevoir ton code d'accès.</span></p>
     </div>
   </section>
 
   <button id="premiumBanner" type="button">
     💛 Premium à 4,99&nbsp;€/mois — débloque le générateur de grille par IA et l'historique complet
+    <span class="premium-hint">Après paiement, écris-moi via la page Contact en précisant ton email PayPal : tu reçois ton code d'accès sous peu.</span>
   </button>
 
   <section id="hero" class="hidden">
@@ -4396,7 +4398,7 @@ $("#authSubmit").addEventListener("click", () => authMode === "code" ? submitCod
 $("#goPremiumBtn").addEventListener("click", goCheckout);
 $("#accUpgrade").addEventListener("click", goCheckout);
 $("#premiumBanner").addEventListener("click", () =>
-  session.token ? goCheckout() : openModal("auth"));
+  window.open("https://paypal.me/statirage/4.99", "_blank", "noopener"));
 
 function updateAiGridUi() {
   const locked = !session.premium;
@@ -4404,7 +4406,7 @@ function updateAiGridUi() {
   $("#aiGridLocked").classList.toggle("hidden", !locked);
 }
 $("#aiGridUnlockBtn").addEventListener("click", () =>
-  session.token ? goCheckout() : openModal("auth"));
+  window.open("https://paypal.me/statirage/4.99", "_blank", "noopener"));
 $("#aiGridBtn").addEventListener("click", async () => {
   const btn = $("#aiGridBtn");
   btn.disabled = true;
