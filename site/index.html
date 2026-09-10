@@ -110,7 +110,16 @@
   #accountBtn::before { display: none; }
   .game-tab:focus-visible, .chip:focus-visible, .toggle button:focus-visible, .btn:focus-visible { outline: 3px solid var(--laiton); outline-offset: 2px; }
 
-  /* ---- Bouton de soutien PayPal, sous la tagline ---- */
+  /* ---- Bannière Premium / IA, sous la topbar ---- */
+  #premiumBanner {
+    display: block; width: 100%; margin: 0 0 22px; padding: 11px 16px;
+    font: 600 13.5px 'Poppins', sans-serif; letter-spacing: .2px;
+    color: var(--papier); text-align: center; cursor: pointer;
+    background: rgba(247,243,232,.08); border: 1px solid rgba(247,243,232,.22);
+    border-radius: 12px; transition: border-color .15s, background .15s;
+  }
+  #premiumBanner:hover { border-color: var(--laiton); background: rgba(247,243,232,.13); }
+  #premiumBanner.hidden { display: none; }
   #supportLink {
     font: 600 12.5px 'Poppins', sans-serif; letter-spacing: .2px;
     display: inline-flex; align-items: center; gap: 6px;
@@ -643,7 +652,7 @@
       </div>
     </div>
     <a href="/contact.html" class="game-tab" id="contactBtn" style="order:3">Contact</a>
-    <button class="game-tab" id="accountBtn" style="order:2; display:none">Mon compte</button>
+    <button class="game-tab" id="accountBtn" style="order:2">Mon compte</button>
     <div class="games" role="tablist" style="order:1; margin-left:auto">
       <button class="game-tab active" data-game="keno" role="tab">Keno</button>
       <button class="game-tab" data-game="euromillions" role="tab">EuroMillions</button>
@@ -652,6 +661,10 @@
       <button class="game-tab" id="learnTab">Comprendre</button>
     </div>
   </div>
+
+  <button id="premiumBanner" type="button">
+    💛 Premium à 4,99&nbsp;€/mois — débloque le générateur de grille par IA et l'historique complet
+  </button>
 
   <section id="hero" class="hidden">
     <div class="kicker" id="heroKicker"></div>
@@ -3541,6 +3554,7 @@ function updateAccountUi() {
   if (session.premium) { btn.textContent = "Premium ✓"; btn.classList.add("premium"); }
   else if (session.email) { btn.textContent = "Mon compte"; btn.classList.remove("premium"); }
   else { btn.textContent = "Mon compte"; btn.classList.remove("premium"); }
+  $("#premiumBanner").classList.toggle("hidden", !!session.premium);
   applyGates();
 }
 
@@ -4356,6 +4370,8 @@ document.querySelectorAll("[data-auth]").forEach(b => b.addEventListener("click"
 $("#authSubmit").addEventListener("click", () => authMode === "code" ? submitCode() : submitAuth());
 $("#goPremiumBtn").addEventListener("click", goCheckout);
 $("#accUpgrade").addEventListener("click", goCheckout);
+$("#premiumBanner").addEventListener("click", () =>
+  session.token ? goCheckout() : openModal("auth"));
 $("#accLogout").addEventListener("click", () => {
   session = { token: null, email: null, premium: false };
   writeCookie("st_token", "", 0);
