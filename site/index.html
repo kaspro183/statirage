@@ -117,6 +117,7 @@
   }
   .ai-grid-lede { color: rgba(247,243,232,.75); font-size: 13.5px; max-width: 62ch; margin: 4px 0 14px; }
   .ai-grid-result .balls { margin: 10px 0; }
+  .ai-grid-result .balls .ball { color: var(--encre); }
   .ai-grid-commentary { color: rgba(247,243,232,.85); font-size: 14px; max-width: 62ch; margin-top: 6px; }
   .ai-grid-locked { color: rgba(247,243,232,.75); font-size: 13.5px; }
   .linklike { background: none; border: none; padding: 0; color: var(--accent-soft); font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; }
@@ -676,7 +677,7 @@
 
   <section id="aiGridSection">
     <div class="kicker">Grille générée par IA en fonction des statistiques données</div>
-    <p class="ai-grid-lede">Composée en mélangeant les statistiques réelles du site (fréquence récente, écart actuel) — pas un pronostic : chaque tirage reste indépendant et aucune grille n'a plus de chances qu'une autre.</p>
+    <p class="ai-grid-lede">Composée en mélangeant les statistiques réelles du site (fréquence récente, écart actuel).</p>
     <div class="ai-grid-body">
       <button class="btn hidden" id="aiGridBtn">Générer une grille</button>
       <div class="ai-grid-result hidden" id="aiGridResult">
