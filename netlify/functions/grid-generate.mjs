@@ -10,10 +10,10 @@ import { getStore } from "@netlify/blobs";
 import { verifyToken, bearerFrom, json, isAdmin } from "./_lib.mjs";
 
 const GAMES = {
-  keno:         { label: "Keno",         max: 56, drawSize: 16, extraMax: 0,  extraCount: 0 },
-  euromillions: { label: "EuroMillions", max: 50, drawSize: 5,  extraMax: 12, extraCount: 2 },
-  loto:         { label: "Loto",         max: 49, drawSize: 5,  extraMax: 10, extraCount: 1 },
-  eurodreams:   { label: "EuroDreams",   max: 40, drawSize: 6,  extraMax: 5,  extraCount: 1 },
+  keno:         { label: "Keno",         max: 56, drawSize: 16, playSize: 10, extraMax: 0,  extraCount: 0 },
+  euromillions: { label: "EuroMillions", max: 50, drawSize: 5,  playSize: 5,  extraMax: 12, extraCount: 2 },
+  loto:         { label: "Loto",         max: 49, drawSize: 5,  playSize: 5,  extraMax: 10, extraCount: 1 },
+  eurodreams:   { label: "EuroDreams",   max: 40, drawSize: 6,  playSize: 6,  extraMax: 5,  extraCount: 1 },
 };
 
 async function loadDraws(game) {
@@ -138,7 +138,7 @@ export default async (req) => {
 
   const rng = mulberry32((Date.now() ^ Math.floor(Math.random() * 1e9)) | 0);
   const stats = poolStats(draws, g.max, g.extraMax, g.extraCount);
-  const numbers = weightedSample(buildWeights(stats.freq, stats.gap, rng), g.drawSize, rng);
+  const numbers = weightedSample(buildWeights(stats.freq, stats.gap, rng), g.playSize, rng);
   const extras = g.extraCount > 0
     ? weightedSample(buildWeights(stats.extraFreq, stats.extraGap, rng), g.extraCount, rng)
     : [];
