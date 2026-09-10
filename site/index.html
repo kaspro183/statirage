@@ -111,9 +111,15 @@
   .game-tab:focus-visible, .chip:focus-visible, .toggle button:focus-visible, .btn:focus-visible { outline: 3px solid var(--laiton); outline-offset: 2px; }
 
   /* ---- Section "Grille générée par IA", tout en haut de page ---- */
-  #aiGridSection {
+  #aiGridSection, #adminSection {
     background: rgba(247,243,232,.06); border: 1px solid rgba(247,243,232,.18);
     border-radius: 16px; padding: 20px 22px; margin-bottom: 20px;
+  }
+  #adminSection { border-color: rgba(201,162,39,.45); }
+  .admin-code-result { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+  .admin-code-result code {
+    font: 700 17px 'IBM Plex Mono', monospace; letter-spacing: .5px;
+    background: rgba(247,243,232,.12); padding: 8px 14px; border-radius: 8px; color: var(--laiton);
   }
   .ai-grid-lede { color: rgba(247,243,232,.75); font-size: 13.5px; max-width: 62ch; margin: 4px 0 14px; }
   .ai-grid-result .balls { margin: 10px 0; }
@@ -685,6 +691,18 @@
         <p class="ai-grid-commentary" id="aiGridCommentary"></p>
       </div>
       <p class="ai-grid-locked" id="aiGridLocked">Réservé aux abonnés Premium — <button class="linklike" id="aiGridUnlockBtn">débloquer (4,99&nbsp;€)</button><br><span class="premium-hint">Après paiement, contacte-moi pour recevoir ton code d'accès.</span></p>
+    </div>
+  </section>
+
+  <section id="adminSection" class="hidden">
+    <div class="kicker">Admin — générer un code Premium</div>
+    <p class="ai-grid-lede">Génère un code à usage unique, valable 30 jours, à envoyer au client après réception d'un paiement PayPal.</p>
+    <div class="ai-grid-body">
+      <button class="btn" id="adminGenBtn">Générer un code</button>
+      <div class="admin-code-result hidden" id="adminCodeResult">
+        <code id="adminCodeValue"></code>
+        <button class="linklike" id="adminCodeCopyBtn">copier</button>
+      </div>
     </div>
   </section>
 
@@ -3554,7 +3572,7 @@ document.querySelectorAll(".toggle button").forEach(b => b.addEventListener("cli
 
 
 /* ---------- Comptes & Premium ---------- */
-let session = { token: null, email: null, premium: false };
+let session = { token: null, email: null, premium: false, admin: false };
 let authMode = "login";
 
 function readCookie(name) {
@@ -3605,8 +3623,8 @@ async function restoreSession() {
   session.token = token;
   try {
     const me = await api("/api/auth");
-    session.email = me.email; session.premium = me.premium;
-  } catch { session = { token: null, email: null, premium: false }; }
+    session.email = me.email; session.premium = me.premium; session.admin = !!me.admin;
+  } catch { session = { token: null, email: null, premium: false, admin: false }; }
   updateAccountUi();
   if (session.premium) loadPremiumData(currentGame);
 }
@@ -3618,7 +3636,7 @@ async function submitAuth() {
       method: "POST",
       body: JSON.stringify({ action: authMode, email: $("#authEmail").value, password: $("#authPass").value }),
     });
-    session = { token: data.token, email: data.email, premium: data.premium };
+    session = { token: data.token, email: data.email, premium: data.premium, admin: !!data.admin };
     writeCookie("st_token", data.token, 30);
     updateAccountUi();
     if (session.premium) { closeModal(); loadPremiumData(currentGame); }
@@ -3636,7 +3654,7 @@ async function submitCode() {
   if (!code) { $("#authErr").textContent = "Entre ton code."; return; }
   try {
     const data = await api("/api/redeem-code", { method: "POST", body: JSON.stringify({ code }) });
-    session = { token: data.token, email: null, premium: true };
+    session = { token: data.token, email: null, premium: true, admin: false };
     writeCookie("st_token", data.token, 30);
     updateAccountUi();
     closeModal();
@@ -4405,7 +4423,29 @@ function updateAiGridUi() {
   const locked = !session.premium;
   $("#aiGridBtn").classList.toggle("hidden", locked);
   $("#aiGridLocked").classList.toggle("hidden", !locked);
+  $("#adminSection").classList.toggle("hidden", !session.admin);
 }
+$("#adminGenBtn").addEventListener("click", async () => {
+  const btn = $("#adminGenBtn");
+  btn.disabled = true;
+  btn.textContent = "Génération…";
+  try {
+    const data = await api("/api/admin-codes", { method: "POST" });
+    $("#adminCodeValue").textContent = data.code;
+    $("#adminCodeResult").classList.remove("hidden");
+  } catch (e) {
+    alert(e.message || "Échec de la génération.");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Générer un code";
+  }
+});
+$("#adminCodeCopyBtn").addEventListener("click", () => {
+  navigator.clipboard.writeText($("#adminCodeValue").textContent);
+  const b = $("#adminCodeCopyBtn");
+  b.textContent = "copié ✓";
+  setTimeout(() => { b.textContent = "copier"; }, 1500);
+});
 $("#aiGridUnlockBtn").addEventListener("click", () =>
   window.open("https://paypal.me/statirage/4.99", "_blank", "noopener"));
 $("#aiGridBtn").addEventListener("click", async () => {
@@ -4430,7 +4470,7 @@ $("#aiGridBtn").addEventListener("click", async () => {
   }
 });
 $("#accLogout").addEventListener("click", () => {
-  session = { token: null, email: null, premium: false };
+  session = { token: null, email: null, premium: false, admin: false };
   writeCookie("st_token", "", 0);
   updateAccountUi(); closeModal();
   switchGame(currentGame);
