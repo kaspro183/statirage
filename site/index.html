@@ -110,6 +110,17 @@
   #accountBtn::before { display: none; }
   .game-tab:focus-visible, .chip:focus-visible, .toggle button:focus-visible, .btn:focus-visible { outline: 3px solid var(--laiton); outline-offset: 2px; }
 
+  /* ---- Section "Grille générée par IA", tout en haut de page ---- */
+  #aiGridSection {
+    background: rgba(247,243,232,.06); border: 1px solid rgba(247,243,232,.18);
+    border-radius: 16px; padding: 20px 22px; margin-bottom: 20px;
+  }
+  .ai-grid-lede { color: rgba(247,243,232,.75); font-size: 13.5px; max-width: 62ch; margin: 4px 0 14px; }
+  .ai-grid-result .balls { margin: 10px 0; }
+  .ai-grid-commentary { color: rgba(247,243,232,.85); font-size: 14px; max-width: 62ch; margin-top: 6px; }
+  .ai-grid-locked { color: rgba(247,243,232,.75); font-size: 13.5px; }
+  .linklike { background: none; border: none; padding: 0; color: var(--accent-soft); font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; }
+
   /* ---- Bannière Premium / IA, sous la topbar ---- */
   #premiumBanner {
     display: block; width: 100%; margin: 0 0 22px; padding: 11px 16px;
@@ -661,6 +672,19 @@
       <button class="game-tab" id="learnTab">Comprendre</button>
     </div>
   </div>
+
+  <section id="aiGridSection">
+    <div class="kicker">Grille générée par IA en fonction des statistiques données</div>
+    <p class="ai-grid-lede">Composée en mélangeant les statistiques réelles du site (fréquence récente, écart actuel) — pas un pronostic : chaque tirage reste indépendant et aucune grille n'a plus de chances qu'une autre.</p>
+    <div class="ai-grid-body">
+      <button class="btn hidden" id="aiGridBtn">Générer une grille</button>
+      <div class="ai-grid-result hidden" id="aiGridResult">
+        <div class="balls" id="aiGridBalls"></div>
+        <p class="ai-grid-commentary" id="aiGridCommentary"></p>
+      </div>
+      <p class="ai-grid-locked" id="aiGridLocked">Réservé aux abonnés Premium — <button class="linklike" id="aiGridUnlockBtn">débloquer</button></p>
+    </div>
+  </section>
 
   <button id="premiumBanner" type="button">
     💛 Premium à 4,99&nbsp;€/mois — débloque le générateur de grille par IA et l'historique complet
@@ -3555,6 +3579,7 @@ function updateAccountUi() {
   else if (session.email) { btn.textContent = "Mon compte"; btn.classList.remove("premium"); }
   else { btn.textContent = "Mon compte"; btn.classList.remove("premium"); }
   $("#premiumBanner").classList.toggle("hidden", !!session.premium);
+  updateAiGridUi();
   applyGates();
 }
 
@@ -4372,6 +4397,35 @@ $("#goPremiumBtn").addEventListener("click", goCheckout);
 $("#accUpgrade").addEventListener("click", goCheckout);
 $("#premiumBanner").addEventListener("click", () =>
   session.token ? goCheckout() : openModal("auth"));
+
+function updateAiGridUi() {
+  const locked = !session.premium;
+  $("#aiGridBtn").classList.toggle("hidden", locked);
+  $("#aiGridLocked").classList.toggle("hidden", !locked);
+}
+$("#aiGridUnlockBtn").addEventListener("click", () =>
+  session.token ? goCheckout() : openModal("auth"));
+$("#aiGridBtn").addEventListener("click", async () => {
+  const btn = $("#aiGridBtn");
+  btn.disabled = true;
+  btn.textContent = "Génération…";
+  try {
+    const data = await api("/api/grid-generate", {
+      method: "POST", body: JSON.stringify({ game: currentGame === "keno" ? "keno" : currentGame }),
+    });
+    $("#aiGridBalls").innerHTML =
+      data.numbers.map(n => `<span class="ball">${n}</span>`).join("") +
+      (data.extras || []).map(n => `<span class="ball star">${n}</span>`).join("");
+    $("#aiGridCommentary").textContent = data.commentary || "";
+    $("#aiGridResult").classList.remove("hidden");
+  } catch (e) {
+    $("#aiGridCommentary").textContent = "";
+    alert(e.message || "La génération a échoué, réessaie dans un instant.");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Générer une grille";
+  }
+});
 $("#accLogout").addEventListener("click", () => {
   session = { token: null, email: null, premium: false };
   writeCookie("st_token", "", 0);
