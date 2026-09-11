@@ -682,10 +682,10 @@
   </div>
 
   <section id="aiGridSection">
-    <div class="kicker">Grille générée par IA en fonction des statistiques données</div>
-    <p class="ai-grid-lede">Composée en mélangeant les statistiques réelles du site (fréquence récente, écart actuel).</p>
+    <div class="kicker">🤖 IA Statistique — Grille Nouvelle Génération</div>
+    <p class="ai-grid-lede">Croisez la puissance de l'intelligence artificielle avec l'historique complet des tirages.</p>
     <div class="ai-grid-body">
-      <button class="btn hidden" id="aiGridBtn">Générer une grille</button>
+      <button class="btn hidden" id="aiGridBtn">→ Générer avec l'IA</button>
       <div class="ai-grid-result hidden" id="aiGridResult">
         <div class="balls" id="aiGridBalls"></div>
         <p class="ai-grid-commentary" id="aiGridCommentary"></p>
@@ -4466,7 +4466,7 @@ $("#aiGridBtn").addEventListener("click", async () => {
     alert(e.message || "La génération a échoué, réessaie dans un instant.");
   } finally {
     btn.disabled = false;
-    btn.textContent = "Générer une grille";
+    btn.textContent = "→ Générer avec l'IA";
   }
 });
 $("#accLogout").addEventListener("click", () => {
