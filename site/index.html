@@ -124,6 +124,9 @@
   .ai-grid-lede { color: rgba(247,243,232,.75); font-size: 13.5px; max-width: 62ch; margin: 4px 0 14px; }
   .ai-grid-result .balls { margin: 10px 0; }
   .ai-grid-result .balls .ball { color: var(--encre); }
+  .ai-grid-scanning { max-width: 380px; margin-top: 4px; }
+  #aiGridRain { width: 100%; height: 140px; border-radius: 12px; background: #20101A; display: block; }
+  .ai-grid-scanning-label { margin-top: 9px; font-size: 13px; color: rgba(247,243,232,.72); font-family: 'IBM Plex Mono', monospace; text-align: center; }
   .ai-grid-commentary { color: rgba(247,243,232,.85); font-size: 14px; max-width: 62ch; margin-top: 6px; }
   .ai-grid-locked { color: rgba(247,243,232,.75); font-size: 13.5px; }
   .linklike { background: none; border: none; padding: 0; color: var(--accent-soft); font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; }
@@ -686,9 +689,12 @@
     <p class="ai-grid-lede">Croisez la puissance de l'intelligence artificielle avec l'historique complet des tirages.</p>
     <div class="ai-grid-body">
       <button class="btn hidden" id="aiGridBtn">→ Générer avec l'IA</button>
+      <div class="ai-grid-scanning hidden" id="aiGridScanning">
+        <canvas id="aiGridRain" width="380" height="140"></canvas>
+        <p class="ai-grid-scanning-label" id="aiGridScanningLabel">Analyse des fréquences</p>
+      </div>
       <div class="ai-grid-result hidden" id="aiGridResult">
         <div class="balls" id="aiGridBalls"></div>
-        <p class="ai-grid-commentary" id="aiGridCommentary"></p>
       </div>
       <p class="ai-grid-locked" id="aiGridLocked">Réservé aux abonnés Premium — <button class="linklike" id="aiGridUnlockBtn">débloquer (4,99&nbsp;€)</button><br><span class="premium-hint">Après paiement, contacte-moi pour recevoir ton code d'accès.</span></p>
     </div>
@@ -4450,21 +4456,71 @@ $("#aiGridUnlockBtn").addEventListener("click", () =>
   window.open("https://paypal.me/statirage/4.99", "_blank", "noopener"));
 $("#aiGridBtn").addEventListener("click", async () => {
   const btn = $("#aiGridBtn");
-  btn.disabled = true;
-  btn.textContent = "Génération…";
+  const scanning = $("#aiGridScanning");
+  const label = $("#aiGridScanningLabel");
+  const canvas = $("#aiGridRain");
+  const ctx = canvas.getContext("2d");
+  const messages = [
+    "Analyse des fréquences",
+    "Analyse algorithmique des précédents tirages",
+    "Calcul des écarts actuels",
+    "Mélange pondéré des statistiques",
+    "Tirage sans remise en cours",
+    "Composition de la grille",
+  ];
+
+  btn.classList.add("hidden");
+  scanning.classList.remove("hidden");
+  $("#aiGridResult").classList.add("hidden");
+
+  // Pluie de chiffres façon Matrix, dans les couleurs du site.
+  const cols = Math.floor(canvas.width / 16);
+  const drops = Array.from({ length: cols }, () => Math.random() * -20);
+  ctx.fillStyle = "#20101A";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const rainTick = () => {
+    ctx.fillStyle = "rgba(32,16,26,0.18)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    for (let i = 0; i < cols; i++) {
+      const c = Math.floor(Math.random() * 10);
+      const x = i * 16, y = drops[i] * 16;
+      ctx.font = "bold 14px 'IBM Plex Mono', monospace";
+      ctx.fillStyle = "#F7F3E8"; ctx.fillText(c, x, y);
+      ctx.fillStyle = "#E5799B"; ctx.fillText(c, x, y - 16);
+      if (y > canvas.height && Math.random() > 0.975) drops[i] = 0;
+      drops[i]++;
+    }
+  };
+  const rainCycle = setInterval(rainTick, 60);
+
+  let mi = 0;
+  label.textContent = messages[0];
+  const textCycle = setInterval(() => {
+    mi = (mi + 1) % messages.length;
+    label.textContent = messages[mi];
+  }, 1100);
+
+  const minDelay = 5000 + Math.random() * 5000; // 5 à 10s, aléatoire
+  const wait = new Promise(r => setTimeout(r, minDelay));
   try {
-    const data = await api("/api/grid-generate", {
-      method: "POST", body: JSON.stringify({ game: currentGame === "keno" ? "keno" : currentGame }),
-    });
+    const [data] = await Promise.all([
+      api("/api/grid-generate", {
+        method: "POST", body: JSON.stringify({ game: currentGame === "keno" ? "keno" : currentGame }),
+      }),
+      wait,
+    ]);
     $("#aiGridBalls").innerHTML =
       data.numbers.map(n => `<span class="ball">${n}</span>`).join("") +
       (data.extras || []).map(n => `<span class="ball star">${n}</span>`).join("");
-    $("#aiGridCommentary").textContent = data.commentary || "";
     $("#aiGridResult").classList.remove("hidden");
   } catch (e) {
-    $("#aiGridCommentary").textContent = "";
+    await wait;
     alert(e.message || "La génération a échoué, réessaie dans un instant.");
   } finally {
+    clearInterval(textCycle);
+    clearInterval(rainCycle);
+    scanning.classList.add("hidden");
+    btn.classList.remove("hidden");
     btn.disabled = false;
     btn.textContent = "→ Générer avec l'IA";
   }
