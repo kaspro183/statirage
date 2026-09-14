@@ -126,6 +126,10 @@
   .ai-grid-result .balls .ball { color: var(--encre); }
   .ai-grid-scanning { max-width: 380px; margin-top: 4px; }
   #aiGridRain { width: 100%; height: 140px; border-radius: 12px; background: #20101A; display: block; }
+  @media (min-width: 781px) {
+    .ai-grid-scanning { max-width: none; }
+    #aiGridRain { height: 190px; }
+  }
   .ai-grid-scanning-label { margin-top: 9px; font-size: 13px; color: rgba(247,243,232,.72); font-family: 'IBM Plex Mono', monospace; text-align: center; }
   .ai-grid-commentary { color: rgba(247,243,232,.85); font-size: 14px; max-width: 62ch; margin-top: 6px; }
   .ai-grid-locked { color: rgba(247,243,232,.75); font-size: 13.5px; }
@@ -4474,6 +4478,11 @@ $("#aiGridBtn").addEventListener("click", async () => {
   $("#aiGridResult").classList.add("hidden");
 
   // Pluie de chiffres façon Matrix, dans les couleurs du site.
+  // Résolution réelle adaptée à la largeur affichée (net sur grand écran,
+  // pas juste étiré en CSS) — recalculée à chaque génération.
+  canvas.width = canvas.clientWidth;
+  canvas.height = canvas.clientHeight;
+
   const cols = Math.floor(canvas.width / 16);
   const drops = Array.from({ length: cols }, () => Math.random() * -20);
   ctx.fillStyle = "#20101A";
