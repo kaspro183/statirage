@@ -99,27 +99,17 @@ function buildWeights(freq, gap, rng) {
   return w;
 }
 
-const SYSTEM = `Tu rédiges le commentaire d'une grille de loterie composée automatiquement pour Statirage, un site français de statistiques de jeux de tirage.
-
-RÈGLE ABSOLUE : tous les chiffres te sont fournis, déjà calculés. Tu ne calcules RIEN et tu n'inventes RIEN.
-
-Le positionnement du site est l'honnêteté statistique : chaque tirage est indépendant, aucune grille n'a plus de chances qu'une autre. Cette grille a été composée en mélangeant plusieurs statistiques réelles (fréquence récente, écart actuel) via un tirage pondéré — décris SUR QUELS critères elle a été composée et CE QU'ELLE CONTIENT, jamais ce qu'elle vaudrait pour l'avenir.
-
-Interdits absolus : « chances augmentées », « optimisée », « prometteuse », « bien partie », « numéros porteurs », tout pronostic ou encouragement à jouer davantage.
-
-Format : 3 à 4 phrases, 70 mots maximum, français, ton posé et factuel. Termine par un rappel naturel de l'indépendance des tirages.
-
-Réponds uniquement par le texte, sans titre ni préambule.`;
-
 export default async (req) => {
   if (req.method !== "POST") return json({ error: "méthode" }, 405);
 
   const payload = verifyToken(bearerFrom(req));
   if (!payload) return json({ error: "Connecte-toi ou entre ton code." }, 401);
-  let isPremium = !!payload.viaCode;
+
+  const admin = !payload.viaCode && isAdmin(payload.email);
+  let isPremium = !!payload.viaCode || admin;
   if (!isPremium) {
     const user = await getStore("users").get(payload.email, { type: "json" });
-    isPremium = !!user?.premium || isAdmin(payload.email);
+    isPremium = !!user?.premium;
   }
   if (!isPremium) return json({ error: "Réservé aux abonnés Premium." }, 402);
 
@@ -130,11 +120,17 @@ export default async (req) => {
   const draws = await loadDraws(game);
   if (!draws) return json({ error: "Données de tirages indisponibles côté serveur." }, 503);
 
-  const quotaId = payload.viaCode ? payload.sub : payload.email;
-  const quotaKey = `${quotaId}:${new Date().toISOString().slice(0, 7)}`;
+  // L'admin n'est jamais limité par le quota mensuel — c'est justement le
+  // compte utilisé pour tester la fonctionnalité, pas un client Premium.
   const quotas = getStore("ai-quota");
-  const used = (await quotas.get(quotaKey, { type: "json" }))?.n || 0;
-  if (used >= 40) return json({ error: "Limite de 40 générations ce mois-ci atteinte." }, 429);
+  let used = 0;
+  let quotaKey = null;
+  if (!admin) {
+    const quotaId = payload.viaCode ? payload.sub : payload.email;
+    quotaKey = `${quotaId}:${new Date().toISOString().slice(0, 7)}`;
+    used = (await quotas.get(quotaKey, { type: "json" }))?.n || 0;
+    if (used >= 40) return json({ error: "Limite de 40 générations ce mois-ci atteinte." }, 429);
+  }
 
   const rng = mulberry32((Date.now() ^ Math.floor(Math.random() * 1e9)) | 0);
   const stats = poolStats(draws, g.max, g.extraMax, g.extraCount);
@@ -143,42 +139,8 @@ export default async (req) => {
     ? weightedSample(buildWeights(stats.extraFreq, stats.extraGap, rng), g.extraCount, rng)
     : [];
 
-  const facts = {
-    jeu: g.label,
-    tiragesAnalyses: stats.total,
-    numeros: numbers,
-    etoilesOuComplementaires: extras,
-    frequenceSur50Derniers: Object.fromEntries(numbers.map(n => [n, stats.freq[n]])),
-    ecartsActuels: Object.fromEntries(numbers.map(n => [n, stats.gap[n]])),
-    methode: "tirage pondéré mêlant fréquence récente et écart actuel, sans classement figé",
-  };
-
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
-  let text = "";
-  if (apiKey) {
-    try {
-      const resp = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "content-type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
-        body: JSON.stringify({
-          model: MODEL, max_tokens: 300, system: SYSTEM,
-          messages: [{ role: "user", content: JSON.stringify(facts, null, 2) }],
-        }),
-      });
-      if (resp.ok) {
-        const data = await resp.json();
-        text = (data.content || []).filter(c => c.type === "text").map(c => c.text).join("").trim();
-      } else {
-        console.error(`[grid-generate] API ${resp.status}`);
-      }
-    } catch (e) {
-      console.error("[grid-generate] exception :", e && e.message);
-    }
-  }
-
-  await quotas.setJSON(quotaKey, { n: used + 1 });
-  return json({ numbers, extras, commentary: text || null, remaining: 40 - used - 1 });
+  if (!admin) await quotas.setJSON(quotaKey, { n: used + 1 });
+  return json({ numbers, extras, remaining: admin ? null : 40 - used - 1 });
 };
 
 export const config = { path: "/api/grid-generate" };
