@@ -39,7 +39,7 @@
     "@type": "Offer",
     "price": "0",
     "priceCurrency": "EUR",
-    "description": "Accès gratuit aux statistiques sur 30 tirages ; abonnement Premium pour l'historique complet."
+    "description": "Accès gratuit à toutes les statistiques, à l'historique complet et au générateur de grille par IA."
   }
 }
 </script>
@@ -111,11 +111,10 @@
   .game-tab:focus-visible, .chip:focus-visible, .toggle button:focus-visible, .btn:focus-visible { outline: 3px solid var(--laiton); outline-offset: 2px; }
 
   /* ---- Section "Grille générée par IA", tout en haut de page ---- */
-  #aiGridSection, #adminSection {
+  #aiGridSection {
     background: rgba(247,243,232,.06); border: 1px solid rgba(247,243,232,.18);
     border-radius: 16px; padding: 20px 22px; margin-bottom: 20px;
   }
-  #adminSection { border-color: rgba(201,162,39,.45); }
   .admin-code-result { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
   .admin-code-result code {
     font: 700 17px 'IBM Plex Mono', monospace; letter-spacing: .5px;
@@ -134,31 +133,6 @@
   .ai-grid-commentary { color: rgba(247,243,232,.85); font-size: 14px; max-width: 62ch; margin-top: 6px; }
   .ai-grid-locked { color: rgba(247,243,232,.75); font-size: 13.5px; }
   .linklike { background: none; border: none; padding: 0; color: var(--accent-soft); font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; }
-
-  /* ---- Bannière Premium / IA, sous la topbar ---- */
-  #premiumBanner {
-    display: block; width: 100%; margin: 0 0 22px; padding: 11px 16px;
-    font: 600 13.5px 'Poppins', sans-serif; letter-spacing: .2px;
-    color: var(--papier); text-align: center; cursor: pointer;
-    background: rgba(247,243,232,.08); border: 1px solid rgba(247,243,232,.22);
-    border-radius: 12px; transition: border-color .15s, background .15s;
-  }
-  #premiumBanner:hover { border-color: var(--laiton); background: rgba(247,243,232,.13); }
-  #premiumBanner.hidden { display: none; }
-  #premiumBanner .premium-hint { display: block; margin-top: 4px; font-weight: 400; font-size: 12px; color: rgba(247,243,232,.62); }
-  #supportLink {
-    font: 600 12.5px 'Poppins', sans-serif; letter-spacing: .2px;
-    display: inline-flex; align-items: center; gap: 6px;
-    margin-top: 6px;
-    background: transparent; color: var(--papier);
-    border: 1px solid rgba(247,243,232,.35); border-radius: 999px;
-    padding: 4px 12px; text-decoration: none; white-space: nowrap;
-    transition: border-color .15s, background .15s;
-  }
-  #supportLink:hover { border-color: var(--laiton); background: rgba(247,243,232,.06); }
-  #supportLink .paypal-mark { flex: none; }
-  @media (max-width: 560px) { #supportLink .support-long { display: none; } }
-  @media (min-width: 561px) { #supportLink .support-short { display: none; } }
 
   /* ---- Héros : rail du dernier tirage ---- */
   #hero { margin-bottom: 26px; }
@@ -666,19 +640,10 @@
       <div>
         <div class="wordmark">Stat<em>irage</em></div>
         <div class="site-tagline">L'intelligence statistique au service du hasard</div>
-        <a id="supportLink" href="https://paypal.me/statirage" target="_blank" rel="noopener"
-           title="N'hésitez pas à soutenir Statirage ! Surtout si vous gagnez grâce à lui !">
-          <svg class="paypal-mark" width="16" height="18" viewBox="0 0 24 28" aria-hidden="true">
-            <path fill="#E5799B" d="M8.6 24.4H4.8c-.6 0-1-.5-1-1.1L6.7 1.1C6.8.5 7.3 0 8 0h8.3c3.8 0 6.4 2.1 6 5.8-.6 5.2-4.1 8-8.7 8h-3.1c-.6 0-1.1.5-1.2 1.1l-.7 4.1v.4z"/>
-            <path fill="var(--papier)" d="M17.6 8.4c-.6 3.6-3.5 5.4-7.3 5.4H8.2c-.6 0-1.1.5-1.2 1.1l-1 6.3-.3 1.8c-.1.5.3 1 .9 1h3.4c.6 0 1-.4 1.1-1l.9-4.9c.1-.6.5-1 1.1-1h.7c3.4 0 6.2-1.6 6.9-5.5.3-1.7.1-3.1-.7-4.1-.3-.3-.7-.7-1.4-1.1z"/>
-          </svg>
-          <span class="support-long">N'hésitez pas à soutenir Statirage&nbsp;! Surtout si vous gagnez grâce à lui&nbsp;!</span>
-          <span class="support-short">Soutenir Statirage</span>
-        </a>
       </div>
     </div>
     <a href="/contact.html" class="game-tab" id="contactBtn" style="order:3">Contact</a>
-    <button class="game-tab" id="accountBtn" style="order:2">Mon compte</button>
+    <button class="game-tab" id="accountBtn" style="order:2; display:none">Mon compte</button>
     <div class="games" role="tablist" style="order:1; margin-left:auto">
       <button class="game-tab active" data-game="keno" role="tab">Keno</button>
       <button class="game-tab" data-game="euromillions" role="tab">EuroMillions</button>
@@ -692,7 +657,7 @@
     <div class="kicker">🤖 IA Statistique — Grille Nouvelle Génération</div>
     <p class="ai-grid-lede">Croisez la puissance de l'intelligence artificielle avec l'historique complet des tirages.</p>
     <div class="ai-grid-body">
-      <button class="btn hidden" id="aiGridBtn">→ Générer avec l'IA</button>
+      <button class="btn" id="aiGridBtn">→ Générer avec l'IA</button>
       <div class="ai-grid-scanning hidden" id="aiGridScanning">
         <canvas id="aiGridRain" width="380" height="140"></canvas>
         <p class="ai-grid-scanning-label" id="aiGridScanningLabel">Analyse des fréquences</p>
@@ -700,26 +665,8 @@
       <div class="ai-grid-result hidden" id="aiGridResult">
         <div class="balls" id="aiGridBalls"></div>
       </div>
-      <p class="ai-grid-locked" id="aiGridLocked">Réservé aux abonnés Premium — <button class="linklike" id="aiGridUnlockBtn">débloquer (4,99&nbsp;€)</button><br><span class="premium-hint">Après paiement, contacte-moi pour recevoir ton code d'accès.</span></p>
     </div>
   </section>
-
-  <section id="adminSection" class="hidden">
-    <div class="kicker">Admin — générer un code Premium</div>
-    <p class="ai-grid-lede">Génère un code à usage unique, valable 30 jours, à envoyer au client après réception d'un paiement PayPal.</p>
-    <div class="ai-grid-body">
-      <button class="btn" id="adminGenBtn">Générer un code</button>
-      <div class="admin-code-result hidden" id="adminCodeResult">
-        <code id="adminCodeValue"></code>
-        <button class="linklike" id="adminCodeCopyBtn">copier</button>
-      </div>
-    </div>
-  </section>
-
-  <button id="premiumBanner" type="button">
-    💛 Premium à 4,99&nbsp;€/mois — débloque le générateur de grille par IA et l'historique complet
-    <span class="premium-hint">Après paiement, écris-moi via la page Contact en précisant ton email PayPal : tu reçois ton code d'accès sous peu.</span>
-  </button>
 
   <section id="hero" class="hidden">
     <div class="kicker" id="heroKicker"></div>
@@ -1242,7 +1189,7 @@
           <li>Systèmes réducteurs, générateur et atelier de grilles</li>
           <li>Export CSV · sans publicité · résiliable en un clic</li>
         </ul>
-        <button class="btn" id="goPremiumBtn">S'abonner — 4,99 €/mois</button>
+        <button class="btn" id="goPremiumBtn" style="display:none"></button>
         <p class="modal-fine">Paiement sécurisé par Stripe · sans engagement, résiliable à tout moment · outil d'analyse descriptive, aucune prédiction de résultats.</p>
       </div>
       <div id="modalAuth">
@@ -1261,7 +1208,7 @@
       <div id="modalAccount" class="hidden">
         <div class="kicker">Mon compte</div>
         <p class="modal-text"><span id="accEmail"></span> — <strong id="accPlan"></strong></p>
-        <button class="btn" id="accUpgrade">Passer Premium — 4,99 €/mois</button>
+        <button class="btn" id="accUpgrade" style="display:none"></button>
         <button class="chip" id="accLogout" style="margin-left:8px">Se déconnecter</button>
       </div>
     </div>
@@ -3609,7 +3556,6 @@ function updateAccountUi() {
   if (session.premium) { btn.textContent = "Premium ✓"; btn.classList.add("premium"); }
   else if (session.email) { btn.textContent = "Mon compte"; btn.classList.remove("premium"); }
   else { btn.textContent = "Mon compte"; btn.classList.remove("premium"); }
-  $("#premiumBanner").classList.toggle("hidden", !!session.premium);
   updateAiGridUi();
   applyGates();
 }
@@ -3676,7 +3622,8 @@ async function submitCode() {
   }
 }
 
-async function goCheckout() {
+async function goCheckout() { return; // paiement désactivé : tout est gratuit
+
   if (!session.token) { openModal("auth"); return; }
   try {
     const { url } = await api("/api/checkout", { method: "POST", body: "{}" });
@@ -4426,38 +4373,8 @@ document.querySelectorAll("[data-auth]").forEach(b => b.addEventListener("click"
 $("#authSubmit").addEventListener("click", () => authMode === "code" ? submitCode() : submitAuth());
 $("#goPremiumBtn").addEventListener("click", goCheckout);
 $("#accUpgrade").addEventListener("click", goCheckout);
-$("#premiumBanner").addEventListener("click", () =>
-  window.open("https://paypal.me/statirage/4.99", "_blank", "noopener"));
 
-function updateAiGridUi() {
-  const locked = !session.premium;
-  $("#aiGridBtn").classList.toggle("hidden", locked);
-  $("#aiGridLocked").classList.toggle("hidden", !locked);
-  $("#adminSection").classList.toggle("hidden", !session.admin);
-}
-$("#adminGenBtn").addEventListener("click", async () => {
-  const btn = $("#adminGenBtn");
-  btn.disabled = true;
-  btn.textContent = "Génération…";
-  try {
-    const data = await api("/api/admin-codes", { method: "POST" });
-    $("#adminCodeValue").textContent = data.code;
-    $("#adminCodeResult").classList.remove("hidden");
-  } catch (e) {
-    alert(e.message || "Échec de la génération.");
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "Générer un code";
-  }
-});
-$("#adminCodeCopyBtn").addEventListener("click", () => {
-  navigator.clipboard.writeText($("#adminCodeValue").textContent);
-  const b = $("#adminCodeCopyBtn");
-  b.textContent = "copié ✓";
-  setTimeout(() => { b.textContent = "copier"; }, 1500);
-});
-$("#aiGridUnlockBtn").addEventListener("click", () =>
-  window.open("https://paypal.me/statirage/4.99", "_blank", "noopener"));
+function updateAiGridUi() {}
 $("#aiGridBtn").addEventListener("click", async () => {
   const btn = $("#aiGridBtn");
   const scanning = $("#aiGridScanning");

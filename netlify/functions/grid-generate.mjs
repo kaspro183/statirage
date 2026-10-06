@@ -1,13 +1,10 @@
 // POST /api/grid-generate  { game }
-// Réservé aux abonnés Premium (compte ou code). Compose une grille en
+// Ouvert à tous. Compose une grille en
 // mélangeant plusieurs statistiques réelles (fréquence récente, écart
 // actuel) via un tirage pondéré — PAS un classement strict des "meilleurs"
-// numéros. Les numéros sont choisis en JS, jamais par le modèle : il ne
-// fait que rédiger un court commentaire factuel sur le résultat, avec les
-// mêmes garde-fous que grid-analysis.mjs (aucun langage de pronostic).
+// numéros. Calcul 100 % JS, sans appel à une API externe.
 import { readFile } from "node:fs/promises";
-import { getStore } from "@netlify/blobs";
-import { verifyToken, bearerFrom, json, isAdmin } from "./_lib.mjs";
+import { json } from "./_lib.mjs";
 
 const GAMES = {
   keno:         { label: "Keno",         max: 56, drawSize: 16, playSize: 10, extraMax: 0,  extraCount: 0 },
@@ -102,35 +99,14 @@ function buildWeights(freq, gap, rng) {
 export default async (req) => {
   if (req.method !== "POST") return json({ error: "méthode" }, 405);
 
-  const payload = verifyToken(bearerFrom(req));
-  if (!payload) return json({ error: "Connecte-toi ou entre ton code." }, 401);
-
-  const admin = !payload.viaCode && isAdmin(payload.email);
-  let isPremium = !!payload.viaCode || admin;
-  if (!isPremium) {
-    const user = await getStore("users").get(payload.email, { type: "json" });
-    isPremium = !!user?.premium;
-  }
-  if (!isPremium) return json({ error: "Réservé aux abonnés Premium." }, 402);
-
+  // Générateur ouvert à tous : aucun compte, aucun abonnement, aucun quota.
+  // Le calcul est purement mathématique (aucun appel d'API payante).
   const { game } = await req.json().catch(() => ({}));
   const g = GAMES[game];
   if (!g) return json({ error: "jeu inconnu" }, 400);
 
   const draws = await loadDraws(game);
   if (!draws) return json({ error: "Données de tirages indisponibles côté serveur." }, 503);
-
-  // L'admin n'est jamais limité par le quota mensuel — c'est justement le
-  // compte utilisé pour tester la fonctionnalité, pas un client Premium.
-  const quotas = getStore("ai-quota");
-  let used = 0;
-  let quotaKey = null;
-  if (!admin) {
-    const quotaId = payload.viaCode ? payload.sub : payload.email;
-    quotaKey = `${quotaId}:${new Date().toISOString().slice(0, 7)}`;
-    used = (await quotas.get(quotaKey, { type: "json" }))?.n || 0;
-    if (used >= 40) return json({ error: "Limite de 40 générations ce mois-ci atteinte." }, 429);
-  }
 
   const rng = mulberry32((Date.now() ^ Math.floor(Math.random() * 1e9)) | 0);
   const stats = poolStats(draws, g.max, g.extraMax, g.extraCount);
@@ -139,8 +115,7 @@ export default async (req) => {
     ? weightedSample(buildWeights(stats.extraFreq, stats.extraGap, rng), g.extraCount, rng)
     : [];
 
-  if (!admin) await quotas.setJSON(quotaKey, { n: used + 1 });
-  return json({ numbers, extras, remaining: admin ? null : 40 - used - 1 });
+  return json({ numbers, extras });
 };
 
 export const config = { path: "/api/grid-generate" };
