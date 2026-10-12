@@ -9,7 +9,7 @@
 <link rel="canonical" href="https://statirage.fr/">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <meta name="author" content="Statirage">
-<meta name="theme-color" content="#8C2246">
+<meta name="theme-color" content="#1A2547">
 
 <!-- Open Graph (aperçu lors du partage sur les réseaux, messageries) -->
 <meta property="og:type" content="website">
@@ -44,33 +44,36 @@
 }
 </script>
 
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='29' fill='%23F7F3E8' stroke='%23C13A66' stroke-width='5'/%3E%3Cg fill='%23C13A66'%3E%3Crect x='17' y='36' width='6.5' height='12' rx='2'/%3E%3Crect x='26' y='28' width='6.5' height='20' rx='2'/%3E%3Crect x='35' y='32' width='6.5' height='16' rx='2'/%3E%3Crect x='44' y='22' width='6.5' height='26' rx='2'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='29' fill='%23F7F3E8' stroke='%23E0B04A' stroke-width='5'/%3E%3Cg fill='%23E0B04A'%3E%3Crect x='17' y='36' width='6.5' height='12' rx='2'/%3E%3Crect x='26' y='28' width='6.5' height='20' rx='2'/%3E%3Crect x='35' y='32' width='6.5' height='16' rx='2'/%3E%3Crect x='44' y='22' width='6.5' height='26' rx='2'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
 <style>
   :root {
-    --bg1: #8C2246;        /* dégradé du fond — couleur du jeu actif */
-    --bg2: #4C1226;
-    --papier:   #F7F3E8;   /* bulletin */
-    --papier-2: #EFE9DA;
-    --encre:    #20261F;
-    --laiton:   #C9A227;   /* machine à boules */
-    --accent:      #A62B52;  /* couleur du jeu actif (Keno par défaut) */
-    --accent-ink:  #FFFFFF;
-    --accent-soft: #E5799B;
-    --hot:      #C8352E;
-    --cold:     #33619E;
-    --ligne:    #DDD5C2;
-    --muted:    #79806F;
+    --bg1: #1F2C54;        /* fond — bleu marine */
+    --bg2: #1A2547;
+    --papier:   #F1EEE6;   /* texte clair sur le fond */
+    --papier-2: #E4DFD3;
+    --encre:    #1A1406;   /* texte foncé (sur l'or ou le clair) */
+    --laiton:   #E0B04A;   /* or */
+    --accent:      #E0B04A;
+    --accent-ink:  #1A1406;
+    --accent-soft: #E9BE5F;
+    --hot:      #F07A68;
+    --cold:     #7FA2F0;
+    --ligne:    #344372;
+    --muted:    #A7B0CA;
+    --carte:    #22305A;   /* fond des cartes */
+    --carte-2:  #2C3B6B;   /* surfaces dans les cartes */
+    --surface:  #FFFFFF;
   }
   * { box-sizing: border-box; margin: 0; }
   body {
     background: var(--bg2);
     background-image: radial-gradient(ellipse 130% 65% at 50% -12%, var(--bg1) 0%, var(--bg2) 62%);
     color: var(--papier);
-    font-family: 'Poppins', -apple-system, sans-serif;
+    font-family: 'Inter', -apple-system, sans-serif;
     font-size: 15.5px; line-height: 1.55;
   }
   .wrap { max-width: 1600px; margin: 0 auto; padding: 26px 56px 70px; }
@@ -80,7 +83,7 @@
   .brand { display: flex; align-items: center; gap: 12px; }
   .logo { width: 46px; height: 46px; flex: none; filter: drop-shadow(0 3px 6px rgba(0,0,0,.3)); }
   @media (max-width: 620px) { .logo { width: 36px; height: 36px; } .brand { gap: 9px; } }
-  .wordmark { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 30px; letter-spacing: .2px; color: var(--papier); }
+  .wordmark { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 30px; letter-spacing: .2px; color: var(--papier); }
   .wordmark em { font-style: italic; font-weight: 700; color: var(--accent-soft); }
   .site-tagline { font-size: 12.5px; color: rgba(247,243,232,.7); letter-spacing: .3px; margin-top: -2px; }
   .games { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -92,7 +95,7 @@
   }
   #contactBtn:hover { filter: brightness(1.1); }
   .game-tab {
-    font: 600 14px 'Poppins', sans-serif; letter-spacing: .3px;
+    font: 600 14px 'Inter', sans-serif; letter-spacing: .3px;
     border: 1px solid rgba(247,243,232,.35); background: transparent; color: var(--papier);
     border-radius: 999px; padding: 8px 18px; cursor: pointer; transition: background .15s, border-color .15s;
   }
@@ -143,10 +146,10 @@
   }
   .fact-box b { color: var(--accent-soft); }
   .kicker {
-    font: 600 12px 'Poppins', sans-serif; letter-spacing: 2.5px; text-transform: uppercase;
+    font: 600 12px 'Inter', sans-serif; letter-spacing: 2.5px; text-transform: uppercase;
     color: var(--accent-soft); margin-bottom: 6px;
   }
-  .hero-date { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: clamp(24px, 4vw, 38px); margin-bottom: 18px; text-transform: capitalize; }
+  .hero-date { font-family: 'Inter', sans-serif; font-weight: 800; font-size: clamp(24px, 4vw, 38px); margin-bottom: 18px; text-transform: capitalize; }
   .rail { position: relative; padding: 14px 6px 20px; }
   .rail::after {
     content: ""; position: absolute; left: 0; right: 0; bottom: 8px; height: 3px;
@@ -194,8 +197,8 @@
     border-top-color: var(--ligne); margin-top: 18px; padding-top: 16px;
   }
   .hero-mynums-light .label { color: var(--muted); }
-  .hero-mynums-light .orb-mini { border-color: var(--ligne); color: var(--muted); background: #fff; }
-  .hero-mynums-light .orb-mini.hit { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .hero-mynums-light .orb-mini { border-color: var(--ligne); color: var(--muted); background: var(--surface); }
+  .hero-mynums-light .orb-mini.hit { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   .hero-mynums-light .score { color: var(--encre); }
   .hero-mynums-light .score b { color: var(--accent); }
   .hero-mynums-light a { color: var(--accent); }
@@ -220,7 +223,7 @@
   }
   #loadError .hint { color: rgba(247,243,232,.65); font-size: 13px; margin-top: 5px; }
   .btn {
-    display: inline-block; margin-top: 12px; font: 600 14px 'Poppins', sans-serif;
+    display: inline-block; margin-top: 12px; font: 600 14px 'Inter', sans-serif;
     background: var(--accent); color: var(--accent-ink); border: none; border-radius: 999px;
     padding: 10px 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,.2);
   }
@@ -230,15 +233,15 @@
 
   /* ---- Contrôles ---- */
   .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 20px 0 16px; }
-  .controls .label { font: 600 11.5px 'Poppins', sans-serif; letter-spacing: 2px; text-transform: uppercase; color: rgba(247,243,232,.6); }
+  .controls .label { font: 600 11.5px 'Inter', sans-serif; letter-spacing: 2px; text-transform: uppercase; color: rgba(247,243,232,.6); }
   .chip {
-    font: 600 13px 'Poppins', sans-serif; border: 1px solid rgba(247,243,232,.35);
+    font: 600 13px 'Inter', sans-serif; border: 1px solid rgba(247,243,232,.35);
     background: transparent; color: var(--papier); border-radius: 999px; padding: 6px 14px; cursor: pointer;
   }
   .chip.active { background: var(--papier); border-color: var(--papier); color: var(--encre); }
   /* Variante pour les panneaux à fond clair : la .chip de base est prévue pour le fond sombre. */
   .panel .chip, .board-card .chip, .picker .chip, .atelier-tools .chip {
-    background: #fff; border-color: var(--ligne); color: var(--encre);
+    background: var(--surface); border-color: var(--ligne); color: var(--encre);
   }
   .panel .chip:hover, .board-card .chip:hover, .picker .chip:hover, .atelier-tools .chip:hover {
     border-color: var(--encre);
@@ -247,7 +250,7 @@
     background: var(--encre); border-color: var(--encre); color: var(--papier);
   }
   .toggle { display: inline-flex; border: 1px solid rgba(247,243,232,.35); border-radius: 10px; overflow: hidden; }
-  .toggle button { font: 600 13px 'Poppins', sans-serif; border: none; background: transparent; color: var(--papier); padding: 7px 14px; cursor: pointer; }
+  .toggle button { font: 600 13px 'Inter', sans-serif; border: none; background: transparent; color: var(--papier); padding: 7px 14px; cursor: pointer; }
   .toggle button.active { background: var(--accent); color: var(--accent-ink); }
 
   /* ---- Cartes bulletin (papier) ---- */
@@ -261,12 +264,12 @@
      qu'elle, sinon l'ombre du bloc du haut retombe sur le bloc du bas. */
   #app > .panel, #app > .board-card, #app > .row { margin-top: 26px; }
   .row > .panel, .row > .board-card { margin-top: 0; }
-  .board-title { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 22px; margin-bottom: 3px; }
+  .board-title { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 22px; margin-bottom: 3px; }
   .board-sub { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
   .portrait-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin-top: 14px; }
   .pt-box { background: var(--papier2); border-radius: 14px; padding: 13px 15px; }
   .pt-h { font-size: 11.5px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; color: var(--muted); margin-bottom: 9px; }
-  .pt-run { display: inline-flex; gap: 3px; background: #fff; border: 1px solid var(--ligne); border-radius: 999px; padding: 3px 8px; margin: 0 5px 5px 0; }
+  .pt-run { display: inline-flex; gap: 3px; background: var(--surface); border: 1px solid var(--ligne); border-radius: 999px; padding: 3px 8px; margin: 0 5px 5px 0; }
   .pt-run span { font: 600 12.5px 'IBM Plex Mono', monospace; }
   .pt-bars { display: flex; align-items: flex-end; gap: 5px; height: 62px; margin-top: 4px; }
   .pt-bar { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; position: relative; }
@@ -281,12 +284,12 @@
   .pt-gauge { height: 6px; background: var(--ligne); border-radius: 999px; margin: 7px 0 4px; position: relative; }
   .pt-gauge i { position: absolute; top: -3px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); transform: translateX(-50%); }
   .pt-mini { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 5px; }
-  .pt-mini span { width: 25px; height: 25px; border-radius: 50%; background: #fff; border: 1px solid var(--ligne);
+  .pt-mini span { width: 25px; height: 25px; border-radius: 50%; background: var(--surface); border: 1px solid var(--ligne);
     display: flex; align-items: center; justify-content: center; font: 600 11px 'IBM Plex Mono', monospace; }
-  .pt-mini span.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .pt-mini span.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   .pt-mini .pt-sep { width: 1px; height: 25px; background: var(--ligne); margin: 0 4px; flex: none; }
-  .pt-mini span.xtra { border-radius: 8px; border-color: var(--accent); color: var(--accent); background: #fff; }
-  .pt-mini span.xtra.on { background: var(--accent); color: #fff; }
+  .pt-mini span.xtra { border-radius: 8px; border-color: var(--accent); color: var(--accent); background: var(--surface); }
+  .pt-mini span.xtra.on { background: var(--accent); color: var(--accent-ink); }
   .pt-big { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
   .pt-big b { font: 700 30px 'IBM Plex Mono', monospace; color: var(--accent); line-height: 1; }
   .pt-big span { color: var(--muted); font-size: 12px; }
@@ -312,7 +315,7 @@
   .cell:hover .tip { display: block; }
 
   .extras-strip { margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--ligne); }
-  .extras-strip .label { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 15px; margin-bottom: 8px; display: block; }
+  .extras-strip .label { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 15px; margin-bottom: 8px; display: block; }
   .extras-row { display: flex; flex-wrap: wrap; gap: 6px; }
   .extra-ball { min-width: 46px; border-radius: 10px; border: 1px solid var(--ligne); padding: 6px; text-align: center; }
   .extra-ball .num { font: 600 14px 'IBM Plex Mono', monospace; display: block; }
@@ -320,10 +323,10 @@
 
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   @media (max-width: 720px) { .row { grid-template-columns: 1fr; gap: 26px; } #board { gap: 5px; } .orb { width: 38px; height: 38px; font-size: 14px; } }
-  .panel h2 { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 19px; margin-bottom: 10px; }
+  .panel h2 { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 19px; margin-bottom: 10px; }
   .panel h2.hot { color: var(--hot); } .panel h2.cold { color: var(--cold); }
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th { text-align: left; font: 600 11px 'Poppins', sans-serif; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); padding: 4px 6px; border-bottom: 1px solid var(--ligne); }
+  th { text-align: left; font: 600 11px 'Inter', sans-serif; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); padding: 4px 6px; border-bottom: 1px solid var(--ligne); }
   td { padding: 6px; border-bottom: 1px solid var(--papier-2); font-family: 'IBM Plex Mono', monospace; font-size: 13.5px; }
   td:first-child { font-weight: 600; }
 
@@ -335,7 +338,7 @@
   .chart-note p { font-size: 14px; line-height: 1.6; margin-bottom: 10px; color: var(--encre); }
   .chart-note b { font-weight: 600; }
   @media (max-width: 820px) { .chart-grid { grid-template-columns: 1fr; } .chart-explain { grid-template-columns: 1fr; gap: 12px; } }
-  .chart-h3 { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 16px; margin-bottom: 6px; }
+  .chart-h3 { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 16px; margin-bottom: 6px; }
   .verdict-panel { margin-top: 16px; }
   .verdict-panel p { font-size: 14.5px; margin-bottom: 12px; }
   .verdict-panel .ok-badge { color: #1E6B45; font-weight: 600; }
@@ -357,7 +360,7 @@
   .record-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin-top: 12px; }
   .record-card { background: var(--papier-2); border-radius: 10px; padding: 12px 14px; }
   .record-card .r-title { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
-  .record-card .r-val { font: 800 22px 'Poppins', sans-serif; color: var(--accent); margin: 3px 0; }
+  .record-card .r-val { font: 800 22px 'Inter', sans-serif; color: var(--accent); margin: 3px 0; }
   .record-card .r-sub { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
   .next-row { display: flex; align-items: baseline; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--papier-2); }
   .next-row .n-game { font-weight: 600; min-width: 100px; }
@@ -374,17 +377,17 @@
   .comp-nums { display: flex; gap: 4px; flex-wrap: wrap; }
   .comp-n { width: 29px; height: 29px; border-radius: 8px; background: var(--papier-2); border: 1.5px solid var(--ligne);
     display: flex; align-items: center; justify-content: center; font: 600 12px 'IBM Plex Mono', monospace; color: var(--encre); transition: all .3s ease; }
-  .comp-n.borne { background: var(--laiton); border-color: var(--laiton); color: #fff; font-weight: 700; }
-  .comp-n.livre { background: #2E8B57; border-color: #2E8B57; color: #fff; }
-  .comp-n.attente { background: #fff; border-style: dashed; opacity: .55; }
+  .comp-n.borne { background: var(--laiton); border-color: var(--laiton); color: var(--accent-ink); font-weight: 700; }
+  .comp-n.livre { background: #2E8B57; border-color: #2E8B57; color: var(--accent-ink); }
+  .comp-n.attente { background: var(--surface); border-style: dashed; opacity: .55; }
   .comp-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin: 12px 0; }
   .comp-legend span { display: inline-flex; align-items: center; gap: 6px; }
   .comp-dot { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
   .comp-dot.borne { background: var(--laiton); }
   .comp-dot.livre { background: #2E8B57; }
-  .comp-dot.attente { background: #fff; border: 1.5px dashed var(--ligne); }
+  .comp-dot.attente { background: var(--surface); border: 1.5px dashed var(--ligne); }
   .comp-serie { margin: 12px 0; padding: 12px 14px; background: var(--papier-2); border-radius: 10px; }
-  .comp-serie-title { font: 600 12.5px 'Poppins', sans-serif; color: var(--encre); margin-bottom: 8px; }
+  .comp-serie-title { font: 600 12.5px 'Inter', sans-serif; color: var(--encre); margin-bottom: 8px; }
   .comp-interval { display: flex; gap: 3px; flex-wrap: wrap; align-items: center; }
   .comp-prog-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin: 10px 0 5px; }
   .comp-prog-bar { height: 9px; border-radius: 6px; background: var(--papier); overflow: hidden; border: 1px solid var(--ligne); }
@@ -401,11 +404,11 @@
   .genadv-range { width: 100%; max-width: 340px; accent-color: var(--accent); height: 22px; cursor: pointer; }
   .genadv-rangepair { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .genadv-rangepair .genadv-range { max-width: 150px; }
-  .genadv-txt { width: 130px; padding: 4px 8px; border: 1.5px solid rgba(140,34,70,.25); border-radius: 8px; font: inherit; font-size: 13px; }
-  .genadv-sel { padding: 4px 8px; border: 1.5px solid rgba(140,34,70,.25); border-radius: 8px; font: inherit; font-size: 13px; background: #fff; }
+  .genadv-txt { width: 130px; padding: 4px 8px; border: 1.5px solid var(--ligne); border-radius: 8px; font: inherit; font-size: 13px; }
+  .genadv-sel { padding: 4px 8px; border: 1.5px solid var(--ligne); border-radius: 8px; font: inherit; font-size: 13px; background: var(--surface); }
   .genadv-result { margin-top: 16px; }
   .genadv-balls { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
-  .genadv-ball { width: 42px; height: 42px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font: 700 16px 'IBM Plex Mono', monospace; }
+  .genadv-ball { width: 42px; height: 42px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: flex; align-items: center; justify-content: center; font: 700 16px 'IBM Plex Mono', monospace; }
   .genadv-fail { color: var(--accent); font-size: 13.5px; margin-top: 12px; }
   .smart-grid .ball { width: 34px; height: 34px; font-size: 14px; }
   .atelier-note { font-size: 13.5px; color: var(--muted); margin-bottom: 14px; max-width: 70ch; }
@@ -415,8 +418,8 @@
   .atelier-panel .chip:hover { border-color: var(--encre); }
   .atelier-panel .label { color: var(--muted); }
   .select {
-    font: 600 13px 'Poppins', sans-serif; color: var(--encre);
-    border: 1px solid var(--ligne); border-radius: 999px; padding: 7px 10px; background: #fff;
+    font: 600 13px 'Inter', sans-serif; color: var(--encre);
+    border: 1px solid var(--ligne); border-radius: 999px; padding: 7px 10px; background: var(--surface);
   }
   .pool-board { display: grid; gap: 5px; margin: 8px 0 4px; grid-template-columns: repeat(var(--pool-cols, 16), 1fr); }
   /* ---- Calendrier de sélection d'un tirage ---- */
@@ -424,19 +427,19 @@
   .cal.open { display: block; }
   .cal-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
   .cal-month { font-weight: 700; font-size: 15px; text-transform: capitalize; }
-  .cal-nav { width: 32px; height: 32px; border-radius: 9px; border: 1px solid var(--ligne); background: #fff;
-    font: 600 14px 'Poppins', sans-serif; color: var(--encre); cursor: pointer; line-height: 1; }
+  .cal-nav { width: 32px; height: 32px; border-radius: 9px; border: 1px solid var(--ligne); background: var(--surface);
+    font: 600 14px 'Inter', sans-serif; color: var(--encre); cursor: pointer; line-height: 1; }
   .cal-nav:hover:not(:disabled) { border-color: var(--encre); }
   .cal-nav:disabled { opacity: .3; cursor: default; }
   .cal-dows { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 5px; }
-  .cal-dows span { text-align: center; font: 600 10.5px 'Poppins', sans-serif; color: var(--muted); text-transform: uppercase; }
+  .cal-dows span { text-align: center; font: 600 10.5px 'Inter', sans-serif; color: var(--muted); text-transform: uppercase; }
   .cal-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-  .cal-day { aspect-ratio: 1; border-radius: 9px; border: 1px solid var(--ligne); background: #fff;
+  .cal-day { aspect-ratio: 1; border-radius: 9px; border: 1px solid var(--ligne); background: var(--surface);
     font: 600 13px 'IBM Plex Mono', monospace; color: var(--encre); cursor: pointer;
     display: flex; align-items: center; justify-content: center; padding: 0; }
   .cal-day:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
   .cal-day:disabled { background: transparent; border-color: transparent; color: var(--muted); opacity: .4; cursor: default; }
-  .cal-day.sel { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .cal-day.sel { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   .cal-day.empty { border: none; background: none; cursor: default; }
   .cal-foot { margin-top: 11px; padding-top: 10px; border-top: 1px solid var(--ligne);
     display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -456,7 +459,7 @@
   .rank-row { display: flex; align-items: center; gap: 10px; padding: 3px 0; border-bottom: 1px solid var(--papier2); }
   .rank-row:last-child { border-bottom: none; }
   .rank-pos { font: 600 11px 'IBM Plex Mono', monospace; color: var(--muted); min-width: 26px; }
-  .rank-n { width: 26px; height: 26px; border-radius: 50%; background: #fff; border: 1px solid var(--ligne);
+  .rank-n { width: 26px; height: 26px; border-radius: 50%; background: var(--surface); border: 1px solid var(--ligne);
     display: flex; align-items: center; justify-content: center; font: 600 12px 'IBM Plex Mono', monospace;
     text-decoration: none; color: var(--encre); flex-shrink: 0; }
   .rank-n:hover { border-color: var(--accent); color: var(--accent); }
@@ -486,7 +489,7 @@
     .picker-board .pool-cell { font-size: 12px; }
   }
   .pool-cell {
-    aspect-ratio: 1; border-radius: 8px; border: 1px solid var(--ligne); background: #fff;
+    aspect-ratio: 1; border-radius: 8px; border: 1px solid var(--ligne); background: var(--surface);
     display: flex; align-items: center; justify-content: center;
     font: 600 14px 'IBM Plex Mono', monospace; color: var(--encre); cursor: pointer;
   }
@@ -498,10 +501,10 @@
   .draw-line { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--papier-2); }
   .mynums-scroll { max-height: 520px; overflow-y: auto; margin-top: 6px; padding-right: 8px; }
   .mynums-scroll::-webkit-scrollbar { width: 8px; }
-  .mynums-scroll::-webkit-scrollbar-thumb { background: rgba(140,34,70,.25); border-radius: 8px; }
+  .mynums-scroll::-webkit-scrollbar-thumb { background: var(--ligne); border-radius: 8px; }
   .draw-date { font: 600 12.5px 'IBM Plex Mono', monospace; color: var(--muted); min-width: 132px; }
   .ball {
-    width: 27px; height: 27px; border-radius: 50%; background: #fff; border: 1px solid var(--ligne);
+    width: 27px; height: 27px; border-radius: 50%; background: var(--surface); border: 1px solid var(--ligne);
     display: inline-flex; align-items: center; justify-content: center; font: 600 11.5px 'IBM Plex Mono', monospace;
   }
   .ball.star { border-color: var(--accent); color: var(--accent); border-radius: 8px; }
@@ -538,7 +541,7 @@
   }
   .modal .kicker { color: var(--hot); }
   .modal-x { position: absolute; top: 12px; right: 14px; border: none; background: none; font-size: 16px; cursor: pointer; color: var(--muted); }
-  .modal-title { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 22px; margin: 4px 0 8px; }
+  .modal-title { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 22px; margin: 4px 0 8px; }
   .modal-text { font-size: 14px; margin-bottom: 10px; }
   .modal-list { margin: 0 0 14px 18px; font-size: 14px; }
   .modal-list li { margin-bottom: 4px; }
@@ -546,10 +549,10 @@
   .auth-tabs { display: flex; gap: 8px; margin: 10px 0 14px; }
   .modal .chip { border-color: var(--ligne); color: var(--encre); }
   .modal .chip.active { background: var(--encre); border-color: var(--encre); color: var(--papier); }
-  .modal-label { display: block; font: 600 12px 'Poppins', sans-serif; color: var(--muted); margin-bottom: 10px; }
+  .modal-label { display: block; font: 600 12px 'Inter', sans-serif; color: var(--muted); margin-bottom: 10px; }
   .modal-input {
-    display: block; width: 100%; margin-top: 4px; font: 500 15px 'Poppins', sans-serif;
-    border: 1px solid var(--ligne); border-radius: 8px; padding: 9px 10px; background: #fff; color: var(--encre);
+    display: block; width: 100%; margin-top: 4px; font: 500 15px 'Inter', sans-serif;
+    border: 1px solid var(--ligne); border-radius: 8px; padding: 9px 10px; background: var(--surface); color: var(--encre);
   }
   .modal-err { color: var(--hot); font-size: 13px; min-height: 18px; margin-bottom: 6px; }
   .locked { position: relative; }
@@ -559,7 +562,7 @@
     align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 20px;
   }
   .lock-cover .btn { margin-top: 0; }
-  .lock-cover strong { font-family: 'Poppins', sans-serif; font-size: 18px; }
+  .lock-cover strong { font-family: 'Inter', sans-serif; font-size: 18px; }
   .chip.gated::after { content: " 🔒"; }
   .learn-p { font-size: 15px; line-height: 1.65; margin-bottom: 12px; max-width: 75ch; }
   .learn-p b { color: var(--encre); }
@@ -617,6 +620,181 @@
     .decade-label { min-width: 46px; font-size: 11px; }
     .decade-val { min-width: 52px; font-size: 11px; }
   }
+
+  /* ================= DESIGN BLEU MARINE ET OR ================= */
+  body { background: var(--bg2); background-image: radial-gradient(ellipse 120% 60% at 60% -10%, var(--bg1) 0%, var(--bg2) 60%); }
+  /* Cartes sombres : on redéfinit localement les variables pour que
+     tout le contenu existant (tableaux, puces, grilles) suive. */
+  .board-card, .panel, .modal {
+    --papier: var(--carte); --papier-2: var(--carte-2); --papier2: var(--carte-2);
+    --encre: #F1EEE6; --ligne: #344372; --muted: #A7B0CA; --surface: var(--carte-2);
+    background: var(--carte); color: #F1EEE6; border: 1px solid var(--ligne);
+    border-radius: 14px; box-shadow: 0 10px 28px rgba(5,10,30,.28);
+  }
+  .panel .chip.active, .board-card .chip.active, .atelier-tools .chip.active, .modal .chip.active {
+    background: #F1EEE6; border-color: #F1EEE6; color: #1A2547;
+  }
+  .pool-cell.sel { background: #F1EEE6; color: #1A2547; border-color: #F1EEE6; }
+  .cell .tip { background: #0F1630; color: #F1EEE6; }
+  .cell:focus-visible { outline-color: #F1EEE6; }
+  table.matrix td.hit-extra { background: #F1EEE6; color: #1A2547; }
+  .verdict-panel .ok-badge { color: #6FD39A; }
+  .learn-p b { color: #F1EEE6; }
+  .modal .kicker { color: var(--accent); }
+  .board-card, .panel, .modal { color-scheme: dark; }
+  .genadv-txt, .panel input[type="text"], .panel input[type="date"], .panel input:not([type]) {
+    background: var(--surface); color: var(--encre); border: 1px solid var(--ligne);
+  }
+  .modal-back { background: rgba(8, 12, 30, .72); }
+
+  /* Numéros : boules rondes et plates */
+  .orb {
+    background: var(--carte-2); color: #F1EEE6; border: 1px solid #3E4F86;
+    box-shadow: 0 3px 8px rgba(5,10,30,.30);
+  }
+  .orb-extra { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); box-shadow: 0 3px 8px rgba(5,10,30,.30); }
+  .rail::after { display: none; }
+  .rail { padding: 6px 0 12px; }
+  .hero-date { font-weight: 800; letter-spacing: -.5px; }
+  .wordmark { font-weight: 800; letter-spacing: -.3px; }
+  .wordmark em { font-style: normal; color: var(--accent); }
+  .kicker { color: var(--accent); }
+  .fact-box { background: var(--carte); border-color: var(--ligne); }
+  .btn { box-shadow: none; border-radius: 10px; font-weight: 700; }
+
+  /* Générateur IA : carte sombre, grille en or */
+  #aiGridSection { background: var(--carte); border: 1px solid var(--ligne); border-radius: 14px; padding: 26px 28px; }
+  #aiGridRain { background: #141D3A; }
+  .ai-grid-result .balls { gap: 10px; }
+  .ai-grid-result .balls .ball {
+    width: 42px; height: 42px; font-size: 15px; font-weight: 700;
+    background: var(--accent); border-color: var(--accent); color: var(--accent-ink);
+  }
+  .ai-grid-result .balls .ball.star { background: #F1EEE6; border-color: #F1EEE6; color: #1A2547; border-radius: 10px; }
+  .ai-profiles { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 6px; }
+  .ai-chip {
+    font: 600 13.5px 'Inter', sans-serif; padding: 8px 14px; border-radius: 999px; cursor: pointer;
+    background: transparent; color: #F1EEE6; border: 1px solid var(--ligne);
+  }
+  .ai-chip:hover { border-color: var(--accent); }
+  .ai-chip.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .ai-profile-desc { color: var(--muted); font-size: 13.5px; margin: 4px 0 14px; max-width: 70ch; }
+  .ai-size { display: inline-flex; align-items: center; gap: 10px; font-size: 14px; color: #F1EEE6; margin: 0 0 14px; }
+  .ai-size.hidden { display: none; }
+  .ai-size select {
+    font: 600 14px 'Inter', sans-serif; padding: 6px 10px; border-radius: 8px;
+    background: var(--carte-2); color: #F1EEE6; border: 1px solid var(--ligne);
+  }
+  .ai-grid-meta { color: var(--muted); font-size: 13px; margin: 14px 0 6px; }
+  .ai-why { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+  .ai-why li { font-size: 13.5px; color: #F1EEE6; display: flex; gap: 10px; align-items: baseline; }
+  .ai-why li b {
+    flex: none; display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 50%; background: var(--carte-2); color: var(--accent); font-size: 13px;
+  }
+  .ai-why li span { color: var(--muted); }
+
+  /* ---- Menu latéral (ordinateur) ---- */
+  .nav-toggle { display: none; }
+  @media (min-width: 901px) {
+    body { padding-left: 248px; }
+    .wrap { max-width: 1380px; padding: 34px 48px 70px; }
+    .topbar {
+      position: fixed; top: 0; left: 0; bottom: 0; width: 248px; z-index: 30;
+      flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 4px;
+      margin: 0; padding: 28px 16px; overflow-y: auto;
+      background: var(--carte); border-right: 1px solid var(--ligne);
+    }
+    .brand { margin: 0 6px 24px; align-items: flex-start; }
+    .logo { width: 38px; height: 38px; }
+    .wordmark { font-size: 27px; line-height: 1.1; }
+    .site-tagline { margin-top: 4px; line-height: 1.35; }
+    .games { flex-direction: column; flex-wrap: nowrap; gap: 4px; margin-left: 0 !important; }
+    .game-tab, #contactBtn {
+      display: flex; align-items: center; width: 100%; text-align: left;
+      border: none; border-radius: 9px; padding: 11px 14px;
+      font: 500 15px 'Inter', sans-serif; letter-spacing: 0;
+      background: transparent; color: var(--muted);
+    }
+    .game-tab:hover, #contactBtn:hover { background: rgba(241,238,230,.06); color: #F1EEE6; filter: none; }
+    .game-tab.active, #learnTab.active {
+      background: rgba(224,176,74,.13); color: #F1EEE6; font-weight: 600;
+      box-shadow: inset 3px 0 0 var(--accent);
+    }
+    .game-tab.active::before { background: var(--dot, transparent); opacity: 1; }
+    #contactBtn { margin-top: 2px; }
+    #learnTab::before, #contactBtn::before { background: transparent; }
+  }
+
+  /* ---- Menu hamburger (téléphone et tablette) ---- */
+  @media (max-width: 900px) {
+    .topbar {
+      position: sticky; top: 0; z-index: 30; margin: -16px -12px 22px; padding: 12px 14px;
+      background: var(--carte); border-bottom: 1px solid var(--ligne);
+      flex-wrap: wrap; gap: 0;
+    }
+    .brand { flex: 1; min-width: 0; }
+    .logo { width: 32px; height: 32px; }
+    .wordmark { font-size: 22px; }
+    .site-tagline { display: none; }
+    .nav-toggle {
+      display: inline-flex; align-items: center; justify-content: center; order: 0;
+      width: 42px; height: 42px; border-radius: 10px; cursor: pointer;
+      background: transparent; color: #F1EEE6; border: 1px solid var(--ligne); font-size: 20px;
+    }
+    .games, #contactBtn { display: none; }
+    .topbar.open .games { display: flex; flex-direction: column; gap: 4px; width: 100%; margin: 12px 0 0 !important; order: 5; }
+    .topbar.open #contactBtn { display: flex; width: 100%; order: 6; }
+    .topbar.open .game-tab, .topbar.open #contactBtn {
+      width: 100%; text-align: left; border: none; border-radius: 9px; padding: 12px 14px;
+      font: 500 15px 'Inter', sans-serif; background: transparent; color: #F1EEE6;
+    }
+    .topbar.open .game-tab.active { background: rgba(224,176,74,.13); box-shadow: inset 3px 0 0 var(--accent); }
+    .topbar.open .game-tab.active::before { background: var(--dot, transparent); opacity: 1; }
+  }
+  @media (max-width: 620px) { .topbar { margin: -14px -10px 18px; } }
+
+  /* ---- Tableau de bord : générateur + repères du moment ---- */
+  .dash { display: grid; grid-template-columns: minmax(0,1fr) 290px; gap: 22px; align-items: start; margin-bottom: 28px; }
+  .dash #aiGridSection { margin: 0; }
+  .side-stats { display: grid; gap: 14px; }
+  .side-stats.hidden { display: none; }
+  .sstat { background: var(--carte); border: 1px solid var(--ligne); border-radius: 12px; padding: 14px 20px 16px; }
+  .sstat .sl { font-size: 13.5px; color: var(--muted); margin-bottom: 4px; }
+  .sstat .sv { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .sstat .sv b { font: 700 30px 'IBM Plex Mono', monospace; color: #F1EEE6; white-space: nowrap; }
+  .sstat .sv span { font-size: 13.5px; color: var(--muted); text-align: right; }
+  .spark { display: flex; align-items: flex-end; gap: 2px; height: 42px; margin-top: 8px; }
+  .spark i { flex: 1; min-width: 1px; background: #56689E; border-radius: 1px; }
+  .spark i.h { background: var(--accent); }
+  .spark i.c { background: var(--cold); }
+  @media (max-width: 1150px) {
+    .dash { grid-template-columns: 1fr; }
+    .side-stats { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  }
+  @media (max-width: 520px) {
+    .side-stats { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .sstat { padding: 12px 14px; }
+    .sstat .sv { flex-direction: column; gap: 0; }
+    .sstat .sv b { font-size: 24px; }
+    .sstat .sv span { text-align: left; font-size: 12.5px; }
+  }
+  .hero-date { text-transform: none; }
+  #hero .kicker::before { content: ""; display: inline-block; width: 4px; height: 13px; background: var(--accent); border-radius: 1px; margin-right: 9px; vertical-align: -1px; }
+  .ai-chip { border-radius: 8px; padding: 9px 18px; }
+  .ai-chip.active { background: #F1EEE6; border-color: #F1EEE6; color: #1A2547; }
+  .ai-run { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 20px; }
+  .ai-run .btn { padding: 14px 42px; font-size: 16px; border-radius: 10px; }
+  .ai-run-info { color: var(--muted); font-size: 15px; }
+  .ai-run-info select {
+    font: 600 14px 'Inter', sans-serif; padding: 4px 8px; border-radius: 7px; margin: 0 2px;
+    background: var(--carte-2); color: #F1EEE6; border: 1px solid var(--ligne); color-scheme: dark;
+  }
+  .ai-why li { font: 400 14px 'IBM Plex Mono', monospace; color: #F1EEE6; display: block; }
+  .ai-why li b { display: inline; width: auto; height: auto; background: none; color: var(--accent); font-weight: 700; font-size: 14px; margin-right: 4px; }
+  .ai-why li span { color: #F1EEE6; }
+  .ai-why { gap: 8px; }
+  @media (max-width: 520px) { .ai-why li { font-size: 12.5px; } #aiGridSection { padding: 20px 18px; } }
 </style>
 </head>
 <body>
@@ -642,6 +820,7 @@
         <div class="site-tagline">L'intelligence statistique au service du hasard</div>
       </div>
     </div>
+    <button class="nav-toggle" id="navToggle" type="button" aria-label="Ouvrir le menu" aria-expanded="false">☰</button>
     <a href="/contact.html" class="game-tab" id="contactBtn" style="order:3">Contact</a>
     <button class="game-tab" id="accountBtn" style="order:2; display:none">Mon compte</button>
     <div class="games" role="tablist" style="order:1; margin-left:auto">
@@ -653,20 +832,6 @@
     </div>
   </div>
 
-  <section id="aiGridSection">
-    <div class="kicker">🤖 IA Statistique — Grille Nouvelle Génération</div>
-    <p class="ai-grid-lede">Croisez la puissance de l'intelligence artificielle avec l'historique complet des tirages.</p>
-    <div class="ai-grid-body">
-      <button class="btn" id="aiGridBtn">→ Générer avec l'IA</button>
-      <div class="ai-grid-scanning hidden" id="aiGridScanning">
-        <canvas id="aiGridRain" width="380" height="140"></canvas>
-        <p class="ai-grid-scanning-label" id="aiGridScanningLabel">Analyse des fréquences</p>
-      </div>
-      <div class="ai-grid-result hidden" id="aiGridResult">
-        <div class="balls" id="aiGridBalls"></div>
-      </div>
-    </div>
-  </section>
 
   <section id="hero" class="hidden">
     <div class="kicker" id="heroKicker"></div>
@@ -676,6 +841,45 @@
     <div class="hero-meta" id="heroMeta"></div>
     <div class="hero-mynums hidden" id="heroMyNums"></div>
   </section>
+
+  <div class="dash" id="dash">
+  <section id="aiGridSection">
+    <div class="kicker">🤖 IA Statistique — Grille Nouvelle Génération</div>
+    <p class="ai-grid-lede">Croisez la puissance de l'intelligence artificielle avec l'historique complet des tirages.</p>
+    <div class="ai-profiles" id="aiProfiles" role="radiogroup" aria-label="Profil de la grille">
+      <button type="button" class="ai-chip" data-profile="equilibre">Équilibré</button>
+      <button type="button" class="ai-chip" data-profile="chauds">Numéros chauds</button>
+      <button type="button" class="ai-chip" data-profile="retards">Retardataires</button>
+      <button type="button" class="ai-chip active" data-profile="historique">Tendances historiques</button>
+    </div>
+    <p class="ai-profile-desc" id="aiProfileDesc"></p>
+    <div class="ai-grid-body">
+      <div class="ai-run">
+        <button class="btn" id="aiGridBtn">Générer avec l'IA</button>
+        <span class="ai-run-info"><span id="aiRunGame">Keno</span><span id="aiSizeWrap"> · <select id="aiSize" aria-label="Nombre de numéros">
+          <option>4</option><option>5</option><option>6</option><option>7</option>
+          <option>8</option><option>9</option><option selected>10</option>
+        </select> numéros</span><span id="aiRunFixed"></span></span>
+      </div>
+      <div class="ai-grid-scanning hidden" id="aiGridScanning">
+        <canvas id="aiGridRain" width="380" height="140"></canvas>
+        <p class="ai-grid-scanning-label" id="aiGridScanningLabel">Analyse des fréquences</p>
+      </div>
+      <div class="ai-grid-result hidden" id="aiGridResult">
+        <div class="balls" id="aiGridBalls"></div>
+        <p class="ai-grid-meta" id="aiGridMeta"></p>
+        <ul class="ai-why" id="aiGridWhy"></ul>
+      </div>
+    </div>
+  </section>
+    <aside class="side-stats hidden" id="sideStats" aria-label="Repères du moment">
+      <div class="sstat"><div class="sl">Plus en retard</div><div class="sv"><b id="ssLate"></b><span id="ssLateSub"></span></div></div>
+      <div class="sstat"><div class="sl">Plus sorti</div><div class="sv"><b id="ssHot"></b><span id="ssHotSub"></span></div></div>
+      <div class="sstat"><div class="sl">Somme du tirage</div><div class="sv"><b id="ssSum"></b><span id="ssSumSub"></span></div></div>
+      <div class="sstat"><div class="sl">Fréquences sur 50 tirages</div><div class="spark" id="ssSpark"></div></div>
+    </aside>
+  </div>
+
 
   <div id="factBox" class="fact-box hidden"></div>
 
@@ -1308,13 +1512,11 @@ const GAMES = {
 
 /* Couleurs par jeu, reprises de l'univers des cartes FDJ :
    Keno framboise, EuroMillions bleu nuit, Loto bleu ciel, EuroDreams violet. */
-const THEMES = {
-  // accent = couleur d'action · bg1/bg2 = dégradé du fond, façon cartes FDJ
-  keno:         { accent: "#C13A66", ink: "#FFFFFF", soft: "#EC8FAD", bg1: "#8C2246", bg2: "#4C1226" },
-  euromillions: { accent: "#3D4FD8", ink: "#FFFFFF", soft: "#93A0F5", bg1: "#16249B", bg2: "#090F4E" },
-  loto:         { accent: "#2FA9DA", ink: "#0F2E3A", soft: "#A7E0F5", bg1: "#2E9AC8", bg2: "#155D80" },
-  eurodreams:   { accent: "#9C4FD6", ink: "#FFFFFF", soft: "#CDA0EE", bg1: "#7433AF", bg2: "#3A1760" },
-};
+const THEMES = (() => {
+  // Design unique bleu marine et or, quel que soit le jeu.
+  const t = { accent: "#E0B04A", ink: "#1A1406", soft: "#E9BE5F", bg1: "#1F2C54", bg2: "#1A2547" };
+  return { keno: t, euromillions: t, loto: t, eurodreams: t };
+})();
 function applyGameTheme(gameKey) {
   const t = THEMES[gameKey];
   const r = document.documentElement.style;
@@ -1432,24 +1634,25 @@ function computeExtraStats(all, win, gameKey) {
 function renderHero() {
   const g = GAMES[currentGame];
   const draws = store[currentGame];
-  if (!draws || !draws.length) { $("#hero").classList.add("hidden"); return; }
+  if (!draws || !draws.length) { $("#hero").classList.add("hidden"); $("#sideStats").classList.add("hidden"); return; }
   const d = draws[0];
-  if (!d || !Array.isArray(d.numbers)) { $("#hero").classList.add("hidden"); return; }
+  if (!d || !Array.isArray(d.numbers)) { $("#hero").classList.add("hidden"); $("#sideStats").classList.add("hidden"); return; }
   const nums = d.numbers, extras = Array.isArray(d.extras) ? d.extras : [];
   const when = d.date.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   $("#heroKicker").textContent = "Dernier tirage " + g.label;
-  $("#heroDate").textContent = when + (d.time && d.time !== "unique" ? " — " + d.time : "");
+  $("#heroDate").textContent = when.charAt(0).toUpperCase() + when.slice(1) + (d.time && d.time !== "unique" ? " — " + d.time : "");
   $("#heroBalls").innerHTML =
     nums.map((n, i) => `<span class="orb" style="animation-delay:${i * 55}ms">${n}</span>`).join("") +
     extras.map((n, i) => `<span class="orb orb-extra" style="animation-delay:${(nums.length + i) * 55}ms">${n}</span>`).join("");
   const oldest = draws[draws.length - 1].date.toLocaleDateString("fr-FR");
-  $("#heroMeta").textContent = draws.length + " tirages en mémoire · depuis le " + oldest;
+  const multTxt = (currentGame === "keno" && (d.mult || "").replace(/[^0-9]/g, "")) ? " · multiplicateur ×" + d.mult.replace(/[^0-9]/g, "") : "";
+  $("#heroMeta").textContent = draws.length + " tirages en mémoire · depuis le " + oldest + multTxt;
 
   // Multiplicateur du tirage (Keno uniquement) : la mise doublée l'active,
   // le coefficient est tiré au sort à chaque tirage. On affiche celui du jour.
   const multEl = $("#heroMult");
   const mult = (d.mult || "").replace(/[^0-9]/g, "");
-  if (currentGame === "keno" && mult) {
+  if (false && mult) {
     multEl.innerHTML = `Multiplicateur du tirage : <b>×${mult}</b> <span>· appliqué aux gains si l'option était jouée</span>`;
     multEl.classList.remove("hidden");
   } else {
@@ -1458,6 +1661,31 @@ function renderHero() {
 
   $("#hero").classList.remove("hidden");
   renderHeroMyNums(d);
+  renderSideStats();
+}
+
+/* ---------- Repères du moment (colonne de droite du tableau de bord) ---------- */
+function renderSideStats() {
+  const g = GAMES[currentGame], draws = store[currentGame], box = $("#sideStats");
+  if (!draws || !draws.length || !g) { box.classList.add("hidden"); return; }
+  const max = g.max, total = draws.length;
+  const gap = new Array(max + 1).fill(total), f50 = new Array(max + 1).fill(0);
+  draws.forEach((d, i) => d.numbers.forEach(n => { if (n <= max && gap[n] === total) gap[n] = i; }));
+  draws.slice(0, 50).forEach(d => d.numbers.forEach(n => { if (n <= max) f50[n]++; }));
+  let late = 1, hot = 1;
+  for (let n = 2; n <= max; n++) { if (gap[n] > gap[late]) late = n; if (f50[n] > f50[hot]) hot = n; }
+  const k = draws[0].numbers.length, sum = draws[0].numbers.reduce((a, b) => a + b, 0);
+  $("#ssLate").textContent = "n° " + late;
+  $("#ssLateSub").textContent = "absent depuis " + gap[late];
+  $("#ssHot").textContent = "n° " + hot;
+  $("#ssHotSub").textContent = f50[hot] + " fois / " + Math.min(50, total);
+  $("#ssSum").textContent = sum;
+  $("#ssSumSub").textContent = "moyenne " + Math.round(k * (max + 1) / 2);
+  const vals = f50.slice(1), sorted = [...vals].sort((a, b) => a - b);
+  const lo = sorted[Math.floor(max * 0.2)], hi = sorted[Math.ceil(max * 0.8) - 1], top = Math.max(...vals) || 1;
+  $("#ssSpark").innerHTML = vals.map((v, i) =>
+    `<i class="${v >= hi && v > lo ? "h" : v <= lo && v < hi ? "c" : ""}" style="height:${Math.max(8, Math.round(v / top * 100))}%" title="n° ${i + 1} : ${v} fois"></i>`).join("");
+  box.classList.remove("hidden");
 }
 
 // Petit résumé "mes numéros" affiché sous le dernier tirage (héros) et sous
@@ -2290,7 +2518,7 @@ const $ = sel => document.querySelector(sel);
 function fmtDate(d) { return d.toLocaleDateString("fr-FR"); }
 function heatColor(t) {
   const lerp = (a, b, k) => Math.round(a + (b - a) * k);
-  const cold = [46, 95, 163], hot = [213, 35, 46], mid = [255, 255, 255];
+  const cold = [86, 124, 222], hot = [234, 104, 88], mid = [52, 67, 114];
   const [from, to, k] = t < 0.5 ? [cold, mid, t * 2] : [mid, hot, (t - 0.5) * 2];
   const c = from.map((v, i) => lerp(v, to[i], k));
   return `rgb(${c[0]},${c[1]},${c[2]})`;
@@ -2329,7 +2557,7 @@ function render() {
     cell.href = `/${currentGame}/numero-${s.n}/`;
     cell.setAttribute("aria-label", `Statistiques détaillées du numéro ${s.n} au ${g.label}`);
     cell.style.background = heatColor(t);
-    cell.style.color = (t < 0.25 || t > 0.78) ? "#fff" : "var(--ink)";
+    cell.style.color = "#F1EEE6";
     cell.innerHTML =
       `<span class="num">${s.n}</span>` +
       `<span class="val">${colorMode === "freq" ? s.freq + "×" : colorMode === "gap" ? "é " + s.currentGap : (adv ? (adv.z[s.n] >= 0 ? "+" : "") + adv.z[s.n].toFixed(1) + "σ" : "")}</span>` +
@@ -2346,7 +2574,7 @@ function render() {
     $("#extrasRow").innerHTML = ex.freq.slice(1).map((f, i) => {
       const t = eMax > eMin ? (f - eMin) / (eMax - eMin) : 0.5;
       const dark = t < 0.25 || t > 0.78;
-      return `<div class="extra-ball" style="background:${heatColor(t)};color:${dark ? "#fff" : "var(--ink)"}">` +
+      return `<div class="extra-ball" style="background:${heatColor(t)};color:#F1EEE6">` +
              `<span class="num">${i + 1}</span><span class="val">${f}×</span></div>`;
     }).join("");
   } else {
@@ -2623,7 +2851,7 @@ async function switchGame(gameKey) {
     return;
   }
   $("#app").classList.add("hidden");
-  $("#hero").classList.add("hidden");
+  $("#hero").classList.add("hidden"); $("#sideStats").classList.add("hidden");
   showLoader("Recherche des tirages " + GAMES[gameKey].label + "…");
   if (session.premium) { await loadPremiumData(gameKey); if (store[gameKey].length) { hideLoader(); pool = []; renderPoolBoard(); return; } }
   const ok = await tryAutoLoad(gameKey);
@@ -2682,7 +2910,18 @@ async function prefetchOthers() {
 }
 
 /* ---------- Événements ---------- */
-document.querySelectorAll(".game-tab").forEach(t => t.addEventListener("click", () => switchGame(t.dataset.game)));
+document.querySelectorAll(".game-tab[data-game]").forEach(t => t.addEventListener("click", () => switchGame(t.dataset.game)));
+// Menu hamburger (téléphone) : ouvre / ferme la liste, se referme au choix d'un onglet.
+$("#navToggle").addEventListener("click", () => {
+  const open = $(".topbar").classList.toggle("open");
+  $("#navToggle").setAttribute("aria-expanded", open);
+  $("#navToggle").textContent = open ? "✕" : "☰";
+});
+document.querySelectorAll(".games .game-tab").forEach(t => t.addEventListener("click", () => {
+  $(".topbar").classList.remove("open");
+  $("#navToggle").setAttribute("aria-expanded", "false");
+  $("#navToggle").textContent = "☰";
+}));
 $("#retryBtn").addEventListener("click", () => switchGame(currentGame));
 
 
@@ -3963,14 +4202,14 @@ function renderMult() {
 
 /* ---------- Graphiques (Chart.js) ---------- */
 let charts = {};
-const INK = "#20261F", MUTED = "#79806F", LIGNE = "#DDD5C2", HOT = "#C8352E", COLD = "#33619E";
+const INK = "#F1EEE6", MUTED = "#A7B0CA", LIGNE = "#344372", HOT = "#F07A68", COLD = "#7FA2F0";
 function killChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
 const chartBase = {
   responsive: true, maintainAspectRatio: false, animation: false,
   plugins: { legend: { display: false } },
   scales: {
-    x: { ticks: { color: MUTED, font: { family: "'IBM Plex Mono', monospace", size: 10 }, maxTicksLimit: 12 }, grid: { color: "rgba(0,0,0,.05)" } },
-    y: { ticks: { color: MUTED, font: { family: "'IBM Plex Mono', monospace", size: 10 } }, grid: { color: "rgba(0,0,0,.07)" } },
+    x: { ticks: { color: MUTED, font: { family: "'IBM Plex Mono', monospace", size: 10 }, maxTicksLimit: 12 }, grid: { color: "rgba(241,238,230,.06)" } },
+    y: { ticks: { color: MUTED, font: { family: "'IBM Plex Mono', monospace", size: 10 } }, grid: { color: "rgba(241,238,230,.08)" } },
   },
 };
 
@@ -4027,7 +4266,7 @@ function renderCharts() {
     data: { datasets: [
       { data: roll, borderColor: HOT, backgroundColor: "transparent", pointRadius: 0, borderWidth: 2, tension: .25 },
       { data: roll.map(p => ({ x: p.x, y: expectedW })), borderColor: MUTED, borderDash: [5, 4], pointRadius: 0, borderWidth: 1.5 },
-      { data: marks, type: "scatter", pointStyle: "triangle", radius: 4, backgroundColor: "#C9A227", borderColor: "#C9A227" },
+      { data: marks, type: "scatter", pointStyle: "triangle", radius: 4, backgroundColor: "#E0B04A", borderColor: "#E0B04A" },
     ]},
     options: { ...chartBase, scales: { ...chartBase.scales,
       x: { ...chartBase.scales.x, type: "linear", title: { display: true, text: "tirages (ancien → récent)", color: MUTED, font: { size: 10 } } } } },
@@ -4043,7 +4282,7 @@ function renderCharts() {
     data: {
       labels: stats.map(st => st.n),
       datasets: [{ data: stats.map(st => st.freq),
-        backgroundColor: stats.map(st => adv && adv.z[st.n] > 1 ? HOT : adv && adv.z[st.n] < -1 ? COLD : "#B9B29C") }],
+        backgroundColor: stats.map(st => adv && adv.z[st.n] > 1 ? HOT : adv && adv.z[st.n] < -1 ? COLD : "#56689E") }],
     },
     options: { ...chartBase, plugins: { legend: { display: false } },
       scales: { ...chartBase.scales, x: { ...chartBase.scales.x, maxTicksLimit: 20 } } },
@@ -4066,7 +4305,7 @@ function renderCharts() {
     type: "bar",
     data: { labels: histo.map((_, b) => Math.round(lo + (b + .5) * step)),
       datasets: [
-        { data: histo, backgroundColor: "rgba(51,97,158,.55)" },
+        { data: histo, backgroundColor: "rgba(127,162,240,.55)" },
         { data: theo, type: "line", borderColor: INK, pointRadius: 0, borderWidth: 2, tension: .35 },
       ]},
     options: chartBase,
@@ -4103,7 +4342,7 @@ function renderCharts() {
     type: "bar",
     data: { labels: labels4,
       datasets: [
-        { data: obs4, backgroundColor: "rgba(51,97,158,.55)" },
+        { data: obs4, backgroundColor: "rgba(127,162,240,.55)" },
         { data: theo4, type: "line", borderColor: INK, pointRadius: 0, borderWidth: 2, tension: .35 },
       ]},
     options: chartBase,
@@ -4343,7 +4582,7 @@ function showLearn() {
   document.querySelectorAll(".game-tab").forEach(t => t.classList.remove("active"));
   $("#learnTab").classList.add("active");
   $("#app").classList.add("hidden");
-  $("#hero").classList.add("hidden");
+  $("#hero").classList.add("hidden"); $("#sideStats").classList.add("hidden");
   $("#factBox") && $("#factBox").classList.add("hidden");
   $("#loader").classList.add("hidden");
   $("#loadError").classList.add("hidden");
@@ -4374,7 +4613,47 @@ $("#authSubmit").addEventListener("click", () => authMode === "code" ? submitCod
 $("#goPremiumBtn").addEventListener("click", goCheckout);
 $("#accUpgrade").addEventListener("click", goCheckout);
 
-function updateAiGridUi() {}
+var AI_PROFILE_DESC = {
+  equilibre: "Mélange léger des numéros récemment sortis et des retardataires, avec une large part de hasard.",
+  chauds: "Privilégie les numéros les plus sortis sur les 50 derniers tirages.",
+  retards: "Privilégie les numéros absents depuis le plus longtemps.",
+  historique: "S'appuie sur tout l'historique : numéros les plus fréquents, paires qui sortent souvent ensemble et numéros qui ont souvent suivi le dernier tirage. Les tirages restent indépendants : aucun profil n'augmente les chances de gain.",
+};
+var aiProfile = "historique";
+function updateAiGridUi() {
+  if (!AI_PROFILE_DESC) return;
+  $("#aiProfileDesc").textContent = AI_PROFILE_DESC[aiProfile];
+  const g = GAMES[currentGame] || {};
+  $("#aiRunGame").textContent = g.label || "";
+  $("#aiSizeWrap").style.display = currentGame === "keno" ? "" : "none";
+  const fixed = { euromillions: " · 5 numéros + 2 étoiles", loto: " · 5 numéros + 1 n° chance", eurodreams: " · 6 numéros + 1 n° Dream" };
+  $("#aiRunFixed").textContent = fixed[currentGame] || "";
+}
+document.querySelectorAll(".ai-chip").forEach(chip => chip.addEventListener("click", () => {
+  aiProfile = chip.dataset.profile;
+  document.querySelectorAll(".ai-chip").forEach(c => c.classList.toggle("active", c === chip));
+  updateAiGridUi();
+}));
+document.querySelectorAll(".game-tab[data-game]").forEach(t =>
+  t.addEventListener("click", () => setTimeout(() => {
+    updateAiGridUi();
+    $("#aiGridResult").classList.add("hidden");
+  }, 0)));
+updateAiGridUi();
+const plural = (n, w) => `${n} ${w}${n > 1 ? "s" : ""}`;
+function aiWhyLine(d, profile) {
+  const gap = d.gap === 0 ? "sorti au dernier tirage" : `absent depuis ${plural(d.gap, "tirage")}`;
+  let txt;
+  if (profile === "historique") {
+    txt = `sorti ${d.all} fois sur ${d.allOf} tirages`;
+    if (d.partner && d.partner.count > 0) txt += ` · sorti avec le ${d.partner.n} à ${d.partner.count} reprise${d.partner.count > 1 ? "s" : ""}`;
+  } else if (profile === "retards") {
+    txt = `${gap} · sorti ${d.recent} fois sur les ${d.recentOf} derniers tirages`;
+  } else {
+    txt = `sorti ${d.recent} fois sur les ${d.recentOf} derniers tirages · ${gap}`;
+  }
+  return `<li><b>${d.n}</b><span>${txt}</span></li>`;
+}
 $("#aiGridBtn").addEventListener("click", async () => {
   const btn = $("#aiGridBtn");
   const scanning = $("#aiGridScanning");
@@ -4402,17 +4681,17 @@ $("#aiGridBtn").addEventListener("click", async () => {
 
   const cols = Math.floor(canvas.width / 16);
   const drops = Array.from({ length: cols }, () => Math.random() * -20);
-  ctx.fillStyle = "#20101A";
+  ctx.fillStyle = "#141D3A";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   const rainTick = () => {
-    ctx.fillStyle = "rgba(32,16,26,0.18)";
+    ctx.fillStyle = "rgba(20,29,58,0.18)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     for (let i = 0; i < cols; i++) {
       const c = Math.floor(Math.random() * 10);
       const x = i * 16, y = drops[i] * 16;
       ctx.font = "bold 14px 'IBM Plex Mono', monospace";
       ctx.fillStyle = "#F7F3E8"; ctx.fillText(c, x, y);
-      ctx.fillStyle = "#E5799B"; ctx.fillText(c, x, y - 16);
+      ctx.fillStyle = "#E0B04A"; ctx.fillText(c, x, y - 16);
       if (y > canvas.height && Math.random() > 0.975) drops[i] = 0;
       drops[i]++;
     }
@@ -4431,13 +4710,19 @@ $("#aiGridBtn").addEventListener("click", async () => {
   try {
     const [data] = await Promise.all([
       api("/api/grid-generate", {
-        method: "POST", body: JSON.stringify({ game: currentGame === "keno" ? "keno" : currentGame }),
+        method: "POST", body: JSON.stringify({
+          game: currentGame, profile: aiProfile,
+          size: currentGame === "keno" ? parseInt($("#aiSize").value, 10) : undefined,
+        }),
       }),
       wait,
     ]);
     $("#aiGridBalls").innerHTML =
       data.numbers.map(n => `<span class="ball">${n}</span>`).join("") +
       (data.extras || []).map(n => `<span class="ball star">${n}</span>`).join("");
+    $("#aiGridMeta").textContent =
+      `Profil « ${data.profileLabel} » · calculé sur ${data.draws} tirages. Pourquoi ces numéros :`;
+    $("#aiGridWhy").innerHTML = (data.details || []).map(d => aiWhyLine(d, data.profile)).join("");
     $("#aiGridResult").classList.remove("hidden");
   } catch (e) {
     await wait;
@@ -4448,7 +4733,7 @@ $("#aiGridBtn").addEventListener("click", async () => {
     scanning.classList.add("hidden");
     btn.classList.remove("hidden");
     btn.disabled = false;
-    btn.textContent = "→ Générer avec l'IA";
+    btn.textContent = "Générer avec l'IA";
   }
 });
 $("#accLogout").addEventListener("click", () => {
