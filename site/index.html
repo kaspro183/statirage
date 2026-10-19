@@ -1777,7 +1777,7 @@ function drawPortrait(gameKey, index = 0) {
       shared: i === index ? -1 : x.numbers.filter(n => nums.includes(n)).length }))
     .filter(x => x.shared >= 0)
     .sort((a, b) => b.shared - a.shared || a.i - b.i)
-    .slice(0, 3);
+    .slice(0, 2);
 
   // 5. Répétitions depuis les tirages précédents
   const rep = [];
