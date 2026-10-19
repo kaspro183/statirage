@@ -754,9 +754,32 @@
   }
   @media (max-width: 620px) { .topbar { margin: -14px -10px 18px; } }
 
+  /* ---- Portrait du tirage : les six lectures sur une ligne ---- */
+  .portrait-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; align-items: stretch; }
+  .portrait-grid .pt-box { min-width: 0; }
+  @media (max-width: 1500px) {
+    .portrait-grid { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 8px; }
+    .portrait-grid .pt-box { flex: 0 0 240px; scroll-snap-align: start; }
+  }
+
+  /* ---- Onglets déroulants ---- */
+  details.fold > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  details.fold > summary::-webkit-details-marker { display: none; }
+  details.fold > summary h2 { margin: 0; }
+  details.fold > summary::after {
+    content: ""; flex: none; width: 10px; height: 10px; margin-right: 6px;
+    border-right: 2px solid var(--accent); border-bottom: 2px solid var(--accent);
+    transform: rotate(45deg); transition: transform .2s;
+  }
+  details.fold[open] > summary::after { transform: rotate(-135deg); }
+  details.fold[open] > summary { margin-bottom: 14px; }
+  details.fold:not([open]) { padding-top: 18px; padding-bottom: 18px; }
+  details.fold > summary:hover h2 { color: var(--accent); }
+
   /* ---- Tableau de bord : générateur + repères du moment ---- */
   .dash { display: grid; grid-template-columns: minmax(0,1fr) 290px; gap: 22px; align-items: start; margin-bottom: 28px; }
   .dash #aiGridSection { margin: 0; }
+  .dash.hidden { display: none; }
   .side-stats { display: grid; gap: 14px; }
   .side-stats.hidden { display: none; }
   .sstat { background: var(--carte); border: 1px solid var(--ligne); border-radius: 12px; padding: 14px 20px 16px; }
@@ -926,12 +949,12 @@
 
     <div class="panel" id="portraitPanel">
       <h2>Le portrait du tirage</h2>
-      <p class="atelier-note">Cinq lectures descriptives du dernier tirage, comparées à l'ensemble de l'historique. Ce sont des constats sur ce qui vient de se produire — ils ne disent rien du tirage suivant.</p>
+      <p class="atelier-note">Six lectures descriptives du dernier tirage, comparées à l'ensemble de l'historique. Ce sont des constats sur ce qui vient de se produire — ils ne disent rien du tirage suivant.</p>
       <div id="portraitBody"></div>
     </div>
 
-    <div class="panel chart-panel">
-      <h2>Les courbes</h2>
+    <details class="panel chart-panel fold">
+      <summary><h2>Les courbes</h2></summary>
 
       <div class="chart-explain">
         <div>
@@ -981,7 +1004,7 @@
           <p id="sharedNote"></p>
         </div>
       </div>
-    </div>
+    </details>
 
     <div class="row">
       <div class="panel">
@@ -1049,37 +1072,8 @@
       </div>
     </div>
 
-    <div class="panel gate-panel">
-      <h2>Le générateur statistique</h2>
-      <p class="atelier-note">Sept profils, sept façons de composer une grille à partir de critères explicites. Aucun ne modifie vos chances — ils structurent le choix.</p>
-      <div class="atelier-tools" id="profileTabs">
-        <button class="chip active" data-profile="balanced">Équilibrée</button>
-        <button class="chip" data-profile="cold">Les retardataires</button>
-        <button class="chip" data-profile="hot">Les habituées</button>
-        <button class="chip" data-profile="contrarian">Anti-consensus</button>
-        <button class="chip" data-profile="markov">Chaîne de Markov</button>
-        <button class="chip" data-profile="signature">Signature</button>
-        <button class="chip" data-profile="random">Au hasard pur</button>
-      </div>
-      <div class="atelier-tools" id="sigRow" style="display:none">
-        <span class="label">Ton mot</span>
-        <input type="text" id="sigWord" class="select" placeholder="ex : Marley" maxlength="32" style="min-width:160px" value="Marley">
-      </div>
-      <div class="atelier-tools" id="kenoSizeRow" style="display:none">
-        <span class="label">Numéros joués</span>
-        <select id="kenoSize" class="select">
-          <option>4</option><option>5</option><option>6</option><option>7</option>
-          <option selected>8</option><option>9</option><option>10</option>
-        </select>
-      </div>
-      <div class="atelier-tools">
-        <button class="btn" type="button" id="smartBtn">Générer la grille</button>
-      </div>
-      <div id="smartBody"></div>
-    </div>
-
-    <div class="panel gate-panel" id="compPanel">
-      <h2>Le système de complémentarité</h2>
+    <details class="panel gate-panel fold" id="compPanel">
+      <summary><h2>Le système de complémentarité</h2></summary>
       <p class="atelier-note">Repère les numéros « répétitifs » d'un couple de deux tirages consécutifs : ils deviennent des <b>bornes</b> qui découpent l'espace en <b>séries</b> (une par intervalle entre bornes voisines). Chaque série se « complète » à mesure que ses numéros internes sortent lors des tirages suivants. Le curseur choisit quel couple observer : le plus récent, ou un couple plus ancien qui a déjà eu le temps de se compléter. Une lecture descriptive — elle ne modifie pas la probabilité du prochain tirage.</p>
       <div class="atelier-tools" id="compDepthRow">
         <span class="label">Profondeur</span>
@@ -1091,10 +1085,10 @@
         <button class="btn" type="button" id="compGridBtn">Générer une grille depuis la série</button>
       </div>
       <div id="compGrid"></div>
-    </div>
+    </details>
 
-    <div class="panel atelier-panel">
-      <h2>Le générateur avancé</h2>
+    <details class="panel atelier-panel fold">
+      <summary><h2>Le générateur avancé</h2></summary>
       <p class="atelier-note">Coche les critères que tu veux imposer à la grille. Les filtres non cochés sont ignorés. <b>Rappel : aucun réglage ne change tes chances de gagner</b> — chaque grille reste aussi probable qu'une autre. Ces filtres servent à composer une grille au profil choisi, rien de plus.</p>
 
       <div class="genadv-grid">
@@ -1169,7 +1163,7 @@
         <button class="btn" type="button" id="genAdvBtn">Générer la grille</button>
       </div>
       <div id="genAdvBody"></div>
-    </div>
+    </details>
 
     <div class="panel atelier-panel gate-panel">
       <h2>L'atelier des grilles</h2>
@@ -2838,6 +2832,7 @@ async function switchGame(gameKey) {
   rankExpanded = false;
   applyGameTheme(gameKey);
   $("#learnPage") && $("#learnPage").classList.add("hidden");
+  $("#dash") && $("#dash").classList.remove("hidden");
   $("#learnTab") && $("#learnTab").classList.remove("active");
   document.querySelectorAll(".game-tab").forEach(t => t.classList.toggle("active", t.dataset.game === gameKey));
   if (store[gameKey].length) {
@@ -3320,6 +3315,7 @@ function renderPortrait() {
 }
 
 function renderSmart() {
+  if (!$("#smartBody")) return;
   if (activeProfile === "signature") {
     const w = $("#sigWord");
     window.__sigWord = (w && w.value.trim()) ? w.value.trim() : "statirage";
@@ -3507,6 +3503,11 @@ document.querySelectorAll("#profileTabs .chip").forEach(c => c.addEventListener(
 $("#sigWord") && $("#sigWord").addEventListener("input", () => { if (activeProfile === "signature") renderSmart(); });
 $("#kenoSize") && $("#kenoSize").addEventListener("change", renderSmart);
 $("#smartBtn") && $("#smartBtn").addEventListener("click", renderSmart);
+
+// Onglets déroulants : redimensionner les graphiques à l'ouverture
+document.querySelectorAll("details.fold").forEach(d => d.addEventListener("toggle", () => {
+  if (d.open && window.Chart && Chart.instances) Object.values(Chart.instances).forEach(c => { try { c.resize(); } catch (e) {} });
+}));
 $("#compGridBtn") && $("#compGridBtn").addEventListener("click", renderComplementGrid);
 $("#compDepth") && $("#compDepth").addEventListener("input", renderComplement);
 
@@ -4587,6 +4588,7 @@ function showLearn() {
   $("#loader").classList.add("hidden");
   $("#loadError").classList.add("hidden");
   setStatus("");
+  $("#dash") && $("#dash").classList.add("hidden");
   $("#learnPage").classList.remove("hidden");
   window.scrollTo(0, 0);
 }
