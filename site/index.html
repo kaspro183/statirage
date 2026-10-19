@@ -358,6 +358,7 @@
   .decade-val { font: 600 12px 'IBM Plex Mono', monospace; min-width: 60px; text-align: right; }
   .smart-grid { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 10px; }
   .record-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin-top: 12px; }
+  @media (min-width: 1500px) { .record-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
   .record-card { background: var(--papier-2); border-radius: 10px; padding: 12px 14px; }
   .record-card .r-title { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
   .record-card .r-val { font: 800 22px 'Inter', sans-serif; color: var(--accent); margin: 3px 0; }
@@ -1041,7 +1042,7 @@
     </div>
 
     <div class="row">
-      <div class="stack">
+      <div class="stack" id="stackLeft">
         <div class="panel">
           <h2>Le contexte des retards</h2>
           <p class="atelier-note">Simulation Monte Carlo : le plus gros retard observé est-il banal ou rare ?</p>
@@ -1082,7 +1083,7 @@
           <div id="btOut"></div>
         </div>
       </div>
-      <div class="stack">
+      <div class="stack" id="stackRight">
         <div class="panel">
           <h2>Probabilités exactes</h2>
           <p class="atelier-note">Loi hypergéométrique — les vraies chances, sans arrondi marketing.</p>
@@ -1097,7 +1098,7 @@
           <tbody id="probaBody"></tbody></table>
           <div id="probaFoot"></div>
         </div>
-        <div class="panel">
+        <div class="panel" id="cmpPanel">
           <h2>Comparateur de numéros</h2>
           <p class="atelier-note">Jusqu'à 8 numéros côte à côte, toutes leurs statistiques en parallèle.</p>
           <div class="atelier-tools">
@@ -2701,7 +2702,25 @@ function render() {
 
   $("#app").classList.remove("hidden");
   renderExtras2();
+  requestAnimationFrame(balanceColumns);
 }
+
+/* Place le comparateur dans la colonne la plus courte, pour que les deux
+   colonnes finissent à peu près à la même hauteur quel que soit le jeu. */
+function balanceColumns() {
+  const L = $("#stackLeft"), R = $("#stackRight"), cmp = $("#cmpPanel");
+  if (!L || !R || !cmp || window.innerWidth <= 720) return;
+  const natural = col => {
+    const kids = [...col.children].filter(e => e !== cmp && e.offsetParent);
+    kids.forEach(e => e.style.flex = "none");
+    const h = kids.reduce((a, e) => a + e.offsetHeight, 0) + 16 * Math.max(kids.length - 1, 0);
+    kids.forEach(e => e.style.flex = "");
+    return h;
+  };
+  const target = natural(L) <= natural(R) ? L : R;
+  if (cmp.parentElement !== target) target.appendChild(cmp);
+}
+window.addEventListener("resize", () => { clearTimeout(window.__balT); window.__balT = setTimeout(balanceColumns, 150); });
 
 /* ---------- Chargement des données ---------- */
 function setStatus(html) { $("#status").innerHTML = html; }
@@ -3297,7 +3316,7 @@ function renderPortrait() {
   const maxDig = Math.max(...p.lastDigits.map(x => x.count), 1);
   const digHtml = `<div class="pt-bars">` + p.lastDigits.map(x =>
     `<div class="pt-bar"><b>${x.count || ""}</b><i style="height:${Math.max(x.count / maxDig * 100, 2)}%;${x.count ? "" : "opacity:.25"}"></i><em>${x.digit}</em></div>`).join("") +
-    `</div><div class="board-sub" style="margin-top:8px">Chiffre des unités des 16 numéros tirés.</div>`;
+    `</div><div class="board-sub" style="margin-top:8px">Chiffre des unités des ${k} numéros tirés.</div>`;
 
   const rankHtml =
     `<div class="pt-line"><b>${p.sum}</b><span>somme du tirage · moyenne historique ${p.avgSum}</span></div>` +
