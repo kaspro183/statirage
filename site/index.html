@@ -765,9 +765,10 @@
 
   /* ---- Colonnes empilées et panneau compact ---- */
   .stack { display: grid; gap: 16px; align-content: start; min-width: 0; }
-  .row:has(> .stack) { align-items: start; }
+  .row { align-items: stretch; }
+  .row > .stack { display: flex; flex-direction: column; gap: 16px; }
+  .row > .stack > .panel:not(.hidden):last-of-type, .row > .stack > .panel:last-child { flex: 1 1 auto; }
   .row > .panel, .stack > .panel { min-width: 0; }
-  .panel-compact { padding: 16px 18px; }
   .panel-compact h2 { font-size: 17px; margin-bottom: 4px; }
   .panel-compact .atelier-note { font-size: 12.5px; margin-bottom: 8px; }
   .panel-compact table { font-size: 12.5px; }
@@ -1080,6 +1081,22 @@
           </div>
           <div id="btOut"></div>
         </div>
+      </div>
+      <div class="stack">
+        <div class="panel">
+          <h2>Probabilités exactes</h2>
+          <p class="atelier-note">Loi hypergéométrique — les vraies chances, sans arrondi marketing.</p>
+          <div class="atelier-tools" id="probaTools">
+            <span class="label">Numéros joués</span>
+            <select id="probaM" class="select"></select>
+            <span class="label probaKeno">Mise</span>
+            <select id="probaMise" class="select probaKeno"><option>1</option><option>2</option><option>3</option><option>5</option><option>10</option></select>
+            <span class="label probaKeno">€</span>
+          </div>
+          <table><thead><tr id="probaHead"><th>Bons numéros</th><th>Probabilité</th><th>Soit 1 chance sur</th></tr></thead>
+          <tbody id="probaBody"></tbody></table>
+          <div id="probaFoot"></div>
+        </div>
         <div class="panel">
           <h2>Comparateur de numéros</h2>
           <p class="atelier-note">Jusqu'à 8 numéros côte à côte, toutes leurs statistiques en parallèle.</p>
@@ -1099,20 +1116,6 @@
           <div class="picker" id="cmpPicker"></div>
           <div id="cmpOut"></div>
         </div>
-      </div>
-      <div class="panel">
-        <h2>Probabilités exactes</h2>
-        <p class="atelier-note">Loi hypergéométrique — les vraies chances, sans arrondi marketing.</p>
-        <div class="atelier-tools" id="probaTools">
-          <span class="label">Numéros joués</span>
-          <select id="probaM" class="select"></select>
-          <span class="label probaKeno">Mise</span>
-          <select id="probaMise" class="select probaKeno"><option>1</option><option>2</option><option>3</option><option>5</option><option>10</option></select>
-          <span class="label probaKeno">€</span>
-        </div>
-        <table><thead><tr id="probaHead"><th>Bons numéros</th><th>Probabilité</th><th>Soit 1 chance sur</th></tr></thead>
-        <tbody id="probaBody"></tbody></table>
-        <div id="probaFoot"></div>
       </div>
     </div>
 
