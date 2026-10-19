@@ -776,8 +776,11 @@
   .panel-compact table { font-size: 12.5px; }
   .panel-compact th, .panel-compact td { padding: 5px 6px; }
   .row .atelier-tools { flex-wrap: wrap; }
-  .stack #btOut, .stack #cmpOut { overflow-x: auto; }
-  .stack .modal-input { max-width: 100% !important; }
+  .row-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  @media (max-width: 1100px) { .row-3 { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 720px) { .row-3 { grid-template-columns: 1fr; } }
+  .row-3 #btOut, .row-3 #cmpOut { overflow-x: auto; }
+  .row-3 .modal-input { max-width: 100% !important; }
   tbody .more-row { display: none; }
   tbody.show-more .more-row { display: table-row; }
   .more-toggle { margin-top: 10px; }
@@ -1042,83 +1045,66 @@
       </div>
     </div>
 
-    <div class="row">
-      <div class="stack" id="stackLeft">
-        <div class="panel">
-          <h2>Le contexte des retards</h2>
-          <p class="atelier-note">Simulation Monte Carlo : le plus gros retard observé est-il banal ou rare ?</p>
-          <div id="gapCtx"></div>
-          <button class="chip" type="button" id="gapCtxBtn">Lancer la simulation (~1 s)</button>
-        </div>
-        <div class="panel panel-compact hidden" id="multPanel">
-          <h2>Multiplicateurs Keno</h2>
-          <p class="atelier-note">Répartition observée des multiplicateurs sur l'historique chargé, comparée aux probabilités officielles FDJ.</p>
-          <table><thead><tr><th>Multiplicateur</th><th>Sorties</th><th>Part observée</th><th>Théorique FDJ</th><th>1 chance sur</th></tr></thead>
-          <tbody id="multBody"></tbody></table>
-          <div id="multFoot"></div>
-        </div>
-        <div class="panel" id="btPanel">
-          <h2>Testeur de grille</h2>
-          <p class="atelier-note">Ta grille face à tout l'historique chargé : combien de fois elle aurait trouvé
-          0, 1, 2… bons numéros, comparé à ce que le hasard prévoit.</p>
-          <div class="atelier-tools">
-            <input type="text" id="btInput" class="modal-input" style="max-width:260px;margin:0" placeholder="Ex : 3 7 12 24 41">
-            <button class="chip" type="button" id="btPick">Choisir sur la grille</button>
-            <button class="chip" type="button" id="btRand">Numéros aléatoires</button>
-            <button class="btn" type="button" id="btRun">Tester</button>
-          </div>
-          <div class="atelier-tools kenoOnly" id="btSizeRow">
-            <span class="label">Numéros joués</span>
-            <select id="btSize" class="select">
-              <option>4</option><option>5</option><option>6</option><option>7</option>
-              <option selected>8</option><option>9</option><option>10</option>
-            </select>
-          </div>
-          <div class="picker" id="btPicker"></div>
-          <div class="atelier-tools kenoOnly">
-            <span class="label">Mise</span>
-            <select id="btMise" class="select"><option>1</option><option>2</option><option>3</option><option>5</option><option>10</option></select>
-            <span class="label">€</span>
-            <label class="chip" style="display:inline-flex;align-items:center;gap:7px;cursor:pointer"><input type="checkbox" id="btMult" style="accent-color:var(--accent)"> <span>Multiplicateur (mise doublée)</span></label>
-          </div>
-          <div id="btOut"></div>
-        </div>
+    <div class="row row-3">
+      <div class="panel">
+        <h2>Le contexte des retards</h2>
+        <p class="atelier-note">Simulation Monte Carlo : le plus gros retard observé est-il banal ou rare ?</p>
+        <div id="gapCtx"></div>
+        <button class="chip" type="button" id="gapCtxBtn">Lancer la simulation (~1 s)</button>
       </div>
-      <div class="stack" id="stackRight">
-        <div class="panel">
-          <h2>Probabilités exactes</h2>
-          <p class="atelier-note">Loi hypergéométrique — les vraies chances, sans arrondi marketing.</p>
-          <div class="atelier-tools" id="probaTools">
-            <span class="label">Numéros joués</span>
-            <select id="probaM" class="select"></select>
-            <span class="label probaKeno">Mise</span>
-            <select id="probaMise" class="select probaKeno"><option>1</option><option>2</option><option>3</option><option>5</option><option>10</option></select>
-            <span class="label probaKeno">€</span>
-          </div>
-          <table><thead><tr id="probaHead"><th>Bons numéros</th><th>Probabilité</th><th>Soit 1 chance sur</th></tr></thead>
-          <tbody id="probaBody"></tbody></table>
-          <div id="probaFoot"></div>
+      <div class="panel" id="btPanel">
+        <h2>Testeur de grille</h2>
+        <p class="atelier-note">Ta grille face à tout l'historique chargé : combien de fois elle aurait trouvé
+        0, 1, 2… bons numéros, comparé à ce que le hasard prévoit.</p>
+        <div class="atelier-tools">
+          <input type="text" id="btInput" class="modal-input" style="max-width:260px;margin:0" placeholder="Ex : 3 7 12 24 41">
+          <button class="chip" type="button" id="btPick">Choisir sur la grille</button>
+          <button class="chip" type="button" id="btRand">Numéros aléatoires</button>
+          <button class="btn" type="button" id="btRun">Tester</button>
         </div>
-        <div class="panel" id="cmpPanel">
-          <h2>Comparateur de numéros</h2>
-          <p class="atelier-note">Jusqu'à 8 numéros côte à côte, toutes leurs statistiques en parallèle.</p>
-          <div class="atelier-tools">
-            <input type="text" id="cmpInput" class="modal-input" style="max-width:260px;margin:0" placeholder="Ex : 7 13 41 56">
-            <button class="chip" type="button" id="cmpPick">Choisir sur la grille</button>
-            <button class="chip" type="button" id="cmpRand">Numéros aléatoires</button>
-            <button class="btn" type="button" id="cmpRun">Comparer</button>
-          </div>
-          <div class="atelier-tools kenoOnly" id="cmpSizeRow">
-            <span class="label">Numéros</span>
-            <select id="cmpSize" class="select">
-              <option>4</option><option>5</option><option>6</option><option>7</option>
-              <option selected>8</option>
-            </select>
-          </div>
-          <div class="picker" id="cmpPicker"></div>
-          <div id="cmpOut"></div>
+        <div class="atelier-tools kenoOnly" id="btSizeRow">
+          <span class="label">Numéros joués</span>
+          <select id="btSize" class="select">
+            <option>4</option><option>5</option><option>6</option><option>7</option>
+            <option selected>8</option><option>9</option><option>10</option>
+          </select>
         </div>
+        <div class="picker" id="btPicker"></div>
+        <div class="atelier-tools kenoOnly">
+          <span class="label">Mise</span>
+          <select id="btMise" class="select"><option>1</option><option>2</option><option>3</option><option>5</option><option>10</option></select>
+          <span class="label">€</span>
+          <label class="chip" style="display:inline-flex;align-items:center;gap:7px;cursor:pointer"><input type="checkbox" id="btMult" style="accent-color:var(--accent)"> <span>Multiplicateur (mise doublée)</span></label>
+        </div>
+        <div id="btOut"></div>
       </div>
+      <div class="panel" id="cmpPanel">
+        <h2>Comparateur de numéros</h2>
+        <p class="atelier-note">Jusqu'à 8 numéros côte à côte, toutes leurs statistiques en parallèle.</p>
+        <div class="atelier-tools">
+          <input type="text" id="cmpInput" class="modal-input" style="max-width:260px;margin:0" placeholder="Ex : 7 13 41 56">
+          <button class="chip" type="button" id="cmpPick">Choisir sur la grille</button>
+          <button class="chip" type="button" id="cmpRand">Numéros aléatoires</button>
+          <button class="btn" type="button" id="cmpRun">Comparer</button>
+        </div>
+        <div class="atelier-tools kenoOnly" id="cmpSizeRow">
+          <span class="label">Numéros</span>
+          <select id="cmpSize" class="select">
+            <option>4</option><option>5</option><option>6</option><option>7</option>
+            <option selected>8</option>
+          </select>
+        </div>
+        <div class="picker" id="cmpPicker"></div>
+        <div id="cmpOut"></div>
+      </div>
+    </div>
+
+    <div class="panel panel-compact hidden" id="multPanel">
+      <h2>Multiplicateurs Keno</h2>
+      <p class="atelier-note">Répartition observée des multiplicateurs sur l'historique chargé, comparée aux probabilités officielles FDJ.</p>
+      <table><thead><tr><th>Multiplicateur</th><th>Sorties</th><th>Part observée</th><th>Théorique FDJ</th><th>1 chance sur</th></tr></thead>
+      <tbody id="multBody"></tbody></table>
+      <div id="multFoot"></div>
     </div>
 
     <div class="row">
@@ -1148,6 +1134,20 @@
     </div>
 
     <div class="fold-group">
+    <details class="panel fold" id="probaPanel">
+      <summary><h2>Probabilités exactes</h2></summary>
+      <p class="atelier-note">Loi hypergéométrique — les vraies chances, sans arrondi marketing.</p>
+      <div class="atelier-tools" id="probaTools">
+        <span class="label">Numéros joués</span>
+        <select id="probaM" class="select"></select>
+        <span class="label probaKeno">Mise</span>
+        <select id="probaMise" class="select probaKeno"><option>1</option><option>2</option><option>3</option><option>5</option><option>10</option></select>
+        <span class="label probaKeno">€</span>
+      </div>
+      <table><thead><tr id="probaHead"><th>Bons numéros</th><th>Probabilité</th><th>Soit 1 chance sur</th></tr></thead>
+      <tbody id="probaBody"></tbody></table>
+      <div id="probaFoot"></div>
+    </details>
     <details class="panel chart-panel fold">
       <summary><h2>Les courbes</h2></summary>
 
