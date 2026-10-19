@@ -776,6 +776,8 @@
   tbody.show-more .more-row { display: table-row; }
   .more-toggle { margin-top: 10px; }
   /* ---- Onglets déroulants ---- */
+  #app > .fold-group { margin-top: 26px; display: grid; gap: 12px; }
+  .fold-group > details.fold { margin: 0; }
   details.fold > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   details.fold > summary::-webkit-details-marker { display: none; }
   details.fold > summary h2 { margin: 0; }
@@ -966,59 +968,6 @@
       <div id="portraitBody"></div>
     </div>
 
-    <details class="panel chart-panel fold">
-      <summary><h2>Les courbes</h2></summary>
-
-      <div class="chart-explain">
-        <div>
-          <div class="atelier-tools">
-            <span class="label">Suivre le numéro</span>
-            <select id="trackNum" class="select"></select>
-          </div>
-          <div class="chart-box"><canvas id="chartTrack"></canvas></div>
-          <div class="board-sub" id="trackSub"></div>
-        </div>
-        <div class="chart-note">
-          <h3 class="chart-h3">Suivi d'un numéro</h3>
-          <p>La <b>courbe</b> montre à quelle fréquence ce numéro est sorti au fil du temps (sur 30 tirages glissants). La <b>ligne pointillée</b> est la valeur théorique attendue. Les <b>triangles dorés</b> marquent chaque sortie réelle.</p>
-          <p>La courbe oscille autour de la théorie : parfois « chaud », parfois « froid », sans jamais s'installer. C'est le hasard qui respire — aucune tendance ne se maintient.</p>
-        </div>
-      </div>
-
-      <div class="chart-explain">
-        <div>
-          <h3 class="chart-h3">Fréquences par numéro</h3>
-          <div class="chart-box"><canvas id="chartFreq"></canvas></div>
-        </div>
-        <div class="chart-note">
-          <p>Une barre par numéro : sa hauteur, c'est le nombre de sorties sur la période. Les couleurs : <b style="color:var(--hot)">rouge</b> pour un numéro nettement au-dessus de la moyenne, <b style="color:var(--cold)">bleu</b> pour un numéro en dessous, sable pour la norme.</p>
-          <p>C'est la vue d'ensemble qui complète la grille colorée plus haut : on repère d'un coup les numéros qui dévient le plus.</p>
-        </div>
-      </div>
-
-      <div class="chart-explain">
-        <div>
-          <h3 class="chart-h3">La cloche des sommes</h3>
-          <div class="chart-box"><canvas id="chartSum"></canvas></div>
-        </div>
-        <div class="chart-note">
-          <p>On additionne les numéros de chaque tirage. Réparties sur des centaines de tirages, ces <b>sommes</b> dessinent une cloche : les barres bleues sont la réalité, la courbe noire la théorie.</p>
-          <p>Les barres épousent la courbe. La plupart des tirages ont une somme moyenne ; les sommes extrêmes (que des petits ou que des grands numéros) sont rares. <b>Le hasard en personne.</b></p>
-        </div>
-      </div>
-
-      <div class="chart-explain">
-        <div>
-          <h3 class="chart-h3">La cloche des communs</h3>
-          <div class="chart-box"><canvas id="chartShared"></canvas></div>
-        </div>
-        <div class="chart-note">
-          <p>Pour chaque tirage, on compte combien de numéros il partage avec le tirage <b>précédent</b>. Répétée sur tout l'historique, cette distribution dessine elle aussi une cloche — les barres sont la réalité, la courbe la théorie.</p>
-          <p id="sharedNote"></p>
-        </div>
-      </div>
-    </details>
-
     <div class="row">
       <div class="panel">
         <h2 class="hot">Numéros chauds</h2>
@@ -1085,141 +1034,6 @@
         </div>
         <div id="nextBody"></div>
       </div>
-    </div>
-
-    <details class="panel gate-panel fold" id="compPanel">
-      <summary><h2>Le système de complémentarité</h2></summary>
-      <p class="atelier-note">Repère les numéros « répétitifs » d'un couple de deux tirages consécutifs : ils deviennent des <b>bornes</b> qui découpent l'espace en <b>séries</b> (une par intervalle entre bornes voisines). Chaque série se « complète » à mesure que ses numéros internes sortent lors des tirages suivants. Le curseur choisit quel couple observer : le plus récent, ou un couple plus ancien qui a déjà eu le temps de se compléter. Une lecture descriptive — elle ne modifie pas la probabilité du prochain tirage.</p>
-      <div class="atelier-tools" id="compDepthRow">
-        <span class="label">Profondeur</span>
-        <input type="range" id="compDepth" min="1" max="20" value="1" step="1" style="flex:1;min-width:120px;accent-color:var(--accent)">
-        <span class="label" id="compDepthVal" style="min-width:150px">couple le plus récent</span>
-      </div>
-      <div id="compBody"></div>
-      <div class="atelier-tools" style="margin-top:14px">
-        <button class="btn" type="button" id="compGridBtn">Générer une grille depuis la série</button>
-      </div>
-      <div id="compGrid"></div>
-    </details>
-
-    <details class="panel atelier-panel fold">
-      <summary><h2>Le générateur avancé</h2></summary>
-      <p class="atelier-note">Coche les critères que tu veux imposer à la grille. Les filtres non cochés sont ignorés. <b>Rappel : aucun réglage ne change tes chances de gagner</b> — chaque grille reste aussi probable qu'une autre. Ces filtres servent à composer une grille au profil choisi, rien de plus.</p>
-
-      <div class="genadv-grid">
-        <div class="genadv-slider"><input type="checkbox" id="fSum">
-          <div class="genadv-sliderbody">
-            <div class="genadv-sliderlabel">Somme entre <b id="fSumMinV">380</b> et <b id="fSumMaxV">530</b></div>
-            <div class="genadv-rangepair">
-              <input type="range" id="fSumMin" class="genadv-range" min="0" max="1000" value="380">
-              <input type="range" id="fSumMax" class="genadv-range" min="0" max="1000" value="530">
-            </div>
-          </div>
-        </div>
-
-        <div class="genadv-slider"><input type="checkbox" id="fEven">
-          <div class="genadv-sliderbody">
-            <div class="genadv-sliderlabel">Exactement <b id="fEvenV">5</b> numéros pairs</div>
-            <input type="range" id="fEven2" class="genadv-range" min="0" max="10" value="5">
-          </div>
-        </div>
-
-        <div class="genadv-slider"><input type="checkbox" id="fLow">
-          <div class="genadv-sliderbody">
-            <div class="genadv-sliderlabel">Exactement <b id="fLowV">5</b> numéros bas (première moitié)</div>
-            <input type="range" id="fLow2" class="genadv-range" min="0" max="10" value="5">
-          </div>
-        </div>
-
-        <div class="genadv-slider"><input type="checkbox" id="fGap">
-          <div class="genadv-sliderbody">
-            <div class="genadv-sliderlabel">Aucun numéro absent depuis plus de <b id="fGapV">15</b> tirages</div>
-            <input type="range" id="fGapMax" class="genadv-range" min="1" max="40" value="15">
-          </div>
-        </div>
-
-        <div class="genadv-slider"><input type="checkbox" id="fDecade">
-          <div class="genadv-sliderbody">
-            <div class="genadv-sliderlabel">Max <b id="fDecadeV">4</b> numéros par dizaine</div>
-            <input type="range" id="fDecadeMax" class="genadv-range" min="1" max="10" value="4">
-          </div>
-        </div>
-
-        <div class="genadv-slider"><input type="checkbox" id="fConsec">
-          <div class="genadv-sliderbody">
-            <div class="genadv-sliderlabel">Au plus <b id="fConsecV">2</b> paires de consécutifs</div>
-            <input type="range" id="fConsecMax" class="genadv-range" min="0" max="10" value="2">
-          </div>
-        </div>
-
-        <div class="genadv-slider"><input type="checkbox" id="fEnding">
-          <div class="genadv-sliderbody">
-            <div class="genadv-sliderlabel">Max <b id="fEndingV">3</b> numéros finissant par le même chiffre</div>
-            <input type="range" id="fEndingMax" class="genadv-range" min="1" max="10" value="3">
-          </div>
-        </div>
-
-        <label class="genadv-row"><input type="checkbox" id="fFreq"><span class="genadv-text">Privilégier les numéros
-          <select id="fFreqType" class="genadv-sel"><option value="hot">chauds</option><option value="cold">froids</option><option value="mid">équilibrés</option></select>
-          (fenêtre en cours)</span></label>
-
-        <label class="genadv-row"><input type="checkbox" id="fInclude"><span class="genadv-text">Inclure obligatoirement
-          <input type="text" id="fIncludeVal" class="genadv-txt" placeholder="ex : 7 13 22"></span></label>
-
-        <label class="genadv-row"><input type="checkbox" id="fExclude"><span class="genadv-text">Exclure
-          <input type="text" id="fExcludeVal" class="genadv-txt" placeholder="ex : 13 40"></span></label>
-
-        <label class="genadv-row"><input type="checkbox" id="fUnseen"><span class="genadv-text">Éviter les grilles déjà sorties dans l'historique</span></label>
-      </div>
-
-      <div class="atelier-tools" style="margin-top:14px">
-        <span class="label">Numéros à jouer</span>
-        <select id="genCount" class="genadv-sel"></select>
-        <button class="btn" type="button" id="genAdvBtn">Générer la grille</button>
-      </div>
-      <div id="genAdvBody"></div>
-    </details>
-
-    <div class="panel atelier-panel gate-panel">
-      <h2>L'atelier des grilles</h2>
-      <p class="atelier-note">Un système réducteur organise ta sélection en un minimum de grilles avec une garantie
-      de couverture. Il <strong>ne change pas les chances de gain</strong> — chaque grille reste soumise au même hasard ;
-      il structure simplement le jeu d'une sélection large.</p>
-
-      <div class="atelier-tools">
-        <span class="label">Remplir avec</span>
-        <button class="chip" data-fill="hot">Les chauds</button>
-        <button class="chip" data-fill="cold">Les retards</button>
-        <button class="chip" data-fill="mix">Équilibré</button>
-        <button class="chip" data-fill="rand">Au hasard</button>
-        <button class="chip" data-fill="clear">Effacer</button>
-      </div>
-      <div id="poolBoard" class="pool-board"></div>
-      <div class="board-sub" id="poolProfile"></div>
-
-      <div class="atelier-tools">
-        <span class="label" id="gridSizeLabel">Numéros par grille</span>
-        <select id="gridSize" class="select"></select>
-        <span class="label">Garantie</span>
-        <select id="guarantee" class="select">
-          <option value="2,3">2 si 3 sortent (économique)</option>
-          <option value="2,4">2 si 4 sortent (très économique)</option>
-          <option value="2,5">2 si 5 sortent (minimal)</option>
-          <option value="3,3">3 si 3 sortent (serré)</option>
-          <option value="3,4">3 si 4 sortent</option>
-          <option value="3,5" selected>3 si 5 sortent (équilibré)</option>
-          <option value="3,6">3 si 6 sortent</option>
-          <option value="4,4">4 si 4 sortent (exigeant)</option>
-          <option value="4,5">4 si 5 sortent</option>
-          <option value="4,6">4 si 6 sortent</option>
-          <option value="5,5">5 si 5 sortent (quasi complet)</option>
-          <option value="5,6">5 si 6 sortent</option>
-          <option value="full">Système complet</option>
-        </select>
-        <button class="btn" type="button" id="wheelBtn">Générer les grilles</button>
-      </div>
-      <div id="wheelSummary" class="board-sub"></div>
-      <div id="wheelGrids"></div>
     </div>
 
     <div class="panel" id="btPanel">
@@ -1327,6 +1141,193 @@
         <div class="cal" id="calBox"></div>
         <div id="findBody"></div>
       </div>
+    </div>
+
+    <div class="fold-group">
+    <details class="panel chart-panel fold">
+      <summary><h2>Les courbes</h2></summary>
+
+      <div class="chart-explain">
+        <div>
+          <div class="atelier-tools">
+            <span class="label">Suivre le numéro</span>
+            <select id="trackNum" class="select"></select>
+          </div>
+          <div class="chart-box"><canvas id="chartTrack"></canvas></div>
+          <div class="board-sub" id="trackSub"></div>
+        </div>
+        <div class="chart-note">
+          <h3 class="chart-h3">Suivi d'un numéro</h3>
+          <p>La <b>courbe</b> montre à quelle fréquence ce numéro est sorti au fil du temps (sur 30 tirages glissants). La <b>ligne pointillée</b> est la valeur théorique attendue. Les <b>triangles dorés</b> marquent chaque sortie réelle.</p>
+          <p>La courbe oscille autour de la théorie : parfois « chaud », parfois « froid », sans jamais s'installer. C'est le hasard qui respire — aucune tendance ne se maintient.</p>
+        </div>
+      </div>
+
+      <div class="chart-explain">
+        <div>
+          <h3 class="chart-h3">Fréquences par numéro</h3>
+          <div class="chart-box"><canvas id="chartFreq"></canvas></div>
+        </div>
+        <div class="chart-note">
+          <p>Une barre par numéro : sa hauteur, c'est le nombre de sorties sur la période. Les couleurs : <b style="color:var(--hot)">rouge</b> pour un numéro nettement au-dessus de la moyenne, <b style="color:var(--cold)">bleu</b> pour un numéro en dessous, sable pour la norme.</p>
+          <p>C'est la vue d'ensemble qui complète la grille colorée plus haut : on repère d'un coup les numéros qui dévient le plus.</p>
+        </div>
+      </div>
+
+      <div class="chart-explain">
+        <div>
+          <h3 class="chart-h3">La cloche des sommes</h3>
+          <div class="chart-box"><canvas id="chartSum"></canvas></div>
+        </div>
+        <div class="chart-note">
+          <p>On additionne les numéros de chaque tirage. Réparties sur des centaines de tirages, ces <b>sommes</b> dessinent une cloche : les barres bleues sont la réalité, la courbe noire la théorie.</p>
+          <p>Les barres épousent la courbe. La plupart des tirages ont une somme moyenne ; les sommes extrêmes (que des petits ou que des grands numéros) sont rares. <b>Le hasard en personne.</b></p>
+        </div>
+      </div>
+
+      <div class="chart-explain">
+        <div>
+          <h3 class="chart-h3">La cloche des communs</h3>
+          <div class="chart-box"><canvas id="chartShared"></canvas></div>
+        </div>
+        <div class="chart-note">
+          <p>Pour chaque tirage, on compte combien de numéros il partage avec le tirage <b>précédent</b>. Répétée sur tout l'historique, cette distribution dessine elle aussi une cloche — les barres sont la réalité, la courbe la théorie.</p>
+          <p id="sharedNote"></p>
+        </div>
+      </div>
+    </details>
+    <details class="panel gate-panel fold" id="compPanel">
+      <summary><h2>Le système de complémentarité</h2></summary>
+      <p class="atelier-note">Repère les numéros « répétitifs » d'un couple de deux tirages consécutifs : ils deviennent des <b>bornes</b> qui découpent l'espace en <b>séries</b> (une par intervalle entre bornes voisines). Chaque série se « complète » à mesure que ses numéros internes sortent lors des tirages suivants. Le curseur choisit quel couple observer : le plus récent, ou un couple plus ancien qui a déjà eu le temps de se compléter. Une lecture descriptive — elle ne modifie pas la probabilité du prochain tirage.</p>
+      <div class="atelier-tools" id="compDepthRow">
+        <span class="label">Profondeur</span>
+        <input type="range" id="compDepth" min="1" max="20" value="1" step="1" style="flex:1;min-width:120px;accent-color:var(--accent)">
+        <span class="label" id="compDepthVal" style="min-width:150px">couple le plus récent</span>
+      </div>
+      <div id="compBody"></div>
+      <div class="atelier-tools" style="margin-top:14px">
+        <button class="btn" type="button" id="compGridBtn">Générer une grille depuis la série</button>
+      </div>
+      <div id="compGrid"></div>
+    </details>
+    <details class="panel atelier-panel fold">
+      <summary><h2>Le générateur avancé</h2></summary>
+      <p class="atelier-note">Coche les critères que tu veux imposer à la grille. Les filtres non cochés sont ignorés. <b>Rappel : aucun réglage ne change tes chances de gagner</b> — chaque grille reste aussi probable qu'une autre. Ces filtres servent à composer une grille au profil choisi, rien de plus.</p>
+
+      <div class="genadv-grid">
+        <div class="genadv-slider"><input type="checkbox" id="fSum">
+          <div class="genadv-sliderbody">
+            <div class="genadv-sliderlabel">Somme entre <b id="fSumMinV">380</b> et <b id="fSumMaxV">530</b></div>
+            <div class="genadv-rangepair">
+              <input type="range" id="fSumMin" class="genadv-range" min="0" max="1000" value="380">
+              <input type="range" id="fSumMax" class="genadv-range" min="0" max="1000" value="530">
+            </div>
+          </div>
+        </div>
+
+        <div class="genadv-slider"><input type="checkbox" id="fEven">
+          <div class="genadv-sliderbody">
+            <div class="genadv-sliderlabel">Exactement <b id="fEvenV">5</b> numéros pairs</div>
+            <input type="range" id="fEven2" class="genadv-range" min="0" max="10" value="5">
+          </div>
+        </div>
+
+        <div class="genadv-slider"><input type="checkbox" id="fLow">
+          <div class="genadv-sliderbody">
+            <div class="genadv-sliderlabel">Exactement <b id="fLowV">5</b> numéros bas (première moitié)</div>
+            <input type="range" id="fLow2" class="genadv-range" min="0" max="10" value="5">
+          </div>
+        </div>
+
+        <div class="genadv-slider"><input type="checkbox" id="fGap">
+          <div class="genadv-sliderbody">
+            <div class="genadv-sliderlabel">Aucun numéro absent depuis plus de <b id="fGapV">15</b> tirages</div>
+            <input type="range" id="fGapMax" class="genadv-range" min="1" max="40" value="15">
+          </div>
+        </div>
+
+        <div class="genadv-slider"><input type="checkbox" id="fDecade">
+          <div class="genadv-sliderbody">
+            <div class="genadv-sliderlabel">Max <b id="fDecadeV">4</b> numéros par dizaine</div>
+            <input type="range" id="fDecadeMax" class="genadv-range" min="1" max="10" value="4">
+          </div>
+        </div>
+
+        <div class="genadv-slider"><input type="checkbox" id="fConsec">
+          <div class="genadv-sliderbody">
+            <div class="genadv-sliderlabel">Au plus <b id="fConsecV">2</b> paires de consécutifs</div>
+            <input type="range" id="fConsecMax" class="genadv-range" min="0" max="10" value="2">
+          </div>
+        </div>
+
+        <div class="genadv-slider"><input type="checkbox" id="fEnding">
+          <div class="genadv-sliderbody">
+            <div class="genadv-sliderlabel">Max <b id="fEndingV">3</b> numéros finissant par le même chiffre</div>
+            <input type="range" id="fEndingMax" class="genadv-range" min="1" max="10" value="3">
+          </div>
+        </div>
+
+        <label class="genadv-row"><input type="checkbox" id="fFreq"><span class="genadv-text">Privilégier les numéros
+          <select id="fFreqType" class="genadv-sel"><option value="hot">chauds</option><option value="cold">froids</option><option value="mid">équilibrés</option></select>
+          (fenêtre en cours)</span></label>
+
+        <label class="genadv-row"><input type="checkbox" id="fInclude"><span class="genadv-text">Inclure obligatoirement
+          <input type="text" id="fIncludeVal" class="genadv-txt" placeholder="ex : 7 13 22"></span></label>
+
+        <label class="genadv-row"><input type="checkbox" id="fExclude"><span class="genadv-text">Exclure
+          <input type="text" id="fExcludeVal" class="genadv-txt" placeholder="ex : 13 40"></span></label>
+
+        <label class="genadv-row"><input type="checkbox" id="fUnseen"><span class="genadv-text">Éviter les grilles déjà sorties dans l'historique</span></label>
+      </div>
+
+      <div class="atelier-tools" style="margin-top:14px">
+        <span class="label">Numéros à jouer</span>
+        <select id="genCount" class="genadv-sel"></select>
+        <button class="btn" type="button" id="genAdvBtn">Générer la grille</button>
+      </div>
+      <div id="genAdvBody"></div>
+    </details>
+    <details class="panel atelier-panel gate-panel fold" id="atelierPanel">
+      <summary><h2>L'atelier des grilles</h2></summary>
+      <p class="atelier-note">Un système réducteur organise ta sélection en un minimum de grilles avec une garantie
+      de couverture. Il <strong>ne change pas les chances de gain</strong> — chaque grille reste soumise au même hasard ;
+      il structure simplement le jeu d'une sélection large.</p>
+
+      <div class="atelier-tools">
+        <span class="label">Remplir avec</span>
+        <button class="chip" data-fill="hot">Les chauds</button>
+        <button class="chip" data-fill="cold">Les retards</button>
+        <button class="chip" data-fill="mix">Équilibré</button>
+        <button class="chip" data-fill="rand">Au hasard</button>
+        <button class="chip" data-fill="clear">Effacer</button>
+      </div>
+      <div id="poolBoard" class="pool-board"></div>
+      <div class="board-sub" id="poolProfile"></div>
+
+      <div class="atelier-tools">
+        <span class="label" id="gridSizeLabel">Numéros par grille</span>
+        <select id="gridSize" class="select"></select>
+        <span class="label">Garantie</span>
+        <select id="guarantee" class="select">
+          <option value="2,3">2 si 3 sortent (économique)</option>
+          <option value="2,4">2 si 4 sortent (très économique)</option>
+          <option value="2,5">2 si 5 sortent (minimal)</option>
+          <option value="3,3">3 si 3 sortent (serré)</option>
+          <option value="3,4">3 si 4 sortent</option>
+          <option value="3,5" selected>3 si 5 sortent (équilibré)</option>
+          <option value="3,6">3 si 6 sortent</option>
+          <option value="4,4">4 si 4 sortent (exigeant)</option>
+          <option value="4,5">4 si 5 sortent</option>
+          <option value="4,6">4 si 6 sortent</option>
+          <option value="5,5">5 si 5 sortent (quasi complet)</option>
+          <option value="5,6">5 si 6 sortent</option>
+          <option value="full">Système complet</option>
+        </select>
+        <button class="btn" type="button" id="wheelBtn">Générer les grilles</button>
+      </div>
+      <div id="wheelSummary" class="board-sub"></div>
+      <div id="wheelGrids"></div>
+    </details>
     </div>
 
     <div class="panel">
