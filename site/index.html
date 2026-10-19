@@ -1003,32 +1003,6 @@
       </div>
     </div>
 
-    <div class="fold-group">
-    <details class="panel gate-panel fold" id="structPanel">
-      <summary><h2>Structure des tirages</h2></summary>
-      <div class="board-sub" id="structSub"></div>
-      <table><thead><tr><th>Indicateur</th><th>Observé</th><th>Théorique</th></tr></thead>
-      <tbody id="structBody"></tbody></table>
-    </details>
-    <details class="panel gate-panel fold" id="pairsPanel">
-      <summary><h2>Numéros complices</h2></summary>
-      <div class="board-sub" id="pairsSub"></div>
-      <h3 class="chart-h3">Paires</h3>
-      <table><thead><tr><th>Paire</th><th>Ensemble</th><th>Attendu</th><th>Ratio</th></tr></thead>
-      <tbody id="pairsBody"></tbody></table>
-      <button type="button" id="pairsMore" class="chip" style="margin-top:10px; display:none"></button>
-      <h3 class="chart-h3" style="margin-top:18px" id="bigH">Groupes plus larges</h3>
-      <p class="board-sub" id="bigNote">Trios, quatuors et plus, calculés à la demande sur tout l'historique : choisis une taille et lance. Plus le groupe est grand, plus les répétitions sont rares — c'est une curiosité, pas un signal.</p>
-      <div class="atelier-tools" id="bigTools">
-        <span class="label">Taille</span>
-        <select id="bigSize" class="select"></select>
-        <button class="btn" type="button" id="bigRun">Calculer</button>
-      </div>
-      <table id="bigT" style="display:none"><thead><tr><th id="bigLabel">Groupe</th><th>Ensemble</th><th>Attendu</th><th>Ratio</th></tr></thead>
-      <tbody id="bigBody"></tbody></table>
-    </details>
-    </div>
-
     <div class="panel verdict-panel gate-panel">
       <h2>Le verdict du statisticien</h2>
       <p id="verdictText"></p>
@@ -1143,6 +1117,29 @@
     </div>
 
     <div class="fold-group">
+    <details class="panel gate-panel fold" id="structPanel">
+      <summary><h2>Structure des tirages</h2></summary>
+      <div class="board-sub" id="structSub"></div>
+      <table><thead><tr><th>Indicateur</th><th>Observé</th><th>Théorique</th></tr></thead>
+      <tbody id="structBody"></tbody></table>
+    </details>
+    <details class="panel gate-panel fold" id="pairsPanel">
+      <summary><h2>Numéros complices</h2></summary>
+      <div class="board-sub" id="pairsSub"></div>
+      <h3 class="chart-h3">Paires</h3>
+      <table><thead><tr><th>Paire</th><th>Ensemble</th><th>Attendu</th><th>Ratio</th></tr></thead>
+      <tbody id="pairsBody"></tbody></table>
+      <button type="button" id="pairsMore" class="chip" style="margin-top:10px; display:none"></button>
+      <h3 class="chart-h3" style="margin-top:18px" id="bigH">Groupes plus larges</h3>
+      <p class="board-sub" id="bigNote">Trios, quatuors et plus, calculés à la demande sur tout l'historique : choisis une taille et lance. Plus le groupe est grand, plus les répétitions sont rares — c'est une curiosité, pas un signal.</p>
+      <div class="atelier-tools" id="bigTools">
+        <span class="label">Taille</span>
+        <select id="bigSize" class="select"></select>
+        <button class="btn" type="button" id="bigRun">Calculer</button>
+      </div>
+      <table id="bigT" style="display:none"><thead><tr><th id="bigLabel">Groupe</th><th>Ensemble</th><th>Attendu</th><th>Ratio</th></tr></thead>
+      <tbody id="bigBody"></tbody></table>
+    </details>
     <details class="panel fold" id="probaPanel">
       <summary><h2>Probabilités exactes</h2></summary>
       <p class="atelier-note">Loi hypergéométrique — les vraies chances, sans arrondi marketing.</p>
