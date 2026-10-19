@@ -772,6 +772,9 @@
   .panel-compact table { font-size: 12.5px; }
   .panel-compact th, .panel-compact td { padding: 5px 6px; }
   .row .atelier-tools { flex-wrap: wrap; }
+  tbody .more-row { display: none; }
+  tbody.show-more .more-row { display: table-row; }
+  .more-toggle { margin-top: 10px; }
   /* ---- Onglets déroulants ---- */
   details.fold > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   details.fold > summary::-webkit-details-marker { display: none; }
@@ -1021,11 +1024,13 @@
         <h2 class="hot">Numéros chauds</h2>
         <table><thead><tr><th>N°</th><th>Sorties</th><th>Attendu</th><th>Écart actuel</th></tr></thead>
         <tbody id="hotBody"></tbody></table>
+        <button type="button" class="chip more-toggle" data-target="hotBody"></button>
       </div>
       <div class="panel">
         <h2 class="cold">Plus gros retards</h2>
         <table><thead><tr><th>N°</th><th>Écart actuel</th><th>Écart max</th><th>Sorties</th></tr></thead>
         <tbody id="coldBody"></tbody></table>
+        <button type="button" class="chip more-toggle" data-target="coldBody"></button>
       </div>
     </div>
 
@@ -2587,9 +2592,10 @@ function render() {
   }
 
   const byFreq = [...stats].sort((a, b) => b.freq - a.freq).slice(0, 15);
-  $("#hotBody").innerHTML = byFreq.map(s => `<tr><td>${s.n}</td><td>${s.freq}</td><td>${expected.toFixed(1)}</td><td>${s.currentGap}</td></tr>`).join("");
+  $("#hotBody").innerHTML = byFreq.map((s, i) => `<tr${i >= 5 ? ' class="more-row"' : ""}><td>${s.n}</td><td>${s.freq}</td><td>${expected.toFixed(1)}</td><td>${s.currentGap}</td></tr>`).join("");
   const byGap = [...stats].sort((a, b) => b.currentGap - a.currentGap).slice(0, 15);
-  $("#coldBody").innerHTML = byGap.map(s => `<tr><td>${s.n}</td><td>${s.currentGap}</td><td>${s.maxGap}</td><td>${s.freq}</td></tr>`).join("");
+  $("#coldBody").innerHTML = byGap.map((s, i) => `<tr${i >= 5 ? ' class="more-row"' : ""}><td>${s.n}</td><td>${s.currentGap}</td><td>${s.maxGap}</td><td>${s.freq}</td></tr>`).join("");
+  syncMoreToggles();
 
 
   // --- Panneaux avancés ---
@@ -3116,6 +3122,21 @@ let calCursor = null;   // calendrier : premier jour du mois affiché
 let rankMode = "freq";
 let rankExpanded = false;
 let pairsExpanded = false;
+// Tableaux « numéros chauds » / « plus gros retards » : 5 lignes, le reste dans un menu déroulant
+function syncMoreToggles() {
+  document.querySelectorAll(".more-toggle").forEach(btn => {
+    const body = document.getElementById(btn.dataset.target);
+    const n = body ? body.querySelectorAll(".more-row").length : 0;
+    const open = body && body.classList.contains("show-more");
+    btn.style.display = n ? "" : "none";
+    btn.textContent = open ? "Réduire ▴" : `Voir les ${n} suivants ▾`;
+  });
+}
+document.querySelectorAll(".more-toggle").forEach(btn => btn.addEventListener("click", () => {
+  const body = document.getElementById(btn.dataset.target);
+  body.classList.toggle("show-more");
+  syncMoreToggles();
+}));
 function renderRank() {
   const host = $("#rankBody");
   if (!host) return;
@@ -3151,8 +3172,8 @@ function renderRank() {
     return { v: s.freq, scale: maxFreq, ref: expected };
   };
 
-  const RANK_CAP = 20;
-  const showAll = rankExpanded || rankMode === "num" || stats.length <= RANK_CAP;
+  const RANK_CAP = 5;
+  const showAll = rankExpanded || stats.length <= RANK_CAP;
   const shown = showAll ? stats : stats.slice(0, RANK_CAP);
 
   host.innerHTML = `<div class="rank-head">` +
@@ -3175,8 +3196,8 @@ function renderRank() {
         `<b class="${Math.abs(z) >= 2 ? "far" : ""}" title="Z-score">${(z >= 0 ? "+" : "") + z.toFixed(1)}</b>` +
         `</span></div>`;
     }).join("") +
-    (showAll ? "" : `<button type="button" id="rankMore" class="chip" style="margin-top:10px">Afficher les ${stats.length - RANK_CAP} autres numéros</button>`) +
-    (rankExpanded && stats.length > RANK_CAP ? `<button type="button" id="rankLess" class="chip" style="margin-top:10px">Réduire</button>` : "") +
+    (showAll ? "" : `<button type="button" id="rankMore" class="chip" style="margin-top:10px">Voir les ${stats.length - RANK_CAP} autres numéros ▾</button>`) +
+    (rankExpanded && stats.length > RANK_CAP ? `<button type="button" id="rankLess" class="chip" style="margin-top:10px">Réduire ▴</button>` : "") +
     `<div class="board-sub" style="margin-top:12px">` +
     `<strong>Comment lire :</strong> <b>Sorties</b> = nombre d'apparitions sur ${total} tirages (attendu ${expected.toFixed(1)}). ` +
     `<b>Écart</b> = tirages depuis la dernière sortie. <b>Max</b> = plus longue absence jamais observée ; ` +
