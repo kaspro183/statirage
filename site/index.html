@@ -777,6 +777,17 @@
   .panel-compact th, .panel-compact td { padding: 5px 6px; }
   .row .atelier-tools { flex-wrap: wrap; }
   .row-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  /* Panneaux en pleine largeur : dizaines en colonnes côte à côte */
+  .decade-bar { display: block; width: var(--p); }
+  .decade-bar-bg { background: var(--carte-2); }
+  @media (min-width: 721px) {
+    #decadeBody { display: flex; align-items: stretch; gap: 14px; }
+    #decadeBody .decade-row { flex: 1 1 0; flex-direction: column-reverse; align-items: stretch; gap: 6px; margin: 0; }
+    #decadeBody .decade-bar-bg { flex: none; height: 120px; display: flex; align-items: flex-end; }
+    #decadeBody .decade-bar { width: 100%; height: var(--p); }
+    #decadeBody .decade-label, #decadeBody .decade-val { min-width: 0; text-align: center; }
+    #decadeBody .decade-label { order: 0; }
+  }
   @media (max-width: 1100px) { .row-3 { grid-template-columns: 1fr 1fr; } }
   @media (max-width: 720px) { .row-3 { grid-template-columns: 1fr; } }
   .row-3 #btOut, .row-3 #cmpOut { overflow-x: auto; }
@@ -1024,25 +1035,23 @@
       <div class="ztags" id="zTags"></div>
     </div>
 
-    <div class="row">
-      <div class="panel gate-panel">
-        <h2>Répartition par dizaines</h2>
-        <p class="atelier-note">Comment les numéros se répartissent sur la grille (fenêtre en cours).</p>
-        <div id="decadeBody"></div>
+    <div class="panel gate-panel wide-panel">
+      <h2>Répartition par dizaines</h2>
+      <p class="atelier-note">Comment les numéros se répartissent sur la grille (fenêtre en cours).</p>
+      <div id="decadeBody"></div>
+    </div>
+    <div class="panel gate-panel wide-panel">
+      <h2>Le numéro suivant</h2>
+      <p class="atelier-note">Après ce numéro, lesquels sortent le plus souvent au tirage d'après ? C'est le principe des « numéros annoncés » vendus ailleurs — ici on le confronte à ce que produirait le pur hasard.</p>
+      <div class="atelier-tools">
+        <button class="chip active" type="button" data-next="one">Un numéro</button>
+        <button class="chip" type="button" data-next="draw">Tout le dernier tirage</button>
       </div>
-      <div class="panel gate-panel">
-        <h2>Le numéro suivant</h2>
-        <p class="atelier-note">Après ce numéro, lesquels sortent le plus souvent au tirage d'après ? C'est le principe des « numéros annoncés » vendus ailleurs — ici on le confronte à ce que produirait le pur hasard.</p>
-        <div class="atelier-tools">
-          <button class="chip active" type="button" data-next="one">Un numéro</button>
-          <button class="chip" type="button" data-next="draw">Tout le dernier tirage</button>
-        </div>
-        <div class="atelier-tools" id="nextOneTools">
-          <span class="label">Après le n°</span>
-          <select id="nextNum" class="select"></select>
-        </div>
-        <div id="nextBody"></div>
+      <div class="atelier-tools" id="nextOneTools">
+        <span class="label">Après le n°</span>
+        <select id="nextNum" class="select"></select>
       </div>
+      <div id="nextBody"></div>
     </div>
 
     <div class="row row-3">
@@ -2987,7 +2996,7 @@ function renderDecades() {
   const maxPct = Math.max(...ds.map(d => d.pct), 1);
   $("#decadeBody").innerHTML = ds.map(d =>
     `<div class="decade-row"><span class="decade-label">${d.label}</span>` +
-    `<span class="decade-bar-bg"><span class="decade-bar" style="width:${d.pct / maxPct * 100}%"></span></span>` +
+    `<span class="decade-bar-bg"><span class="decade-bar" style="--p:${(d.pct / maxPct * 100).toFixed(1)}%"></span></span>` +
     `<span class="decade-val">${d.count}× · ${d.pct.toFixed(0)}%</span></div>`).join("");
 }
 
