@@ -762,6 +762,16 @@
     .portrait-grid .pt-box { flex: 0 0 240px; scroll-snap-align: start; }
   }
 
+
+  /* ---- Colonnes empilées et panneau compact ---- */
+  .stack { display: grid; gap: 16px; align-content: start; min-width: 0; }
+  .row > .panel, .stack > .panel { min-width: 0; }
+  .panel-compact { padding: 16px 18px; }
+  .panel-compact h2 { font-size: 17px; margin-bottom: 4px; }
+  .panel-compact .atelier-note { font-size: 12.5px; margin-bottom: 8px; }
+  .panel-compact table { font-size: 12.5px; }
+  .panel-compact th, .panel-compact td { padding: 5px 6px; }
+  .row .atelier-tools { flex-wrap: wrap; }
   /* ---- Onglets déroulants ---- */
   details.fold > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   details.fold > summary::-webkit-details-marker { display: none; }
@@ -1257,11 +1267,20 @@
     </div>
 
     <div class="row">
-      <div class="panel">
-        <h2>Le contexte des retards</h2>
-        <p class="atelier-note">Simulation Monte Carlo : le plus gros retard observé est-il banal ou rare ?</p>
-        <div id="gapCtx"></div>
-        <button class="chip" type="button" id="gapCtxBtn">Lancer la simulation (~1 s)</button>
+      <div class="stack">
+        <div class="panel">
+          <h2>Le contexte des retards</h2>
+          <p class="atelier-note">Simulation Monte Carlo : le plus gros retard observé est-il banal ou rare ?</p>
+          <div id="gapCtx"></div>
+          <button class="chip" type="button" id="gapCtxBtn">Lancer la simulation (~1 s)</button>
+        </div>
+        <div class="panel panel-compact hidden" id="multPanel">
+          <h2>Multiplicateurs Keno</h2>
+          <p class="atelier-note">Répartition observée des multiplicateurs sur l'historique chargé, comparée aux probabilités officielles FDJ.</p>
+          <table><thead><tr><th>Multiplicateur</th><th>Sorties</th><th>Part observée</th><th>Théorique FDJ</th><th>1 chance sur</th></tr></thead>
+          <tbody id="multBody"></tbody></table>
+          <div id="multFoot"></div>
+        </div>
       </div>
       <div class="panel">
         <h2>Probabilités exactes</h2>
@@ -1287,30 +1306,22 @@
         <table><thead><tr><th>Jour</th><th>Tirages</th><th>Top 3</th></tr></thead>
         <tbody id="weekdayBody"></tbody></table>
       </div>
-      <div class="panel hidden" id="multPanel">
-        <h2>Multiplicateurs Keno</h2>
-        <p class="atelier-note">Répartition observée des multiplicateurs sur l'historique chargé, comparée aux probabilités officielles FDJ.</p>
-        <table><thead><tr><th>Multiplicateur</th><th>Sorties</th><th>Part observée</th><th>Théorique FDJ</th><th>1 chance sur</th></tr></thead>
-        <tbody id="multBody"></tbody></table>
-        <div id="multFoot"></div>
+      <div class="panel">
+        <h2>Retrouver un tirage</h2>
+        <p class="atelier-note">Consultez les tirages d'une date précise, ou d'une période complète.</p>
+        <div class="atelier-tools">
+          <span class="label">Du</span>
+          <input type="date" id="dateFrom" class="select">
+          <span class="label">au (facultatif)</span>
+          <input type="date" id="dateTo" class="select">
+          <button class="btn" type="button" id="findBtn">Rechercher</button>
+          <button class="chip" type="button" id="calBtn">Choisir un tirage</button>
+          <button class="chip" type="button" id="findTodayBtn">Aujourd'hui</button>
+          <button class="chip" type="button" id="findWeekBtn">7 derniers jours</button>
+        </div>
+        <div class="cal" id="calBox"></div>
+        <div id="findBody"></div>
       </div>
-    </div>
-
-    <div class="panel">
-      <h2>Retrouver un tirage</h2>
-      <p class="atelier-note">Consultez les tirages d'une date précise, ou d'une période complète.</p>
-      <div class="atelier-tools">
-        <span class="label">Du</span>
-        <input type="date" id="dateFrom" class="select">
-        <span class="label">au (facultatif)</span>
-        <input type="date" id="dateTo" class="select">
-        <button class="btn" type="button" id="findBtn">Rechercher</button>
-        <button class="chip" type="button" id="calBtn">Choisir un tirage</button>
-        <button class="chip" type="button" id="findTodayBtn">Aujourd'hui</button>
-        <button class="chip" type="button" id="findWeekBtn">7 derniers jours</button>
-      </div>
-      <div class="cal" id="calBox"></div>
-      <div id="findBody"></div>
     </div>
 
     <div class="panel">
