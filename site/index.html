@@ -816,17 +816,20 @@
   .dash #aiGridSection { margin: 0; }
   .dash.hidden { display: none; }
   .side-stats { display: grid; gap: 14px; }
-  /* Grand écran : repères en 2×2 à côté du générateur, mêmes hauteurs, sans vide */
   @media (min-width: 1151px) {
-    .dash { grid-template-columns: minmax(0,1fr) minmax(300px, 34%); }
     .dash .ai-grid-lede, .dash .ai-profile-desc { max-width: none; }
-    .side-stats { grid-template-columns: 1fr 1fr; grid-auto-rows: auto; align-content: stretch; }
-    .side-stats .sstat { display: flex; flex-direction: column; justify-content: center; }
-    .side-stats .sstat .sv { flex-direction: column; align-items: flex-start; gap: 0; }
-    .side-stats .sstat .sv span { text-align: left; }
-    .side-stats .sstat:last-child { justify-content: flex-start; }
-    .side-stats .sstat:last-child .spark { flex: 1 1 auto; height: auto; min-height: 42px; max-height: 140px; }
+    .side-stats { display: flex; flex-direction: column; }
+    .side-stats .sstat { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; }
   }
+  .spark-wide { grid-column: 1 / -1; padding: 12px 20px 10px; }
+  .spark-wide.hidden { display: none; }
+  .spark-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; }
+  .spark-head .sl { margin: 0; }
+  .spark-head .sl em { font-style: normal; font-size: 12px; opacity: .8; }
+  .spark-wide .spark { height: 38px; margin-top: 8px; gap: 3px; }
+  .spark-wide .spark-legend { margin: 0; }
+  .spark-axis { display: flex; gap: 3px; margin-top: 3px; }
+  .spark-axis span { flex: 1; min-width: 1px; font: 600 10px 'IBM Plex Mono', monospace; color: var(--muted); text-align: center; white-space: nowrap; overflow: visible; }
   .side-stats.hidden { display: none; }
   .sstat { background: var(--carte); border: 1px solid var(--ligne); border-radius: 12px; padding: 14px 20px 16px; }
   .sstat .sl { font-size: 13.5px; color: var(--muted); margin-bottom: 4px; }
@@ -842,14 +845,15 @@
   .spark-legend i { width: 9px; height: 9px; border-radius: 2px; background: #56689E; display: inline-block; }
   .spark-legend i.h { background: var(--accent); }
   .spark-legend i.c { background: var(--cold); }
-  .spark-note { margin-top: 4px; font-size: 11.5px; color: var(--muted); opacity: .8; }
   #portraitPanel { margin-bottom: 24px; }
   @media (max-width: 1150px) {
     .dash { grid-template-columns: 1fr; }
-    .side-stats { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .side-stats { grid-template-columns: repeat(3, minmax(0,1fr)); }
   }
   @media (max-width: 520px) {
-    .side-stats { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .side-stats { grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; }
+    .sstat .sl { font-size: 12px; }
+    .spark-wide .spark { gap: 1px; } .spark-axis { gap: 1px; }
     .sstat { padding: 12px 14px; }
     .sstat .sv { flex-direction: column; gap: 0; }
     .sstat .sv b { font-size: 24px; }
@@ -958,8 +962,13 @@
       <div class="sstat"><div class="sl">Plus en retard</div><div class="sv"><b id="ssLate"></b><span id="ssLateSub"></span></div></div>
       <div class="sstat"><div class="sl">Plus sorti</div><div class="sv"><b id="ssHot"></b><span id="ssHotSub"></span></div></div>
       <div class="sstat"><div class="sl">Somme du tirage</div><div class="sv"><b id="ssSum"></b><span id="ssSumSub"></span></div></div>
-      <div class="sstat"><div class="sl">Fréquences sur 50 tirages</div><div class="spark" id="ssSpark"></div><div class="spark-legend"><span><i class="h"></i>les plus sortis</span><span><i></i>dans la moyenne</span><span><i class="c"></i>les moins sortis</span></div><div class="spark-note">Une barre par numéro, du plus petit au plus grand.</div></div>
     </aside>
+    <div class="sstat spark-wide hidden" id="sparkCard">
+      <div class="spark-head"><span class="sl">Fréquences sur 50 tirages <em>· une barre par numéro, du plus petit au plus grand</em></span>
+        <span class="spark-legend"><span><i class="h"></i>les plus sortis</span><span><i></i>dans la moyenne</span><span><i class="c"></i>les moins sortis</span></span></div>
+      <div class="spark" id="ssSpark"></div>
+      <div class="spark-axis" id="ssAxis"></div>
+    </div>
   </div>
 
 
@@ -1673,9 +1682,9 @@ function computeExtraStats(all, win, gameKey) {
 function renderHero() {
   const g = GAMES[currentGame];
   const draws = store[currentGame];
-  if (!draws || !draws.length) { $("#hero").classList.add("hidden"); $("#sideStats").classList.add("hidden"); $("#portraitPanel").classList.add("hidden"); return; }
+  if (!draws || !draws.length) { $("#hero").classList.add("hidden"); $("#sideStats").classList.add("hidden"); $("#sparkCard").classList.add("hidden"); $("#portraitPanel").classList.add("hidden"); return; }
   const d = draws[0];
-  if (!d || !Array.isArray(d.numbers)) { $("#hero").classList.add("hidden"); $("#sideStats").classList.add("hidden"); $("#portraitPanel").classList.add("hidden"); return; }
+  if (!d || !Array.isArray(d.numbers)) { $("#hero").classList.add("hidden"); $("#sideStats").classList.add("hidden"); $("#sparkCard").classList.add("hidden"); $("#portraitPanel").classList.add("hidden"); return; }
   const nums = d.numbers, extras = Array.isArray(d.extras) ? d.extras : [];
   const when = d.date.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   $("#heroKicker").textContent = "Dernier tirage " + g.label;
@@ -1706,7 +1715,7 @@ function renderHero() {
 /* ---------- Repères du moment (colonne de droite du tableau de bord) ---------- */
 function renderSideStats() {
   const g = GAMES[currentGame], draws = store[currentGame], box = $("#sideStats");
-  if (!draws || !draws.length || !g) { box.classList.add("hidden"); return; }
+  if (!draws || !draws.length || !g) { box.classList.add("hidden"); $("#sparkCard").classList.add("hidden"); return; }
   const max = g.max, total = draws.length;
   const gap = new Array(max + 1).fill(total), f50 = new Array(max + 1).fill(0);
   draws.forEach((d, i) => d.numbers.forEach(n => { if (n <= max && gap[n] === total) gap[n] = i; }));
@@ -1724,7 +1733,9 @@ function renderSideStats() {
   const lo = sorted[Math.floor(max * 0.2)], hi = sorted[Math.ceil(max * 0.8) - 1], top = Math.max(...vals) || 1;
   $("#ssSpark").innerHTML = vals.map((v, i) =>
     `<i class="${v >= hi && v > lo ? "h" : v <= lo && v < hi ? "c" : ""}" style="height:${Math.max(8, Math.round(v / top * 100))}%" title="n° ${i + 1} : ${v} fois"></i>`).join("");
+  $("#ssAxis").innerHTML = vals.map((v, i) => `<span>${(i + 1) === 1 || (i + 1) % 10 === 0 ? i + 1 : ""}</span>`).join("");
   box.classList.remove("hidden");
+  $("#sparkCard").classList.remove("hidden");
 }
 
 // Petit résumé "mes numéros" affiché sous le dernier tirage (héros) et sous
@@ -2910,7 +2921,7 @@ async function switchGame(gameKey) {
     return;
   }
   $("#app").classList.add("hidden");
-  $("#hero").classList.add("hidden"); $("#sideStats").classList.add("hidden"); $("#portraitPanel").classList.add("hidden");
+  $("#hero").classList.add("hidden"); $("#sideStats").classList.add("hidden"); $("#sparkCard").classList.add("hidden"); $("#portraitPanel").classList.add("hidden");
   showLoader("Recherche des tirages " + GAMES[gameKey].label + "…");
   if (session.premium) { await loadPremiumData(gameKey); if (store[gameKey].length) { hideLoader(); pool = []; renderPoolBoard(); return; } }
   const ok = await tryAutoLoad(gameKey);
@@ -4662,7 +4673,7 @@ function showLearn() {
   document.querySelectorAll(".game-tab").forEach(t => t.classList.remove("active"));
   $("#learnTab").classList.add("active");
   $("#app").classList.add("hidden");
-  $("#hero").classList.add("hidden"); $("#sideStats").classList.add("hidden"); $("#portraitPanel").classList.add("hidden");
+  $("#hero").classList.add("hidden"); $("#sideStats").classList.add("hidden"); $("#sparkCard").classList.add("hidden"); $("#portraitPanel").classList.add("hidden");
   $("#factBox") && $("#factBox").classList.add("hidden");
   $("#loader").classList.add("hidden");
   $("#loadError").classList.add("hidden");
