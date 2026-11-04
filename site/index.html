@@ -826,6 +826,13 @@
   .spark i { flex: 1; min-width: 1px; background: #56689E; border-radius: 1px; }
   .spark i.h { background: var(--accent); }
   .spark i.c { background: var(--cold); }
+  .spark-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 10px; font-size: 12px; color: var(--muted); }
+  .spark-legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .spark-legend i { width: 9px; height: 9px; border-radius: 2px; background: #56689E; display: inline-block; }
+  .spark-legend i.h { background: var(--accent); }
+  .spark-legend i.c { background: var(--cold); }
+  .spark-note { margin-top: 4px; font-size: 11.5px; color: var(--muted); opacity: .8; }
+  #portraitPanel { margin-bottom: 24px; }
   @media (max-width: 1150px) {
     .dash { grid-template-columns: 1fr; }
     .side-stats { grid-template-columns: repeat(2, minmax(0,1fr)); }
@@ -900,6 +907,12 @@
     <div class="hero-mynums hidden" id="heroMyNums"></div>
   </section>
 
+  <div class="panel hidden" id="portraitPanel">
+    <h2>Le portrait du tirage</h2>
+    <p class="atelier-note">Six lectures descriptives du dernier tirage, comparées à l'ensemble de l'historique. Ce sont des constats sur ce qui vient de se produire — ils ne disent rien du tirage suivant.</p>
+    <div id="portraitBody"></div>
+  </div>
+
   <div class="dash" id="dash">
   <section id="aiGridSection">
     <div class="kicker">🤖 IA Statistique — Grille Nouvelle Génération</div>
@@ -934,7 +947,7 @@
       <div class="sstat"><div class="sl">Plus en retard</div><div class="sv"><b id="ssLate"></b><span id="ssLateSub"></span></div></div>
       <div class="sstat"><div class="sl">Plus sorti</div><div class="sv"><b id="ssHot"></b><span id="ssHotSub"></span></div></div>
       <div class="sstat"><div class="sl">Somme du tirage</div><div class="sv"><b id="ssSum"></b><span id="ssSumSub"></span></div></div>
-      <div class="sstat"><div class="sl">Fréquences sur 50 tirages</div><div class="spark" id="ssSpark"></div></div>
+      <div class="sstat"><div class="sl">Fréquences sur 50 tirages</div><div class="spark" id="ssSpark"></div><div class="spark-legend"><span><i class="h"></i>les plus sortis</span><span><i></i>dans la moyenne</span><span><i class="c"></i>les moins sortis</span></div><div class="spark-note">Une barre par numéro, du plus petit au plus grand.</div></div>
     </aside>
   </div>
 
@@ -980,12 +993,6 @@
         <span class="label" id="extrasLabel"></span>
         <div class="extras-row" id="extrasRow"></div>
       </div>
-    </div>
-
-    <div class="panel" id="portraitPanel">
-      <h2>Le portrait du tirage</h2>
-      <p class="atelier-note">Six lectures descriptives du dernier tirage, comparées à l'ensemble de l'historique. Ce sont des constats sur ce qui vient de se produire — ils ne disent rien du tirage suivant.</p>
-      <div id="portraitBody"></div>
     </div>
 
     <div class="row">
@@ -1655,9 +1662,9 @@ function computeExtraStats(all, win, gameKey) {
 function renderHero() {
   const g = GAMES[currentGame];
   const draws = store[currentGame];
-  if (!draws || !draws.length) { $("#hero").classList.add("hidden"); $("#sideStats").classList.add("hidden"); return; }
+  if (!draws || !draws.length) { $("#hero").classList.add("hidden"); $("#sideStats").classList.add("hidden"); $("#portraitPanel").classList.add("hidden"); return; }
   const d = draws[0];
-  if (!d || !Array.isArray(d.numbers)) { $("#hero").classList.add("hidden"); $("#sideStats").classList.add("hidden"); return; }
+  if (!d || !Array.isArray(d.numbers)) { $("#hero").classList.add("hidden"); $("#sideStats").classList.add("hidden"); $("#portraitPanel").classList.add("hidden"); return; }
   const nums = d.numbers, extras = Array.isArray(d.extras) ? d.extras : [];
   const when = d.date.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   $("#heroKicker").textContent = "Dernier tirage " + g.label;
@@ -2892,7 +2899,7 @@ async function switchGame(gameKey) {
     return;
   }
   $("#app").classList.add("hidden");
-  $("#hero").classList.add("hidden"); $("#sideStats").classList.add("hidden");
+  $("#hero").classList.add("hidden"); $("#sideStats").classList.add("hidden"); $("#portraitPanel").classList.add("hidden");
   showLoader("Recherche des tirages " + GAMES[gameKey].label + "…");
   if (session.premium) { await loadPremiumData(gameKey); if (store[gameKey].length) { hideLoader(); pool = []; renderPoolBoard(); return; } }
   const ok = await tryAutoLoad(gameKey);
@@ -4644,7 +4651,7 @@ function showLearn() {
   document.querySelectorAll(".game-tab").forEach(t => t.classList.remove("active"));
   $("#learnTab").classList.add("active");
   $("#app").classList.add("hidden");
-  $("#hero").classList.add("hidden"); $("#sideStats").classList.add("hidden");
+  $("#hero").classList.add("hidden"); $("#sideStats").classList.add("hidden"); $("#portraitPanel").classList.add("hidden");
   $("#factBox") && $("#factBox").classList.add("hidden");
   $("#loader").classList.add("hidden");
   $("#loadError").classList.add("hidden");
