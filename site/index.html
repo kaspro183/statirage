@@ -1305,7 +1305,7 @@
       <div id="genAdvBody"></div>
     </details>
     <details class="panel atelier-panel gate-panel fold" id="atelierPanel">
-      <summary><h2>L'atelier des grilles</h2></summary>
+      <summary><h2>Les systèmes réducteurs</h2></summary>
       <p class="atelier-note">Un système réducteur organise ta sélection en un minimum de grilles avec une garantie
       de couverture. Il <strong>ne change pas les chances de gain</strong> — chaque grille reste soumise au même hasard ;
       il structure simplement le jeu d'une sélection large.</p>
@@ -3968,7 +3968,7 @@ function applyGates() {
       cover = document.createElement("div");
       cover.className = "lock-cover";
       cover.innerHTML = "<strong>Réservé aux abonnés</strong>" +
-        "<span style='font-size:13px'>Indicateurs avancés, historique complet et atelier des grilles</span>" +
+        "<span style='font-size:13px'>Indicateurs avancés, historique complet et systèmes réducteurs</span>" +
         "<button class='btn' type='button'>Découvrir Premium</button>";
       cover.querySelector("button").addEventListener("click", () =>
         openModal(session.email ? "paywall" : "auth"));
