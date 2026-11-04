@@ -813,16 +813,13 @@
   details.fold > summary:hover h2 { color: var(--accent); }
 
   /* ---- Tableau de bord : générateur + repères du moment ---- */
-  .dash { display: grid; grid-template-columns: minmax(0,1fr) 290px; gap: 22px; align-items: stretch; margin-bottom: 28px; }
+  .dash { display: grid; grid-template-columns: minmax(0,1fr); gap: 16px; align-items: stretch; margin-bottom: 28px; }
   .dash #aiGridSection { margin: 0; }
   .dash.hidden { display: none; }
   .side-stats { display: grid; gap: 14px; }
-  @media (min-width: 1151px) {
-    .dash .ai-grid-lede, .dash .ai-profile-desc { max-width: none; }
-    .side-stats { display: flex; flex-direction: column; }
-    .side-stats .sstat { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; }
-  }
-  .spark-row { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 22px; }
+  .dash .ai-grid-lede, .dash .ai-profile-desc { max-width: none; }
+  .side-stats { grid-template-columns: repeat(3, minmax(0,1fr)); }
+  .spark-row { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 16px; }
   .spark-row.hidden { display: none; }
   @media (max-width: 900px) { .spark-row { grid-template-columns: 1fr; gap: 14px; } }
   .spark-wide, .dec-card { padding: 14px 20px 12px; display: flex; flex-direction: column; }
