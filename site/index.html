@@ -781,9 +781,10 @@
   .decade-bar { display: block; width: var(--p); }
   .decade-bar-bg { background: var(--carte-2); }
   @media (min-width: 721px) {
-    #decadeBody { display: flex; align-items: stretch; gap: 14px; }
+    #decadeBody { display: flex; align-items: flex-end; gap: 8px; }
+    .dec-card #decadeBody .decade-val { font-size: 12px; white-space: nowrap; line-height: 1.2; }
     #decadeBody .decade-row { flex: 1 1 0; flex-direction: column-reverse; align-items: stretch; gap: 6px; margin: 0; }
-    #decadeBody .decade-bar-bg { flex: none; height: 120px; display: flex; align-items: flex-end; }
+    #decadeBody .decade-bar-bg { flex: none; height: 96px; display: flex; align-items: flex-end; }
     #decadeBody .decade-bar { width: 100%; height: var(--p); }
     #decadeBody .decade-label, #decadeBody .decade-val { min-width: 0; text-align: center; }
     #decadeBody .decade-label { order: 0; }
@@ -821,12 +822,17 @@
     .side-stats { display: flex; flex-direction: column; }
     .side-stats .sstat { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; }
   }
-  .spark-wide { grid-column: 1 / -1; padding: 12px 20px 10px; }
-  .spark-wide.hidden { display: none; }
+  .spark-row { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 22px; }
+  .spark-row.hidden { display: none; }
+  @media (max-width: 900px) { .spark-row { grid-template-columns: 1fr; gap: 14px; } }
+  .spark-wide, .dec-card { padding: 14px 20px 12px; display: flex; flex-direction: column; }
+  .dec-card #decadeBody { margin-top: 10px; flex: 1 1 auto; }
+  .decade-val small { display: block; font-size: 10px; color: var(--muted); font-weight: 500; }
+  @media (max-width: 720px) { .decade-val small { display: inline; margin-left: 5px; } }
   .spark-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; }
   .spark-head .sl { margin: 0; }
   .spark-head .sl em { font-style: normal; font-size: 12px; opacity: .8; }
-  .spark-wide .spark { height: 38px; margin-top: 8px; gap: 3px; }
+  .spark-wide .spark { height: 96px; margin-top: 10px; gap: 3px; }
   .spark-wide .spark-legend { margin: 0; }
   .spark-axis { display: flex; gap: 3px; margin-top: 3px; }
   .spark-axis span { flex: 1; min-width: 1px; font: 600 10px 'IBM Plex Mono', monospace; color: var(--muted); text-align: center; white-space: nowrap; overflow: visible; }
@@ -963,11 +969,17 @@
       <div class="sstat"><div class="sl">Plus sorti</div><div class="sv"><b id="ssHot"></b><span id="ssHotSub"></span></div></div>
       <div class="sstat"><div class="sl">Somme du tirage</div><div class="sv"><b id="ssSum"></b><span id="ssSumSub"></span></div></div>
     </aside>
-    <div class="sstat spark-wide hidden" id="sparkCard">
+    <div class="spark-row hidden" id="sparkCard">
+    <div class="sstat spark-wide">
       <div class="spark-head"><span class="sl">Fréquences sur 50 tirages <em>· une barre par numéro, du plus petit au plus grand</em></span>
         <span class="spark-legend"><span><i class="h"></i>les plus sortis</span><span><i></i>dans la moyenne</span><span><i class="c"></i>les moins sortis</span></span></div>
       <div class="spark" id="ssSpark"></div>
       <div class="spark-axis" id="ssAxis"></div>
+    </div>
+    <div class="sstat dec-card">
+      <div class="spark-head"><span class="sl">Répartition par dizaines <em>· fenêtre en cours</em></span></div>
+      <div id="decadeBody"></div>
+    </div>
     </div>
   </div>
 
@@ -1036,11 +1048,6 @@
       <div class="ztags" id="zTags"></div>
     </div>
 
-    <div class="panel gate-panel wide-panel">
-      <h2>Répartition par dizaines</h2>
-      <p class="atelier-note">Comment les numéros se répartissent sur la grille (fenêtre en cours).</p>
-      <div id="decadeBody"></div>
-    </div>
     <div class="panel gate-panel wide-panel">
       <h2>Le numéro suivant</h2>
       <p class="atelier-note">Après ce numéro, lesquels sortent le plus souvent au tirage d'après ? C'est le principe des « numéros annoncés » vendus ailleurs — ici on le confronte à ce que produirait le pur hasard.</p>
@@ -3023,7 +3030,7 @@ function renderDecades() {
   $("#decadeBody").innerHTML = ds.map(d =>
     `<div class="decade-row"><span class="decade-label">${d.label}</span>` +
     `<span class="decade-bar-bg"><span class="decade-bar" style="--p:${(d.pct / maxPct * 100).toFixed(1)}%"></span></span>` +
-    `<span class="decade-val">${d.count}× · ${d.pct.toFixed(0)}%</span></div>`).join("");
+    `<span class="decade-val">${d.pct.toFixed(0)}%<small>${d.count}×</small></span></div>`).join("");
 }
 
 /* Cumul des « suivants » sur tous les numéros d'un tirage donné.
