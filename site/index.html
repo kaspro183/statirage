@@ -796,6 +796,56 @@
   tbody .more-row { display: none; }
   tbody.show-more .more-row { display: table-row; }
   .more-toggle { margin-top: 10px; }
+
+  /* ---- Page d'accueil ---- */
+  #homePage.hidden { display: none; }
+  .home-hero { padding: 18px 0 34px; border-bottom: 1px solid var(--ligne); margin-bottom: 30px; }
+  .home-title { font: 800 clamp(30px, 4.6vw, 54px)/1.08 'Inter', sans-serif; letter-spacing: -1px; color: #F1EEE6; margin: 10px 0 16px; }
+  .home-lede { color: var(--muted); font-size: 16.5px; line-height: 1.6; max-width: 60ch; margin: 0 0 24px; }
+  .home-cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .home-cta .btn { padding: 14px 30px; font-size: 16px; }
+  .home-cta .chip { padding: 12px 20px; font-size: 14.5px; }
+  .home-section-h { font: 600 12px 'Inter', sans-serif; letter-spacing: 2.5px; text-transform: uppercase; color: var(--accent); margin: 0 0 14px; }
+  .home-games { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 36px; }
+  .hg { text-align: left; cursor: pointer; font: inherit; color: #F1EEE6; background: var(--carte); border: 1px solid var(--ligne);
+        border-radius: 14px; padding: 20px 20px 18px; display: flex; flex-direction: column; gap: 10px; transition: border-color .15s, transform .15s; }
+  .hg:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .hg-top { display: flex; align-items: center; gap: 9px; }
+  .hg-top i { width: 9px; height: 9px; border-radius: 50%; background: var(--dot); flex: none; }
+  .hg-name { font: 700 20px 'Inter', sans-serif; }
+  .hg-formula { font-size: 13px; color: var(--muted); }
+  .hg-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .hg-balls { display: flex; flex-wrap: wrap; gap: 5px; min-height: 30px; }
+  .hg-balls span { width: 30px; height: 30px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+                   background: var(--carte-2); font: 600 12.5px 'IBM Plex Mono', monospace; color: #F1EEE6; }
+  .hg-balls span.x { background: var(--accent); color: var(--accent-ink); }
+  .hg-next { font-size: 13px; color: #F1EEE6; margin-top: auto; padding-top: 10px; border-top: 1px solid var(--ligne); }
+  .hg-next em { font-style: normal; color: var(--muted); }
+  .hg-go { font: 700 14px 'Inter', sans-serif; color: var(--accent); }
+  .home-features { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 30px; }
+  .hf { background: var(--carte); border: 1px solid var(--ligne); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px; }
+  .hf b { font-size: 15px; color: #F1EEE6; }
+  .hf span { font-size: 13.5px; color: var(--muted); line-height: 1.5; }
+  .home-note { font-size: 12.5px; color: var(--muted); max-width: 80ch; }
+  @media (max-width: 1200px) { .home-games, .home-features { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 560px) { .home-games, .home-features { grid-template-columns: 1fr; } .home-hero { padding-top: 6px; } }
+  .brand { cursor: pointer; }
+
+  /* ---- Don en bitcoin ---- */
+  .donate-back { position: fixed; inset: 0; z-index: 60; background: rgba(10,14,30,.72); display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .donate-back.hidden { display: none; }
+  .donate-box { position: relative; width: 100%; max-width: 520px; background: var(--carte); border: 1px solid var(--ligne); border-radius: 16px; padding: 28px 28px 24px; color: #F1EEE6; }
+  .donate-box h2 { font: 800 22px/1.25 'Inter', sans-serif; margin: 6px 0 10px; }
+  .donate-box p { color: var(--muted); font-size: 14.5px; line-height: 1.55; margin: 0 0 16px; }
+  .donate-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .donate-addr { background: var(--carte-2); border: 1px solid var(--ligne); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; }
+  .donate-addr code { font: 600 14px 'IBM Plex Mono', monospace; color: var(--accent); word-break: break-all; user-select: all; }
+  .donate-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+  .donate-actions .chip { text-decoration: none; display: inline-flex; align-items: center; }
+  .donate-note { font-size: 12.5px !important; margin: 0 !important; }
+  .donate-close { position: absolute; top: 12px; right: 14px; background: transparent; border: none; color: var(--muted); font-size: 18px; cursor: pointer; }
+  .donate-close:hover { color: #F1EEE6; }
+  #donateTab { color: var(--accent) !important; }
   /* ---- Onglets déroulants ---- */
   #app > .fold-group { margin-top: 26px; display: grid; gap: 12px; }
   .fold-group > details.fold { margin: 0; }
@@ -816,12 +866,14 @@
   .dash { display: grid; grid-template-columns: minmax(0,1fr); gap: 16px; align-items: stretch; margin-bottom: 28px; }
   .dash #aiGridSection { margin: 0; }
   .dash.hidden { display: none; }
-  .side-stats { display: grid; gap: 14px; }
+  .side-stats { display: grid; gap: 14px; margin-bottom: 16px; }
   .dash .ai-grid-lede, .dash .ai-profile-desc { max-width: none; }
   .side-stats { grid-template-columns: repeat(3, minmax(0,1fr)); }
   .spark-row { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 16px; }
   .spark-row.hidden { display: none; }
-  @media (max-width: 900px) { .spark-row { grid-template-columns: 1fr; gap: 14px; } }
+  @media (max-width: 900px) { .spark-row { grid-template-columns: minmax(0, 1fr); gap: 14px; } }
+  .spark-wide, .dec-card { min-width: 0; }
+  .spark-axis span { overflow: hidden; }
   .spark-wide, .dec-card { padding: 14px 20px 12px; display: flex; flex-direction: column; }
   .dec-card #decadeBody { margin-top: 10px; flex: 1 1 auto; }
   .decade-val small { display: block; font-size: 10px; color: var(--muted); font-weight: 500; }
@@ -829,10 +881,12 @@
   .spark-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; }
   .spark-head .sl { margin: 0; }
   .spark-head .sl em { font-style: normal; font-size: 12px; opacity: .8; }
-  .spark-wide .spark { height: 96px; margin-top: 10px; gap: 3px; }
+  .spark-wide .spark { height: auto; min-height: 96px; flex: 1 1 auto; margin-top: 10px; gap: 3px; }
   .spark-wide .spark-legend { margin: 0; }
   .spark-axis { display: flex; gap: 3px; margin-top: 3px; }
-  .spark-axis span { flex: 1; min-width: 1px; font: 600 10px 'IBM Plex Mono', monospace; color: var(--muted); text-align: center; white-space: nowrap; overflow: visible; }
+  .spark-axis span { flex: 1; min-width: 1px; font: 600 10px 'IBM Plex Mono', monospace; color: var(--muted); text-align: center; white-space: nowrap; overflow: visible; letter-spacing: -.5px; }
+  .spark-axis span.k { color: #F1EEE6; }
+  @media (max-width: 1100px) { .spark-axis span:not(.k) { visibility: hidden; } }
   .side-stats.hidden { display: none; }
   .sstat { background: var(--carte); border: 1px solid var(--ligne); border-radius: 12px; padding: 14px 20px 16px; }
   .sstat .sl { font-size: 13.5px; color: var(--muted); margin-bottom: 4px; }
@@ -907,14 +961,40 @@
     <a href="/contact.html" class="game-tab" id="contactBtn" style="order:3">Contact</a>
     <button class="game-tab" id="accountBtn" style="order:2; display:none">Mon compte</button>
     <div class="games" role="tablist" style="order:1; margin-left:auto">
-      <button class="game-tab active" data-game="keno" role="tab">Keno</button>
+      <button class="game-tab" id="homeTab">Accueil</button>
+      <button class="game-tab" data-game="keno" role="tab">Keno</button>
       <button class="game-tab" data-game="euromillions" role="tab">EuroMillions</button>
       <button class="game-tab" data-game="loto" role="tab">Loto</button>
       <button class="game-tab" data-game="eurodreams" role="tab">EuroDreams</button>
       <button class="game-tab" id="learnTab">Comprendre</button>
+      <button class="game-tab" id="donateTab" type="button">Soutenir le site ₿</button>
     </div>
   </div>
 
+
+  <section id="homePage" class="hidden">
+    <div class="home-hero">
+      <div class="kicker">Keno · Loto · EuroMillions · EuroDreams</div>
+      <h1 class="home-title">L'intelligence artificielle<br>au service des jeux de hasard.</h1>
+      <p class="home-lede">Fréquences, retards, portrait de chaque tirage, générateur de grilles basé sur tout l'historique. Gratuit, sans inscription, mis à jour après chaque tirage.</p>
+      <div class="home-cta">
+        <button class="btn" type="button" data-go="keno">Explorer le Keno</button>
+        <button class="chip" type="button" id="homeLearnBtn">Comprendre les statistiques</button>
+      </div>
+    </div>
+
+    <div class="home-section-h">Choisissez un jeu</div>
+    <div class="home-games" id="homeGames"></div>
+
+    <div class="home-section-h">Ce que vous trouverez</div>
+    <div class="home-features">
+      <div class="hf"><b>Générateur IA</b><span>Une grille composée à partir de l'historique, avec l'explication de chaque numéro.</span></div>
+      <div class="hf"><b>Portrait du tirage</b><span>Suites, dizaines, somme, tirages ressemblants : le dernier tirage décrypté.</span></div>
+      <div class="hf"><b>Numéros chauds et retards</b><span>Les numéros les plus sortis et les plus absents, sur la période de votre choix.</span></div>
+      <div class="hf"><b>Systèmes réducteurs</b><span>Organisez une sélection large en un minimum de grilles.</span></div>
+    </div>
+
+  </section>
 
   <section id="hero" class="hidden">
     <div class="kicker" id="heroKicker"></div>
@@ -924,6 +1004,12 @@
     <div class="hero-meta" id="heroMeta"></div>
     <div class="hero-mynums hidden" id="heroMyNums"></div>
   </section>
+
+  <aside class="side-stats hidden" id="sideStats" aria-label="Repères du moment">
+    <div class="sstat"><div class="sl">Plus en retard</div><div class="sv"><b id="ssLate"></b><span id="ssLateSub"></span></div></div>
+    <div class="sstat"><div class="sl">Plus sorti</div><div class="sv"><b id="ssHot"></b><span id="ssHotSub"></span></div></div>
+    <div class="sstat"><div class="sl">Somme du tirage</div><div class="sv"><b id="ssSum"></b><span id="ssSumSub"></span></div></div>
+  </aside>
 
   <div class="panel hidden" id="portraitPanel">
     <h2>Le portrait du tirage</h2>
@@ -961,14 +1047,9 @@
       </div>
     </div>
   </section>
-    <aside class="side-stats hidden" id="sideStats" aria-label="Repères du moment">
-      <div class="sstat"><div class="sl">Plus en retard</div><div class="sv"><b id="ssLate"></b><span id="ssLateSub"></span></div></div>
-      <div class="sstat"><div class="sl">Plus sorti</div><div class="sv"><b id="ssHot"></b><span id="ssHotSub"></span></div></div>
-      <div class="sstat"><div class="sl">Somme du tirage</div><div class="sv"><b id="ssSum"></b><span id="ssSumSub"></span></div></div>
-    </aside>
     <div class="spark-row hidden" id="sparkCard">
     <div class="sstat spark-wide">
-      <div class="spark-head"><span class="sl">Fréquences sur 50 tirages <em>· une barre par numéro, du plus petit au plus grand</em></span>
+      <div class="spark-head"><span class="sl"><span id="ssSparkTitle">Fréquences sur 30 tirages</span> <em>· une barre par numéro, du plus petit au plus grand</em></span>
         <span class="spark-legend"><span><i class="h"></i>les plus sortis</span><span><i></i>dans la moyenne</span><span><i class="c"></i>les moins sortis</span></span></div>
       <div class="spark" id="ssSpark"></div>
       <div class="spark-axis" id="ssAxis"></div>
@@ -1431,6 +1512,22 @@
     </div>
   </div>
 
+  <div class="donate-back hidden" id="donateBack" role="dialog" aria-modal="true" aria-labelledby="donateTitle">
+    <div class="donate-box">
+      <button type="button" class="donate-close" id="donateClose" aria-label="Fermer">✕</button>
+      <div class="kicker">Soutenir</div>
+      <h2 id="donateTitle">Statirage est gratuit, et le restera.</h2>
+      <p>Si le site vous est utile, vous pouvez soutenir son développement par un don en bitcoin, du montant de votre choix.</p>
+      <div class="donate-label">Adresse bitcoin</div>
+      <div class="donate-addr"><code id="donateAddr">bc1qx6pfjn7vs39p5s4mjfvxjnm34qxgns7sm896yt</code></div>
+      <div class="donate-actions">
+        <button type="button" class="btn" id="donateCopy">Copier l'adresse</button>
+        <a class="chip" href="bitcoin:bc1qx6pfjn7vs39p5s4mjfvxjnm34qxgns7sm896yt">Ouvrir dans mon portefeuille</a>
+      </div>
+      <p class="donate-note">Vérifiez toujours l'adresse après l'avoir collée. Un don ne donne accès à aucune fonction supplémentaire : tout le site reste ouvert à tous.</p>
+    </div>
+  </div>
+
   <div class="modal-back hidden" id="modalBack">
     <div class="modal" role="dialog" aria-modal="true">
       <button class="modal-x" id="modalClose" aria-label="Fermer">✕</button>
@@ -1542,7 +1639,7 @@
     ici qu'à des fins descriptives. Les données proviennent des archives publiques officielles mises à disposition
     par l'opérateur.</p>
 
-    <p class="foot-p"><a href="/contact.html">Contact</a></p>
+    <p class="foot-p"><a href="/contact.html">Contact</a> · <a href="#" id="donateFoot">Soutenir Statirage en bitcoin</a></p>
   </footer>
 </div>
 
@@ -1733,11 +1830,16 @@ function renderSideStats() {
   $("#ssHotSub").textContent = f50[hot] + " fois / " + Math.min(50, total);
   $("#ssSum").textContent = sum;
   $("#ssSumSub").textContent = "moyenne " + Math.round(k * (max + 1) / 2);
-  const vals = f50.slice(1), sorted = [...vals].sort((a, b) => a - b);
+  const scope = windowSize ? draws.slice(0, windowSize) : draws;
+  const fw = new Array(max + 1).fill(0);
+  scope.forEach(d => d.numbers.forEach(n => { if (n <= max) fw[n]++; }));
+  $("#ssSparkTitle").textContent = windowSize && windowSize < total
+    ? `Fréquences sur ${scope.length} tirages` : `Fréquences sur tout l'historique (${total} tirages)`;
+  const vals = fw.slice(1), sorted = [...vals].sort((a, b) => a - b);
   const lo = sorted[Math.floor(max * 0.2)], hi = sorted[Math.ceil(max * 0.8) - 1], top = Math.max(...vals) || 1;
   $("#ssSpark").innerHTML = vals.map((v, i) =>
     `<i class="${v >= hi && v > lo ? "h" : v <= lo && v < hi ? "c" : ""}" style="height:${Math.max(8, Math.round(v / top * 100))}%" title="n° ${i + 1} : ${v} fois"></i>`).join("");
-  $("#ssAxis").innerHTML = vals.map((v, i) => `<span>${(i + 1) === 1 || (i + 1) % 10 === 0 ? i + 1 : ""}</span>`).join("");
+  $("#ssAxis").innerHTML = vals.map((v, i) => `<span${(i + 1) === 1 || (i + 1) % 5 === 0 ? ' class="k"' : ""}>${i + 1}</span>`).join("");
   box.classList.remove("hidden");
   $("#sparkCard").classList.remove("hidden");
 }
@@ -2911,6 +3013,9 @@ async function switchGame(gameKey) {
   rankExpanded = false;
   applyGameTheme(gameKey);
   $("#learnPage") && $("#learnPage").classList.add("hidden");
+  $("#homePage").classList.add("hidden");
+  $("#homeTab").classList.remove("active");
+  setPageParam(gameKey);
   $("#dash") && $("#dash").classList.remove("hidden");
   $("#learnTab") && $("#learnTab").classList.remove("active");
   document.querySelectorAll(".game-tab").forEach(t => t.classList.toggle("active", t.dataset.game === gameKey));
@@ -4683,10 +4788,94 @@ function showLearn() {
   $("#loadError").classList.add("hidden");
   setStatus("");
   $("#dash") && $("#dash").classList.add("hidden");
+  $("#homePage").classList.add("hidden");
+  $("#homeTab").classList.remove("active");
+  setPageParam("comprendre");
   $("#learnPage").classList.remove("hidden");
   window.scrollTo(0, 0);
 }
 $("#learnTab") && $("#learnTab").addEventListener("click", showLearn);
+
+/* ---------- Page d'accueil ---------- */
+const GAME_DOTS = { keno: "#E0547A", euromillions: "#5B6CF0", loto: "#3FB6E3", eurodreams: "#A66BE0" };
+const GAME_FORMULA = {
+  keno: "16 numéros sur 56 · tous les jours",
+  euromillions: "5 numéros + 2 étoiles · mardi et vendredi",
+  loto: "5 numéros + 1 n° chance · lun., mer., sam.",
+  eurodreams: "6 numéros + 1 n° Dream · lundi et jeudi",
+};
+function setPageParam(v) {
+  try {
+    const url = new URL(location.href);
+    if (v) url.searchParams.set("jeu", v); else url.searchParams.delete("jeu");
+    history.replaceState(null, "", url.pathname + url.search + url.hash);
+  } catch { /* sans incidence */ }
+}
+async function renderHomeGames() {
+  const host = $("#homeGames");
+  const next = Object.fromEntries(nextDraws().map(n => [n.key, n]));
+  const order = ["keno", "euromillions", "loto", "eurodreams"];
+  host.innerHTML = order.map(k => `<button type="button" class="hg" data-go="${k}" style="--dot:${GAME_DOTS[k]}">
+      <span class="hg-top"><i></i><span class="hg-name">${GAMES[k].label}</span></span>
+      <span class="hg-formula">${GAME_FORMULA[k]}</span>
+      <span class="hg-label" id="hgDate-${k}">Dernier tirage</span>
+      <span class="hg-balls" id="hgBalls-${k}"></span>
+      <span class="hg-next"><em>Prochain tirage :</em> ${next[k] && next[k].when
+        ? next[k].when.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }) + " · " +
+          next[k].when.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
+        : "—"}</span>
+      <span class="hg-go">Voir les statistiques →</span>
+    </button>`).join("");
+  host.querySelectorAll("[data-go]").forEach(b => b.addEventListener("click", () => switchGame(b.dataset.go)));
+  for (const k of order) {
+    try {
+      let d = store[k] && store[k][0];
+      if (!d) {
+        const resp = await fetch(`data/${k}.json`);
+        const data = await resp.json();
+        const r = data.draws && data.draws[0];
+        if (r) d = { date: parseFrDate(r.date), numbers: r.numbers, extras: r.extras || [] };
+      }
+      if (!d) continue;
+      $("#hgDate-" + k).textContent = "Dernier tirage · " + d.date.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+      $("#hgBalls-" + k).innerHTML = d.numbers.map(n => `<span>${n}</span>`).join("") +
+        (d.extras || []).map(n => `<span class="x">${n}</span>`).join("");
+    } catch { /* la carte reste sans boules */ }
+  }
+}
+function showHome() {
+  document.querySelectorAll(".game-tab").forEach(t => t.classList.remove("active"));
+  $("#homeTab").classList.add("active");
+  ["#app", "#hero", "#sideStats", "#sparkCard", "#portraitPanel", "#dash", "#factBox", "#loader", "#loadError", "#learnPage"]
+    .forEach(sel => $(sel) && $(sel).classList.add("hidden"));
+  setStatus("");
+  setPageParam(null);
+  $("#homePage").classList.remove("hidden");
+  renderHomeGames();
+  window.scrollTo(0, 0);
+}
+
+/* ---------- Don en bitcoin ---------- */
+function openDonate(e) { if (e) e.preventDefault(); $("#donateBack").classList.remove("hidden"); $("#donateCopy").focus(); }
+function closeDonate() { $("#donateBack").classList.add("hidden"); $("#donateCopy").textContent = "Copier l'adresse"; }
+$("#donateTab").addEventListener("click", openDonate);
+$("#donateFoot").addEventListener("click", openDonate);
+$("#donateClose").addEventListener("click", closeDonate);
+$("#donateBack").addEventListener("click", e => { if (e.target.id === "donateBack") closeDonate(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#donateBack").classList.contains("hidden")) closeDonate(); });
+$("#donateCopy").addEventListener("click", async () => {
+  const addr = $("#donateAddr").textContent.trim();
+  try { await navigator.clipboard.writeText(addr); $("#donateCopy").textContent = "Adresse copiée ✓"; }
+  catch {
+    const r = document.createRange(); r.selectNodeContents($("#donateAddr"));
+    const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    $("#donateCopy").textContent = "Adresse sélectionnée : faites Copier";
+  }
+});
+$("#homeTab").addEventListener("click", showHome);
+$(".brand").addEventListener("click", showHome);
+$("#homeLearnBtn").addEventListener("click", showLearn);
+document.querySelectorAll(".home-cta [data-go]").forEach(b => b.addEventListener("click", () => switchGame(b.dataset.go)));
 
 $("#accountBtn").addEventListener("click", () =>
   openModal(session.email ? "account" : "auth"));
@@ -4844,7 +5033,12 @@ if (new URLSearchParams(location.search).get("abonnement") === "merci") {
 restoreSession();
 applyGates();
 
-switchGame("keno");
+(() => {
+  const want = new URLSearchParams(location.search).get("jeu");
+  if (want && GAMES[want]) switchGame(want);
+  else if (want === "comprendre") showLearn();
+  else showHome();
+})();
 </script>
 </body>
 </html>
