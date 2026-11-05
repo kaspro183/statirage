@@ -1287,6 +1287,14 @@
     </details>
     <details class="panel chart-panel fold">
       <summary><h2>Les courbes</h2></summary>
+      <div class="atelier-tools courbes-period">
+        <span class="label">Période pour toutes les courbes</span>
+        <button class="chip" type="button" data-chartwin="30">30 tirages</button>
+        <button class="chip" type="button" data-chartwin="50">50</button>
+        <button class="chip" type="button" data-chartwin="100">100</button>
+        <button class="chip active" type="button" data-chartwin="0">Tout</button>
+        <span class="board-sub" id="chartWinInfo" style="margin:0"></span>
+      </div>
 
       <div class="chart-explain">
         <div>
@@ -1341,12 +1349,7 @@
         <h3 class="chart-h3">Les suites de numéros</h3>
         <p class="atelier-note">Une suite, ce sont des numéros qui se suivent dans un même tirage, comme 31-32-33. Combien de fois chaque suite est sortie, et quand pour la dernière fois.</p>
         <div class="atelier-tools">
-          <span class="label">Période</span>
-          <button class="chip" type="button" data-runwin="30">30 tirages</button>
-          <button class="chip" type="button" data-runwin="50">50</button>
-          <button class="chip" type="button" data-runwin="100">100</button>
-          <button class="chip active" type="button" data-runwin="0">Tout</button>
-          <span class="label" style="margin-left:10px">Longueur</span>
+          <span class="label">Longueur</span>
           <button class="chip active" type="button" data-runlen="2">2 numéros</button>
           <button class="chip" type="button" data-runlen="3">3</button>
           <button class="chip" type="button" data-runlen="4">4</button>
@@ -4475,13 +4478,15 @@ function safeChart(id, cfg) {
   try { killChart(id.replace("chart", "").toLowerCase()); return new Chart($("#" + id), cfg); }
   catch (e) { console.error("Graphique " + id + " :", e); return null; }
 }
+let chartWin = 0;   // période des courbes : 0 = tout l'historique
 function renderCharts() {
   if (!ensureChartLib()) { $("#trackSub").textContent = "Chargement du module graphique…"; return; }
   try {
   const g = GAMES[currentGame];
   const draws = store[currentGame];
   if (!draws || draws.length < 2) return;
-  const scope = (windowSize > 0 ? draws.slice(0, windowSize) : draws);
+  const scope = (chartWin > 0 ? draws.slice(0, chartWin) : draws);
+  $("#chartWinInfo").textContent = `· ${scope.length} tirages analysés`;
   const chrono = [...scope].reverse();               // ancien -> récent
   if (!chrono.length) return;
 
@@ -4520,8 +4525,8 @@ function renderCharts() {
   $("#trackSub").textContent = `N°${n} : fréquence sur ${W} tirages glissants (courbe rouge) vs attendu ${expectedW.toFixed(1)} (pointillés) · triangles dorés = chaque sortie.`;
 
   // --- 2. Fréquences par numéro (barres, colorées par Z) ---
-  const { stats, expected } = computeStats(draws, windowSize, currentGame);
-  const adv = computeAdvanced(draws, windowSize, currentGame);
+  const { stats, expected } = computeStats(draws, chartWin, currentGame);
+  const adv = computeAdvanced(draws, chartWin, currentGame);
   killChart("freq");
   charts.freq = new Chart($("#chartFreq"), {
     type: "bar",
@@ -4921,8 +4926,8 @@ $("#donateCopy").addEventListener("click", async () => {
 });
 
 /* ---------- Les suites de numéros (dans « Les courbes ») ---------- */
-let runWin = 0, runLen = 2;
-function runScope() { const d = store[currentGame] || []; return runWin ? d.slice(0, runWin) : d; }
+let runLen = 2;
+function runScope() { const d = store[currentGame] || []; return chartWin ? d.slice(0, chartWin) : d; }
 function renderRuns() {
   const host = $("#runsTop"); if (!host) return;
   const g = GAMES[currentGame], draws = runScope();
@@ -4942,7 +4947,7 @@ function renderRuns() {
       s.count++; stats.set(a, s);   // draws[0] = plus récent : la première rencontre donne la dernière date
     }
   });
-  const label = runWin ? `${draws.length} derniers tirages` : `tout l'historique (${draws.length} tirages)`;
+  const label = chartWin ? `${draws.length} derniers tirages` : `tout l'historique (${draws.length} tirages)`;
   $("#runsTopTitle").textContent = `Suites de ${runLen} les plus sorties · ${label}`;
   const top = [...stats.entries()].sort((a, b) => b[1].count - a[1].count || a[0] - b[0]).slice(0, 10);
   const maxC = top.length ? top[0][1].count : 1;
@@ -4970,16 +4975,16 @@ function findRun() {
   const draws = runScope();
   const hits = draws.filter(d => nums.every(n => d.numbers.includes(n)));
   const consecutive = nums.every((n, i) => i === 0 || n === nums[i - 1] + 1);
-  const period = runWin ? `les ${draws.length} derniers tirages` : `tout l'historique (${draws.length} tirages)`;
+  const period = chartWin ? `les ${draws.length} derniers tirages` : `tout l'historique (${draws.length} tirages)`;
   const what = `${consecutive ? "La suite" : "La combinaison"} <b>${nums.join("-")}</b>`;
   out.innerHTML = `<div class="run-find">${what} ` +
     (hits.length ? `est sortie <b>${hits.length} fois</b> sur ${period}, la dernière fois le <b>${fmtDate(hits[0].date)}</b>.`
                  : `n'est <b>jamais sortie</b> sur ${period}.`) + `</div>`;
 }
-document.querySelectorAll("[data-runwin]").forEach(b => b.addEventListener("click", () => {
-  runWin = +b.dataset.runwin;
-  document.querySelectorAll("[data-runwin]").forEach(x => x.classList.toggle("active", x === b));
-  renderRuns();
+document.querySelectorAll("[data-chartwin]").forEach(b => b.addEventListener("click", () => {
+  chartWin = +b.dataset.chartwin;
+  document.querySelectorAll("[data-chartwin]").forEach(x => x.classList.toggle("active", x === b));
+  renderCharts(); renderRuns();
 }));
 document.querySelectorAll("[data-runlen]").forEach(b => b.addEventListener("click", () => {
   runLen = +b.dataset.runlen;
