@@ -845,6 +845,26 @@
   .donate-close { position: absolute; top: 12px; right: 14px; background: transparent; border: none; color: var(--muted); font-size: 18px; cursor: pointer; }
   .donate-close:hover { color: #F1EEE6; }
   #donateTab { color: var(--accent) !important; }
+
+  /* ---- Les suites de numéros ---- */
+  .runs-block { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--ligne); }
+  .runs-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 28px; margin-top: 16px; }
+  @media (max-width: 820px) { .runs-grid { grid-template-columns: minmax(0, 1fr); } }
+  .runs-sub { font-size: 12.5px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .run-row { display: grid; grid-template-columns: 22px auto minmax(40px, 1fr) auto; align-items: center; gap: 10px; padding: 5px 0; border-bottom: 1px solid var(--ligne); }
+  .run-row:last-child { border-bottom: none; }
+  .run-pos { font: 600 11px 'IBM Plex Mono', monospace; color: var(--muted); }
+  .run-nums { display: inline-flex; gap: 3px; }
+  .run-nums span { width: 27px; height: 27px; border-radius: 50%; background: var(--carte-2); display: inline-flex; align-items: center; justify-content: center; font: 600 11.5px 'IBM Plex Mono', monospace; color: #F1EEE6; }
+  .run-bar { height: 8px; background: var(--carte-2); border-radius: 999px; overflow: hidden; }
+  .run-bar i { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+  .run-meta { font: 600 12px 'IBM Plex Mono', monospace; text-align: right; white-space: nowrap; }
+  .run-meta em { display: block; font: 400 11px 'Inter', sans-serif; color: var(--muted); font-style: normal; }
+  .run-dist-row { display: grid; grid-template-columns: 110px minmax(40px, 1fr) 70px; align-items: center; gap: 10px; padding: 4px 0; font-size: 13px; }
+  .run-dist-row .run-meta { font-size: 12px; }
+  .run-find { margin: 4px 0 6px; padding: 12px 14px; background: var(--carte-2); border-radius: 10px; font-size: 14px; }
+  .run-find b { color: var(--accent); }
+  .run-find.err { color: var(--hot); }
   /* ---- Onglets déroulants ---- */
   #app > .fold-group { margin-top: 26px; display: grid; gap: 12px; }
   .fold-group > details.fold { margin: 0; }
@@ -1314,6 +1334,32 @@
         <div class="chart-note">
           <p>Pour chaque tirage, on compte combien de numéros il partage avec le tirage <b>précédent</b>. Répétée sur tout l'historique, cette distribution dessine elle aussi une cloche — les barres sont la réalité, la courbe la théorie.</p>
           <p id="sharedNote"></p>
+        </div>
+      </div>
+
+      <div class="runs-block" id="runsBlock">
+        <h3 class="chart-h3">Les suites de numéros</h3>
+        <p class="atelier-note">Une suite, ce sont des numéros qui se suivent dans un même tirage, comme 31-32-33. Combien de fois chaque suite est sortie, et quand pour la dernière fois.</p>
+        <div class="atelier-tools">
+          <span class="label">Période</span>
+          <button class="chip" type="button" data-runwin="30">30 tirages</button>
+          <button class="chip" type="button" data-runwin="50">50</button>
+          <button class="chip" type="button" data-runwin="100">100</button>
+          <button class="chip active" type="button" data-runwin="0">Tout</button>
+          <span class="label" style="margin-left:10px">Longueur</span>
+          <button class="chip active" type="button" data-runlen="2">2 numéros</button>
+          <button class="chip" type="button" data-runlen="3">3</button>
+          <button class="chip" type="button" data-runlen="4">4</button>
+        </div>
+        <div class="atelier-tools">
+          <span class="label">Chercher une suite</span>
+          <input type="text" id="runQuery" class="select" placeholder="Ex : 31 32 33" style="min-width:150px">
+          <button class="btn" type="button" id="runFind" style="margin:0">Chercher</button>
+        </div>
+        <div id="runFindOut"></div>
+        <div class="runs-grid">
+          <div><div class="runs-sub" id="runsTopTitle"></div><div id="runsTop"></div></div>
+          <div><div class="runs-sub">Plus longue suite dans chaque tirage</div><div id="runsDist"></div></div>
         </div>
       </div>
     </details>
@@ -4575,6 +4621,7 @@ function renderExtras2() {
   safe("next", () => { mcResult = null; renderNext(); });
   safe("fact", renderFact);
   safe("portrait", renderPortrait);
+  safe("runs", renderRuns);
   safe("complement", renderComplement);
   safe("pickers", refreshPickers);
   safe("rank", renderRank);
@@ -4872,6 +4919,75 @@ $("#donateCopy").addEventListener("click", async () => {
     $("#donateCopy").textContent = "Adresse sélectionnée : faites Copier";
   }
 });
+
+/* ---------- Les suites de numéros (dans « Les courbes ») ---------- */
+let runWin = 0, runLen = 2;
+function runScope() { const d = store[currentGame] || []; return runWin ? d.slice(0, runWin) : d; }
+function renderRuns() {
+  const host = $("#runsTop"); if (!host) return;
+  const g = GAMES[currentGame], draws = runScope();
+  if (!draws.length) { host.innerHTML = ""; $("#runsDist").innerHTML = ""; return; }
+  const stats = new Map();
+  const longest = [];
+  draws.forEach(d => {
+    const set = new Set(d.numbers), sorted = [...d.numbers].sort((a, b) => a - b);
+    let best = 1, cur = 1;
+    for (let i = 1; i < sorted.length; i++) { cur = sorted[i] === sorted[i - 1] + 1 ? cur + 1 : 1; best = Math.max(best, cur); }
+    longest.push(best);
+    for (let a = 1; a + runLen - 1 <= g.max; a++) {
+      let ok = true;
+      for (let k = 0; k < runLen; k++) if (!set.has(a + k)) { ok = false; break; }
+      if (!ok) continue;
+      const s = stats.get(a) || { count: 0, last: d.date };
+      s.count++; stats.set(a, s);   // draws[0] = plus récent : la première rencontre donne la dernière date
+    }
+  });
+  const label = runWin ? `${draws.length} derniers tirages` : `tout l'historique (${draws.length} tirages)`;
+  $("#runsTopTitle").textContent = `Suites de ${runLen} les plus sorties · ${label}`;
+  const top = [...stats.entries()].sort((a, b) => b[1].count - a[1].count || a[0] - b[0]).slice(0, 10);
+  const maxC = top.length ? top[0][1].count : 1;
+  host.innerHTML = top.length ? top.map(([a, s], i) =>
+    `<div class="run-row"><span class="run-pos">${i + 1}.</span>` +
+    `<span class="run-nums">${Array.from({ length: runLen }, (_, k) => `<span>${a + k}</span>`).join("")}</span>` +
+    `<span class="run-bar"><i style="width:${(s.count / maxC * 100).toFixed(1)}%"></i></span>` +
+    `<span class="run-meta">${s.count} fois<em>dernière : ${fmtDate(s.last)}</em></span></div>`).join("")
+    : `<div class="board-sub">Aucune suite de ${runLen} numéros sur cette période.</div>`;
+  const maxL = Math.max(...longest);
+  const dist = Array.from({ length: maxL }, (_, i) => longest.filter(x => x === i + 1).length);
+  const maxD = Math.max(...dist, 1);
+  $("#runsDist").innerHTML = dist.map((c, i) =>
+    `<div class="run-dist-row"><span>${i === 0 ? "aucune suite" : `suite de ${i + 1}`}</span>` +
+    `<span class="run-bar"><i style="width:${(c / maxD * 100).toFixed(1)}%"></i></span>` +
+    `<span class="run-meta">${(c / draws.length * 100).toFixed(0)} %</span></div>`).join("") +
+    `<div class="board-sub" style="margin-top:8px">Part des tirages selon leur plus longue suite. Au Keno, avec 16 numéros tirés, les suites sont fréquentes ; aux jeux à 5 ou 6 numéros, elles sont rares.</div>`;
+  if ($("#runQuery").value.trim()) findRun();
+}
+function findRun() {
+  const out = $("#runFindOut"), g = GAMES[currentGame];
+  const nums = [...new Set(($("#runQuery").value.match(/\d+/g) || []).map(Number))].sort((a, b) => a - b);
+  if (nums.length < 2) { out.innerHTML = `<div class="run-find err">Entrez au moins deux numéros, par exemple 31 32 33.</div>`; return; }
+  if (nums.some(n => n < 1 || n > g.max)) { out.innerHTML = `<div class="run-find err">Les numéros du ${g.label} vont de 1 à ${g.max}.</div>`; return; }
+  const draws = runScope();
+  const hits = draws.filter(d => nums.every(n => d.numbers.includes(n)));
+  const consecutive = nums.every((n, i) => i === 0 || n === nums[i - 1] + 1);
+  const period = runWin ? `les ${draws.length} derniers tirages` : `tout l'historique (${draws.length} tirages)`;
+  const what = `${consecutive ? "La suite" : "La combinaison"} <b>${nums.join("-")}</b>`;
+  out.innerHTML = `<div class="run-find">${what} ` +
+    (hits.length ? `est sortie <b>${hits.length} fois</b> sur ${period}, la dernière fois le <b>${fmtDate(hits[0].date)}</b>.`
+                 : `n'est <b>jamais sortie</b> sur ${period}.`) + `</div>`;
+}
+document.querySelectorAll("[data-runwin]").forEach(b => b.addEventListener("click", () => {
+  runWin = +b.dataset.runwin;
+  document.querySelectorAll("[data-runwin]").forEach(x => x.classList.toggle("active", x === b));
+  renderRuns();
+}));
+document.querySelectorAll("[data-runlen]").forEach(b => b.addEventListener("click", () => {
+  runLen = +b.dataset.runlen;
+  document.querySelectorAll("[data-runlen]").forEach(x => x.classList.toggle("active", x === b));
+  renderRuns();
+}));
+$("#runFind").addEventListener("click", findRun);
+$("#runQuery").addEventListener("keydown", e => { if (e.key === "Enter") findRun(); });
 $("#homeTab").addEventListener("click", showHome);
 $(".brand").addEventListener("click", showHome);
 $("#homeLearnBtn").addEventListener("click", showLearn);
