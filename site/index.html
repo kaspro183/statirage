@@ -3007,6 +3007,7 @@ async function tryAutoLoad(gameKey) {
 }
 
 async function switchGame(gameKey) {
+  window.scrollTo({ top: 0, behavior: "instant" });
   currentGame = gameKey;
   pairsExpanded = false;
   rankExpanded = false;
