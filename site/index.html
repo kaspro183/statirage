@@ -1094,12 +1094,6 @@
   <section id="aiGridSection">
     <div class="kicker">🤖 IA Statistique — Grille Nouvelle Génération</div>
     <p class="ai-grid-lede">Croisez la puissance de l'intelligence artificielle avec l'historique complet des tirages.</p>
-    <div class="ai-profiles" id="aiProfiles" role="radiogroup" aria-label="Profil de la grille">
-      <button type="button" class="ai-chip" data-profile="equilibre">Équilibré</button>
-      <button type="button" class="ai-chip" data-profile="chauds">Numéros chauds</button>
-      <button type="button" class="ai-chip" data-profile="retards">Retardataires</button>
-      <button type="button" class="ai-chip active" data-profile="historique">Tendances historiques</button>
-    </div>
     <p class="ai-profile-desc" id="aiProfileDesc"></p>
     <div class="ai-grid-body">
       <div class="ai-run">
@@ -5087,10 +5081,7 @@ $("#goPremiumBtn").addEventListener("click", goCheckout);
 $("#accUpgrade").addEventListener("click", goCheckout);
 
 var AI_PROFILE_DESC = {
-  equilibre: "Mélange léger des numéros récemment sortis et des retardataires, avec une large part de hasard.",
-  chauds: "Privilégie les numéros les plus sortis sur les 50 derniers tirages.",
-  retards: "Privilégie les numéros absents depuis le plus longtemps.",
-  historique: "S'appuie sur tout l'historique : numéros les plus fréquents, paires qui sortent souvent ensemble et numéros qui ont souvent suivi le dernier tirage. Les tirages restent indépendants : aucun profil n'augmente les chances de gain.",
+  historique: "La grille s'appuie sur tout l'historique : numéros les plus fréquents, paires qui sortent souvent ensemble et numéros qui ont souvent suivi le dernier tirage, puis elle est vérifiée pour ressembler à un vrai tirage. Les tirages restent indépendants : aucune grille n'augmente les chances de gain.",
 };
 var aiProfile = "historique";
 function updateAiGridUi() {
@@ -5102,11 +5093,6 @@ function updateAiGridUi() {
   const fixed = { euromillions: " · 5 numéros + 2 étoiles", loto: " · 5 numéros + 1 n° chance", eurodreams: " · 6 numéros + 1 n° Dream" };
   $("#aiRunFixed").textContent = fixed[currentGame] || "";
 }
-document.querySelectorAll(".ai-chip").forEach(chip => chip.addEventListener("click", () => {
-  aiProfile = chip.dataset.profile;
-  document.querySelectorAll(".ai-chip").forEach(c => c.classList.toggle("active", c === chip));
-  updateAiGridUi();
-}));
 document.querySelectorAll(".game-tab[data-game]").forEach(t =>
   t.addEventListener("click", () => setTimeout(() => {
     updateAiGridUi();
@@ -5194,7 +5180,7 @@ $("#aiGridBtn").addEventListener("click", async () => {
       data.numbers.map(n => `<span class="ball">${n}</span>`).join("") +
       (data.extras || []).map(n => `<span class="ball star">${n}</span>`).join("");
     $("#aiGridMeta").textContent =
-      `Profil « ${data.profileLabel} » · calculé sur ${data.draws} tirages. Pourquoi ces numéros :`;
+      `Calculée sur ${data.draws} tirages. Pourquoi ces numéros :`;
     $("#aiGridWhy").innerHTML = (data.details || []).map(d => aiWhyLine(d, data.profile)).join("");
     $("#aiGridResult").classList.remove("hidden");
   } catch (e) {
