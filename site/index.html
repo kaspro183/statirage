@@ -865,6 +865,58 @@
   .run-find { margin: 4px 0 6px; padding: 12px 14px; background: var(--carte-2); border-radius: 10px; font-size: 14px; }
   .run-find b { color: var(--accent); }
   .run-find.err { color: var(--hot); }
+
+  /* ---- Portrait du tirage (version épurée) ---- */
+  .pt2-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; margin-bottom: 16px; }
+  .pt2-head h2 { margin: 0; }
+  .pt2-headnote { font-size: 13px; color: var(--muted); }
+  .pt2-k { font: 600 11.5px 'Inter', sans-serif; letter-spacing: .6px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .pt2-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+  .pt2-kpi, .pt2-card { background: var(--carte-2); border-radius: 12px; padding: 16px 18px; min-width: 0; }
+  .pt2-big { font: 700 30px/1 'IBM Plex Mono', monospace; color: #F1EEE6; display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+  .pt2-big small { font: 500 12.5px 'Inter', sans-serif; color: var(--muted); margin-right: 8px; }
+  .pt2-sub { font-size: 12.5px; color: var(--muted); margin-top: 10px; line-height: 1.45; }
+  .pt2-gauge { position: relative; height: 6px; border-radius: 999px; margin-top: 14px;
+    background: linear-gradient(90deg, var(--cold) 0%, #56689E 25%, #56689E 75%, var(--hot) 100%); opacity: .9; }
+  .pt2-gauge i { position: absolute; top: 50%; width: 14px; height: 14px; border-radius: 50%; background: #F1EEE6;
+    border: 3px solid var(--carte-2); transform: translate(-50%, -50%); box-shadow: 0 0 0 1px #F1EEE6; }
+  .pt2-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; align-items: center; }
+  .pt2-chip { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+    font: 600 12px 'IBM Plex Mono', monospace; color: #F1EEE6; background: var(--carte); flex: none; }
+  .pt2-chip.on { background: var(--accent); color: var(--accent-ink); }
+  .pt2-chip.x { border-radius: 8px; box-shadow: inset 0 0 0 1.5px var(--accent); }
+  .pt2-chip.x.on { box-shadow: none; }
+  .pt2-chip.mini { width: 11px; height: 11px; }
+  .pt2-run { font: 600 12.5px 'IBM Plex Mono', monospace; padding: 4px 10px; border-radius: 999px; background: var(--carte); color: #F1EEE6; }
+  .pt2-sep { width: 1px; height: 22px; background: var(--ligne); margin: 0 4px; }
+  .pt2-charts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+  .pt2-bars { display: flex; align-items: stretch; gap: 6px; height: 120px; }
+  .pt2-bars.thin { gap: 3px; height: 100px; align-items: flex-end; }
+  .pt2-bar { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .pt2-bar b { font: 600 11px 'IBM Plex Mono', monospace; color: #F1EEE6; height: 14px; }
+  .pt2-bar em { font: 500 10.5px 'IBM Plex Mono', monospace; color: var(--muted); font-style: normal; white-space: nowrap; }
+  .pt2-col { position: relative; flex: 1 1 auto; width: 100%; display: flex; align-items: flex-end; }
+  .pt2-bars.thin .pt2-bar, .pt2-bars.thin .pt2-col { height: 100%; }
+  .pt2-col i { display: block; width: 100%; background: var(--accent); border-radius: 4px 4px 1px 1px; }
+  .pt2-bars.thin .pt2-col i { background: #8A9AD0; border-radius: 2px 2px 0 0; }
+  .pt2-bars.thin .pt2-bar:last-child .pt2-col i { background: var(--accent); }
+  .pt2-col u { position: absolute; left: -2px; right: -2px; border-top: 1.5px dashed rgba(241,238,230,.55); }
+  .pt2-legend { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); margin-top: 10px; }
+  .pt2-legend .pt2-dash { flex: none; width: 16px; border-top: 1.5px dashed rgba(241,238,230,.55); }
+  .pt2-similar { margin-top: 12px; }
+  .pt2-simrow { display: grid; grid-template-columns: 64px 150px minmax(0, 1fr); align-items: center; gap: 14px; padding: 10px 0; border-top: 1px solid var(--ligne); }
+  .pt2-simrow:first-of-type { border-top: none; padding-top: 0; }
+  .pt2-simrow .pt2-chips { margin: 0; }
+  .pt2-score { font: 700 22px 'IBM Plex Mono', monospace; color: var(--accent); }
+  .pt2-score small { font-size: 13px; color: var(--muted); font-weight: 500; }
+  .pt2-date { font-size: 13.5px; color: #F1EEE6; }
+  @media (max-width: 1150px) { .pt2-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .pt2-charts { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .pt2-charts .pt2-card:last-child { grid-column: 1 / -1; } }
+  @media (max-width: 620px) {
+    .pt2-kpis { gap: 8px; } .pt2-kpi, .pt2-card { padding: 13px 14px; }
+    .pt2-big { font-size: 24px; } .pt2-charts { grid-template-columns: minmax(0, 1fr); }
+    .pt2-simrow { grid-template-columns: 54px minmax(0, 1fr); } .pt2-simrow .pt2-chips { grid-column: 1 / -1; }
+    .pt2-bar em { font-size: 9px; }
+  }
   /* ---- Onglets déroulants ---- */
   #app > .fold-group { margin-top: 26px; display: grid; gap: 12px; }
   .fold-group > details.fold { margin: 0; }
@@ -1031,8 +1083,10 @@
   </aside>
 
   <div class="panel hidden" id="portraitPanel">
-    <h2>Le portrait du tirage</h2>
-    <p class="atelier-note">Six lectures descriptives du dernier tirage, comparées à l'ensemble de l'historique. Ce sont des constats sur ce qui vient de se produire — ils ne disent rien du tirage suivant.</p>
+    <div class="pt2-head">
+      <h2>Le portrait du tirage</h2>
+      <span class="pt2-headnote">Ce que le dernier tirage a de particulier, comparé à tout l'historique. Un constat, pas une prévision.</span>
+    </div>
     <div id="portraitBody"></div>
   </div>
 
@@ -3495,71 +3549,84 @@ function renderPortrait() {
   if (!p) { host.innerHTML = ""; $("#portraitPanel").classList.add("hidden"); return; }
   $("#portraitPanel").classList.remove("hidden");
   const k = p.numbers.length;
+  const fr = (v, d = 1) => v.toLocaleString("fr-FR", { maximumFractionDigits: d });
+  const chips = (arr, cls = "") => arr.map(n => `<span class="pt2-chip ${cls}">${n}</span>`).join("");
+  const gauge = pct => `<div class="pt2-gauge"><i style="left:${pct}%"></i></div>`;
 
-  const runsHtml = p.runs.length
-    ? p.runs.map(r => `<span class="pt-run">${r.map(n => `<span>${n}</span>`).join("")}</span>`).join("") +
-      `<div class="board-sub" style="margin-top:6px">${p.runs.length} suite${p.runs.length > 1 ? "s" : ""} — la plus longue compte ${Math.max(...p.runs.map(r => r.length))} numéros.</div>`
-    : `<div class="board-sub">Aucune suite consécutive dans ce tirage.</div>`;
-
-  const maxDec = Math.max(...p.decades.map(d => d.count), 1);
-  const decHtml = `<div class="pt-bars">` + p.decades.map(d =>
-    `<div class="pt-bar"><b>${d.count}</b><i style="height:${Math.max(d.count / maxDec * 100, 3)}%"></i>` +
-    `<u style="bottom:${(d.expected / maxDec * 100 * 0.72) + 14}%"></u><em>${d.label}</em></div>`).join("") +
-    `</div><div class="board-sub" style="margin-top:8px">Pointillés : la répartition attendue si les numéros se distribuaient uniformément.</div>`;
-
-  const maxDig = Math.max(...p.lastDigits.map(x => x.count), 1);
-  const digHtml = `<div class="pt-bars">` + p.lastDigits.map(x =>
-    `<div class="pt-bar"><b>${x.count || ""}</b><i style="height:${Math.max(x.count / maxDig * 100, 2)}%;${x.count ? "" : "opacity:.25"}"></i><em>${x.digit}</em></div>`).join("") +
-    `</div><div class="board-sub" style="margin-top:8px">Chiffre des unités des ${k} numéros tirés.</div>`;
-
-  const rankHtml =
-    `<div class="pt-line"><b>${p.sum}</b><span>somme du tirage · moyenne historique ${p.avgSum}</span></div>` +
-    `<div class="pt-gauge"><i style="left:${p.sumPct}%"></i></div>` +
-    `<div class="board-sub" style="margin-bottom:12px">${p.sumPct}ᵉ percentile — ${p.sumPct >= 75 ? "parmi les tirages à somme élevée" : p.sumPct <= 25 ? "parmi les tirages à somme basse" : "dans la zone centrale"}.</div>` +
-    `<div class="pt-line"><b>${p.evens} / ${p.odds}</b><span>pairs / impairs</span></div>` +
-    `<div class="pt-gauge"><i style="left:${p.evensPct}%"></i></div>` +
-    `<div class="board-sub">${p.evensPct}ᵉ percentile · ${p.lows} numéros dans la moitié basse (1–${g.max / 2}).</div>`;
-
-  const curExtras = p.extras || [];
-  const simHtml = p.similar.map(s => {
-    const numsHtml = s.numbers.map(n => `<span class="${p.numbers.includes(n) ? "on" : ""}">${n}</span>`).join("");
-    const extrasHtml = (g.extraMax && s.extras && s.extras.length)
-      ? `<span class="pt-sep"></span>` + s.extras.map(n => `<span class="xtra${curExtras.includes(n) ? " on" : ""}">${n}</span>`).join("")
-      : "";
-    return `<div class="pt-line"><b>${s.shared}/${k}</b><span>${fmtDate(s.date)}</span></div>` +
-      `<div class="pt-mini">${numsHtml}${extrasHtml}</div>`;
-  }).join("") + `<div class="board-sub" style="margin-top:8px">Les tirages passés partageant le plus de numéros avec celui-ci. En couleur : les numéros communs${g.extraMax ? ` · ${g.extraLabel.toLowerCase()} à droite` : ""}.</div>`;
-
-  let commonHtml;
-  if (p.sharedPrev === null) {
-    commonHtml = `<div class="board-sub">Aucun tirage précédent dans l'historique chargé.</div>`;
-  } else {
-    const nb = p.sharedPrev.length;
-    const ecart = nb - p.expectedShared;
-    const tendance = Math.abs(ecart) < 0.75 ? "dans la moyenne"
-      : ecart > 0 ? "au-dessus de la moyenne" : "en dessous de la moyenne";
-    // mini-graphique d'historique : barres, avec la moyenne théorique en pointillés
-    const maxH = Math.max(...p.sharedHist.map(h => h.count), Math.ceil(p.expectedShared), 1);
-    const barsHtml = `<div class="pt-bars pt-hist">` + p.sharedHist.map(h =>
-      `<div class="pt-bar" title="${fmtDate(h.date)} : ${h.count} commun${h.count > 1 ? "s" : ""}">` +
-      `<i style="height:${Math.max(h.count / maxH * 100, 3)}%"></i></div>`).join("") +
-      `<u style="bottom:${p.expectedShared / maxH * 100 * 0.9}%"></u></div>`;
-    commonHtml =
-      `<div class="pt-big"><b>${nb}</b><span>/ ${k} numéros communs avec le tirage précédent${p.prevDate ? ` (${fmtDate(p.prevDate)})` : ""}</span></div>` +
-      (nb ? `<div class="pt-mini">${p.sharedPrev.map(n => `<span class="on">${n}</span>`).join("")}</div>` : "") +
-      `<div class="board-sub" style="margin:8px 0 4px">Moyenne théorique : ${p.expectedShared.toFixed(1)} — ce tirage est <b>${tendance}</b>.</div>` +
-      barsHtml +
-      `<div class="board-sub" style="margin-top:6px">Communs avec le tirage précédent sur les ${p.sharedHist.length} derniers tirages${p.histAvg !== null ? ` · moyenne observée ${p.histAvg.toFixed(1)}` : ""}. Pointillés : moyenne théorique.</div>`;
+  // ---------- 1. Chiffres clés ----------
+  const sumWord = p.sumPct >= 75 ? "élevée" : p.sumPct <= 25 ? "basse" : "dans la moyenne";
+  const longest = p.runs.length ? Math.max(...p.runs.map(r => r.length)) : 0;
+  let sharedTile = `<div class="pt2-kpi"><div class="pt2-k">Communs avec le précédent</div><div class="pt2-big">—</div></div>`;
+  if (p.sharedPrev !== null) {
+    const nb = p.sharedPrev.length, ecart = nb - p.expectedShared;
+    const word = Math.abs(ecart) < 0.75 ? "dans la moyenne" : ecart > 0 ? "au-dessus de la moyenne" : "en dessous de la moyenne";
+    sharedTile = `<div class="pt2-kpi">
+      <div class="pt2-k">Communs avec le précédent</div>
+      <div class="pt2-big">${nb}<small>/ ${k}</small></div>
+      <div class="pt2-chips">${nb ? chips(p.sharedPrev, "on") : ""}</div>
+      <div class="pt2-sub">${word} · attendu ${fr(p.expectedShared)}</div></div>`;
   }
+  const kpis = `<div class="pt2-kpis">
+    <div class="pt2-kpi">
+      <div class="pt2-k">Somme du tirage</div>
+      <div class="pt2-big">${p.sum}<small>moy. ${Math.round(p.avgSum)}</small></div>
+      ${gauge(p.sumPct)}
+      <div class="pt2-sub">Somme ${sumWord} · plus haute que ${p.sumPct} % des tirages</div>
+    </div>
+    <div class="pt2-kpi">
+      <div class="pt2-k">Pairs / impairs</div>
+      <div class="pt2-big">${p.evens}<small>pairs</small> ${p.odds}<small>impairs</small></div>
+      ${gauge(p.evensPct)}
+      <div class="pt2-sub">${p.lows} numéros dans la moitié basse (1–${Math.floor(g.max / 2)})</div>
+    </div>
+    <div class="pt2-kpi">
+      <div class="pt2-k">Suites de numéros</div>
+      <div class="pt2-big">${p.runs.length}<small>${p.runs.length > 1 ? "suites" : "suite"}</small></div>
+      <div class="pt2-chips">${p.runs.map(r => `<span class="pt2-run">${r.join("-")}</span>`).join("")}</div>
+      <div class="pt2-sub">${p.runs.length ? `la plus longue : ${longest} numéros` : "aucun numéro ne se suit"}</div>
+    </div>
+    ${sharedTile}
+  </div>`;
 
-  host.innerHTML = `<div class="portrait-grid">` +
-    `<div class="pt-box"><div class="pt-h">Suites consécutives</div>${runsHtml}</div>` +
-    `<div class="pt-box"><div class="pt-h">Répartition par dizaine</div>${decHtml}</div>` +
-    `<div class="pt-box"><div class="pt-h">Dernier chiffre</div>${digHtml}</div>` +
-    `<div class="pt-box"><div class="pt-h">Rang parmi ${p.total} tirages</div>${rankHtml}</div>` +
-    `<div class="pt-box"><div class="pt-h">Tirages les plus ressemblants</div>${simHtml}</div>` +
-    `<div class="pt-box"><div class="pt-h">Communs avec le tirage précédent</div>${commonHtml}</div>` +
-    `</div>`;
+  // ---------- 2. Trois petits graphiques ----------
+  const bars = (items, opts = {}) => {
+    const max = Math.max(...items.map(x => Math.max(x.v, x.exp || 0)), 1);
+    return `<div class="pt2-bars${opts.thin ? " thin" : ""}">` + items.map(x =>
+      `<div class="pt2-bar" title="${x.title || ""}">` +
+        (opts.thin ? "" : `<b>${x.v || ""}</b>`) +
+        `<div class="pt2-col"><i style="height:${Math.max(x.v / max * 100, x.v ? 4 : 0)}%"></i>` +
+        (x.exp != null ? `<u style="bottom:${x.exp / max * 100}%"></u>` : "") + `</div>` +
+        (opts.thin ? "" : `<em>${x.label}</em>`) +
+      `</div>`).join("") + `</div>`;
+  };
+  const decBars = bars(p.decades.map(d => ({ v: d.count, exp: d.expected, label: d.label, title: `${d.label} : ${d.count} (attendu ${fr(d.expected)})` })));
+  const digBars = bars(p.lastDigits.map(x => ({ v: x.count, label: x.digit, title: `se terminant par ${x.digit} : ${x.count}` })));
+  const histBars = p.sharedHist.length
+    ? bars(p.sharedHist.map(h => ({ v: h.count, exp: p.expectedShared, title: `${fmtDate(h.date)} : ${h.count} commun${h.count > 1 ? "s" : ""}` })), { thin: true })
+    : "";
+  const charts = `<div class="pt2-charts">
+    <div class="pt2-card"><div class="pt2-k">Répartition par dizaine</div>${decBars}
+      <div class="pt2-legend"><span class="pt2-dash"></span>répartition attendue</div></div>
+    <div class="pt2-card"><div class="pt2-k">Chiffre des unités</div>${digBars}
+      <div class="pt2-legend">les ${k} numéros, selon leur dernier chiffre</div></div>
+    <div class="pt2-card"><div class="pt2-k">Communs avec le précédent · ${p.sharedHist.length} derniers tirages</div>${histBars}
+      <div class="pt2-legend"><span class="pt2-dash"></span>moyenne attendue ${fr(p.expectedShared)}${p.histAvg !== null ? ` · observée ${fr(p.histAvg)}` : ""}</div></div>
+  </div>`;
+
+  // ---------- 3. Tirages les plus ressemblants ----------
+  const curExtras = p.extras || [];
+  const similar = p.similar.length ? `<div class="pt2-card pt2-similar">
+    <div class="pt2-k">Tirages passés les plus ressemblants</div>
+    ${p.similar.map(sm => `<div class="pt2-simrow">
+      <span class="pt2-score">${sm.shared}<small>/${k}</small></span>
+      <span class="pt2-date">${sm.date.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</span>
+      <span class="pt2-chips">${sm.numbers.map(n => `<span class="pt2-chip${p.numbers.includes(n) ? " on" : ""}">${n}</span>`).join("")}${
+        g.extraMax && sm.extras && sm.extras.length ? `<span class="pt2-sep"></span>` + sm.extras.map(n => `<span class="pt2-chip x${curExtras.includes(n) ? " on" : ""}">${n}</span>`).join("") : ""}</span>
+    </div>`).join("")}
+    <div class="pt2-legend"><span class="pt2-chip on mini"></span>numéros en commun avec le dernier tirage</div>
+  </div>` : "";
+
+  host.innerHTML = kpis + charts + similar;
 }
 
 function renderSmart() {
