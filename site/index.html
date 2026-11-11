@@ -3366,11 +3366,9 @@ function renderNext() {
       `<strong>${audit.over2}</strong> dépassent 2 écarts-types — la théorie du pur hasard en prévoit ${Math.round(audit.exp2)}. ` +
       `Au-delà de 3 écarts-types : ${audit.over3} observées, ${Math.round(audit.exp3)} attendues. ` +
       (conforme
-        ? `Les écarts constatés sont donc <strong>exactement ce que produit le hasard</strong> : aucun numéro n'en « appelle » un autre.`
+        ? `Les écarts constatés correspondent à ce que produit le hasard.`
         : `Le décompte s'écarte un peu de la théorie, ce qui reste compatible avec les fluctuations d'un échantillon de cette taille.`) +
-      `<br>C'est le piège classique : sur ${audit.pairs.toLocaleString("fr-FR")} paires, quelques-unes affichent forcément des scores spectaculaires. ` +
-      `La plus extrême ici est ${audit.extreme.from} → ${audit.extreme.to} (Z ${(audit.extreme.z >= 0 ? "+" : "") + audit.extreme.z.toFixed(2)}), ` +
-      `et elle ne prédit rien du tout.</div>`;
+      `<br>La paire la plus marquée est ${audit.extreme.from} → ${audit.extreme.to} (Z ${(audit.extreme.z >= 0 ? "+" : "") + audit.extreme.z.toFixed(2)}).</div>`;
   }
 
   $("#nextBody").innerHTML =
