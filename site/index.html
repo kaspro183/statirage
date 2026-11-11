@@ -3215,7 +3215,7 @@ function renderFact() {
     `Le numéro le plus en retard est le <b>${coldest.n}</b>, absent depuis <b>${coldest.currentGap}</b> tirages (record : ${coldest.maxGap}).`,
     `Sur tout l'historique, le numéro le plus sorti est le <b>${hottest.n}</b> (${hottest.freq} fois).`,
     `${g.label} compte <b>${draws.length}</b> tirages en mémoire depuis le ${fmtDate(draws[draws.length - 1].date)}.`,
-    `Chaque numéro a exactement <b>${(100 * g.drawSize / g.max).toFixed(1)}%</b> de chance de sortir à chaque tirage — et ça ne change jamais.`,
+    `Chaque numéro a exactement <b>${(100 * g.drawSize / g.max).toFixed(1)}%</b> de chance de sortir à chaque tirage.`,
   ];
   const fact = facts[new Date().getDate() % facts.length];
   box.innerHTML = "💡 " + fact;
