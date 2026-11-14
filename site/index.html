@@ -917,6 +917,19 @@
     .pt2-simrow { grid-template-columns: 54px minmax(0, 1fr); } .pt2-simrow .pt2-chips { grid-column: 1 / -1; }
     .pt2-bar em { font-size: 9px; }
   }
+
+  /* ---- Derniers tirages : tout le tableau tient dans la largeur sur grand écran ---- */
+  @media (min-width: 1360px) {
+    table.matrix.fit { width: 100%; table-layout: fixed; }
+    table.matrix.fit th, table.matrix.fit td { min-width: 0; padding: 0; height: 21px; overflow: hidden; }
+    table.matrix.fit thead th { font-size: 9px; letter-spacing: -.3px; }
+    table.matrix.fit .mdate { width: 82px; padding-right: 4px; font-size: 10.5px; white-space: nowrap; }
+    table.matrix.fit .my { display: none; }
+    table.matrix.fit .xcol { width: 36px; }
+    table.matrix.fit .msum { width: 44px; min-width: 0; padding: 0 0 0 3px; text-align: center; }
+    table.matrix.fit thead th.msum { font-size: 9px; line-height: 1.15; white-space: normal; }
+    table.matrix.fit td.hit { font-size: 10px; letter-spacing: -.4px; border-radius: 4px; }
+  }
   /* ---- Onglets déroulants ---- */
   #app > .fold-group { margin-top: 26px; display: grid; gap: 12px; }
   .fold-group > details.fold { margin: 0; }
@@ -2896,13 +2909,13 @@ function render() {
     const last = draws.slice(0, 20).reverse();  // ancien en haut, récent en bas
     const hasExtras = g.extraMax > 0;
     const half = g.max / 2;
-    let html = '<div class="matrix-wrap"><table class="matrix"><thead><tr><th class="mdate">Date</th>';
+    let html = '<div class="matrix-wrap"><table class="matrix fit"><thead><tr><th class="mdate">Date</th>';
     for (let n = 1; n <= g.max; n++) html += `<th>${String(n).padStart(2, "0")}</th>`;
-    if (hasExtras) html += `<th>★</th>`;
+    if (hasExtras) html += `<th class="xcol">★</th>`;
     html += '<th class="msum">Somme</th>';
     if (hasExtras) html += `<th class="msum">Somme ${g.extraLabel.toLowerCase()}</th>`;
     html += `<th class="msum" title="Pairs / Impairs : combien de numéros pairs et impairs dans le tirage">P/I</th>` +
-      `<th class="msum" title="Bas / Haut : combien de numéros dans la première moitié de la grille (1–${Math.floor(half)}) et dans la seconde (${Math.floor(half) + 1}–${g.max})">Bas/Haut</th>`;
+      `<th class="msum" title="Bas / Haut : combien de numéros dans la première moitié de la grille (1–${Math.floor(half)}) et dans la seconde (${Math.floor(half) + 1}–${g.max})">Bas/<wbr>Haut</th>`;
     const showMult = currentGame === "keno";
     if (showMult) html += `<th class="msum" title="Coefficient multiplicateur tiré au sort pour ce tirage">Mult</th>`;
     html += `</tr></thead><tbody>`;
@@ -2916,7 +2929,8 @@ function render() {
       const consec = new Set();
       for (let i = 1; i < nums.length; i++)
         if (nums[i] === nums[i - 1] + 1) { consec.add(nums[i]); consec.add(nums[i - 1]); }
-      html += `<tr><td class="mdate">${d.date.toLocaleDateString("fr-FR", { weekday: "short" })} ${fmtDate(d.date)}${d.time ? " · " + d.time : ""}</td>`;
+      const dd = fmtDate(d.date);
+      html += `<tr><td class="mdate">${d.date.toLocaleDateString("fr-FR", { weekday: "short" })} ${dd.slice(0, 5)}<span class="my">${dd.slice(5)}</span>${d.time ? " · " + d.time : ""}</td>`;
       for (let n = 1; n <= g.max; n++)
         html += inDraw.has(n) ? `<td class="hit${consec.has(n) ? " consec" : ""}">${n}</td>` : "<td></td>";
       if (hasExtras) html += `<td class="hit-extra">${d.extras.join(" ")}</td>`;
