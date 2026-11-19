@@ -628,7 +628,7 @@
      tout le contenu existant (tableaux, puces, grilles) suive. */
   .board-card, .panel, .modal {
     --papier: var(--carte); --papier-2: var(--carte-2); --papier2: var(--carte-2);
-    --encre: #F1EEE6; --ligne: #344372; --muted: #A7B0CA; --surface: var(--carte-2);
+    --encre: #F1EEE6; --muted: #A7B0CA; --surface: var(--carte-2);
     background: var(--carte); color: #F1EEE6; border: 1px solid var(--ligne);
     border-radius: 14px; box-shadow: 0 10px 28px rgba(5,10,30,.28);
   }
@@ -930,6 +930,19 @@
     table.matrix.fit thead th.msum { font-size: 9px; line-height: 1.15; white-space: normal; }
     table.matrix.fit td.hit { font-size: 10px; letter-spacing: -.4px; border-radius: 4px; }
   }
+
+  /* ---- Choix de la couleur du fond ---- */
+  .bg-picker { padding: 14px 14px 4px; }
+  .bg-picker-label { display: block; font: 600 11px 'Inter', sans-serif; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .bg-swatches { display: flex; flex-wrap: wrap; gap: 7px; }
+  .bg-swatch { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; padding: 0;
+    border: 2px solid rgba(241,238,230,.25); background: var(--sw); transition: transform .12s, border-color .12s; }
+  .bg-swatch:hover { transform: scale(1.12); border-color: rgba(241,238,230,.6); }
+  .bg-swatch.active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--carte), 0 0 0 4px var(--accent); }
+  @media (max-width: 900px) {
+    .bg-picker { display: none; }
+    .topbar.open .bg-picker { display: block; width: 100%; order: 7; padding: 12px 14px 6px; }
+  }
   /* ---- Onglets déroulants ---- */
   #app > .fold-group { margin-top: 26px; display: grid; gap: 12px; }
   .fold-group > details.fold { margin: 0; }
@@ -1043,6 +1056,10 @@
     </div>
     <button class="nav-toggle" id="navToggle" type="button" aria-label="Ouvrir le menu" aria-expanded="false">☰</button>
     <a href="/contact.html" class="game-tab" id="contactBtn" style="order:3">Contact</a>
+    <div class="bg-picker" id="bgPicker" style="order:4" role="group" aria-label="Couleur du fond">
+      <span class="bg-picker-label">Couleur du fond</span>
+      <div class="bg-swatches" id="bgSwatches"></div>
+    </div>
     <button class="game-tab" id="accountBtn" style="order:2; display:none">Mon compte</button>
     <div class="games" role="tablist" style="order:1; margin-left:auto">
       <button class="game-tab" id="homeTab">Accueil</button>
@@ -1781,8 +1798,7 @@ function applyGameTheme(gameKey) {
   r.setProperty("--accent", t.accent);
   r.setProperty("--accent-ink", t.ink);
   r.setProperty("--accent-soft", t.soft);
-  r.setProperty("--bg1", t.bg1);
-  r.setProperty("--bg2", t.bg2);
+  if (window.BG_THEMES) applyBgTheme(currentBg);
   const ksr = document.getElementById("kenoSizeRow");
   if (ksr) ksr.style.display = gameKey === "keno" ? "" : "none";
 }
@@ -4979,6 +4995,33 @@ function showHome() {
   renderHomeGames();
   window.scrollTo(0, 0);
 }
+
+
+/* ---------- Couleur du fond (choix du visiteur, mémorisé dans son navigateur) ---------- */
+var BG_THEMES = {
+  bleu:     { label: "Bleu nuit",    bg1: "#1F2C54", bg2: "#1A2547", carte: "#22305A", carte2: "#2C3B6B", ligne: "#344372" },
+  noir:     { label: "Noir",         bg1: "#1C1C20", bg2: "#121215", carte: "#1F1F24", carte2: "#2B2B32", ligne: "#3B3B44" },
+  ardoise:  { label: "Ardoise",      bg1: "#2A3340", bg2: "#1F2630", carte: "#2B3542", carte2: "#364252", ligne: "#465568" },
+  vert:     { label: "Vert forêt",   bg1: "#183A30", bg2: "#112B24", carte: "#1A3D33", carte2: "#234D41", ligne: "#2F5E50" },
+  bordeaux: { label: "Bordeaux",     bg1: "#4A1626", bg2: "#3A101D", carte: "#4E1A2B", carte2: "#612338", ligne: "#74304A" },
+  violet:   { label: "Violet",       bg1: "#2E1F4D", bg2: "#22173B", carte: "#322356", carte2: "#3E2D69", ligne: "#4E3C80" },
+};
+var currentBg = (() => { try { const v = localStorage.getItem("st_bg"); return BG_THEMES[v] ? v : "bleu"; } catch { return "bleu"; } })();
+function applyBgTheme(key) {
+  const t = BG_THEMES[key] || BG_THEMES.bleu, r = document.documentElement.style;
+  r.setProperty("--bg1", t.bg1); r.setProperty("--bg2", t.bg2);
+  r.setProperty("--carte", t.carte); r.setProperty("--carte-2", t.carte2); r.setProperty("--ligne", t.ligne);
+  const meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.setAttribute("content", t.bg2);
+  document.querySelectorAll(".bg-swatch").forEach(b => b.classList.toggle("active", b.dataset.bg === key));
+}
+$("#bgSwatches").innerHTML = Object.entries(BG_THEMES).map(([k, t]) =>
+  `<button type="button" class="bg-swatch" data-bg="${k}" title="${t.label}" aria-label="Fond ${t.label}" style="--sw:${t.carte2}"></button>`).join("");
+document.querySelectorAll(".bg-swatch").forEach(b => b.addEventListener("click", () => {
+  currentBg = b.dataset.bg;
+  try { localStorage.setItem("st_bg", currentBg); } catch { /* navigateur sans stockage : le choix vaut pour cette visite */ }
+  if (window.BG_THEMES) applyBgTheme(currentBg);
+}));
+applyBgTheme(currentBg);
 
 /* ---------- Don en bitcoin ---------- */
 function openDonate(e) { if (e) e.preventDefault(); $("#donateBack").classList.remove("hidden"); $("#donateCopy").focus(); }
