@@ -17,8 +17,9 @@
     --papier: #F1EEE6; --papier-2: #2C3B6B;
     --encre: #F1EEE6; --laiton: #E0B04A;
     --accent: #E0B04A; --accent-ink: #1A1406; --accent-soft: #E0B04A;
-    --ligne: #344372; --muted: #A7B0CA; --carte: #22305A;
+    --ligne: #344372; --muted: #A7B0CA; --carte: #22305A; --txt-rgb: 241,238,230;
   }
+  html[data-tone="light"] input, html[data-tone="light"] textarea, html[data-tone="light"] select { color-scheme: light; }
   * { box-sizing: border-box; margin: 0; }
   body {
     background: var(--bg2);
@@ -34,12 +35,12 @@
   .logo { width: 40px; height: 40px; flex: none; filter: drop-shadow(0 3px 6px rgba(0,0,0,.3)); }
   .wordmark { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 24px; color: var(--papier); text-decoration: none; }
   .wordmark em { font-style: normal; font-weight: 800; color: var(--accent-soft); }
-  .back-link { margin-left: auto; font: 600 13.5px 'Inter', sans-serif; color: rgba(247,243,232,.75); text-decoration: none; border: 1px solid rgba(247,243,232,.3); border-radius: 999px; padding: 7px 16px; transition: border-color .15s; }
+  .back-link { margin-left: auto; font: 600 13.5px 'Inter', sans-serif; color: rgba(var(--txt-rgb),.75); text-decoration: none; border: 1px solid rgba(var(--txt-rgb),.3); border-radius: 999px; padding: 7px 16px; transition: border-color .15s; }
   .back-link:hover { border-color: var(--laiton); }
 
   .kicker { font: 600 12px 'Inter', sans-serif; letter-spacing: 2.5px; text-transform: uppercase; color: var(--accent-soft); margin-bottom: 8px; }
   h1 { font-family: 'Inter', sans-serif; font-weight: 800; font-size: clamp(26px, 5vw, 36px); margin-bottom: 12px; }
-  .lede { color: rgba(247,243,232,.78); font-size: 15px; margin-bottom: 32px; max-width: 46ch; }
+  .lede { color: rgba(var(--txt-rgb),.78); font-size: 15px; margin-bottom: 32px; max-width: 46ch; }
 
   .card {
     background: var(--carte); color: var(--encre); border: 1px solid var(--ligne);
@@ -68,7 +69,7 @@
   }
   .submit-btn:hover { filter: brightness(1.08); }
 
-  .direct-mail { margin-top: 22px; font-size: 13.5px; color: rgba(247,243,232,.72); text-align: center; }
+  .direct-mail { margin-top: 22px; font-size: 13.5px; color: rgba(var(--txt-rgb),.72); text-align: center; }
   .direct-mail a { color: var(--accent-soft); }
 
   .success-box {
@@ -78,8 +79,36 @@
   .success-box.show { display: block; }
   .success-box h2 { font-family: 'Inter', sans-serif; font-weight: 800; margin-bottom: 10px; }
 
-  footer { margin-top: 46px; text-align: center; font-size: 12px; color: rgba(247,243,232,.5); }
+  footer { margin-top: 46px; text-align: center; font-size: 12px; color: rgba(var(--txt-rgb),.5); }
 </style>
+<script>
+/* Même couleur de fond que celle choisie sur le site (mémorisée dans le navigateur) */
+(function () {
+  var T = {
+    bleu:     ["#1A2547", "#22305A", "#2C3B6B", "#344372", 0],
+    noir:     ["#121215", "#1F1F24", "#2B2B32", "#3B3B44", 0],
+    ardoise:  ["#1F2630", "#2B3542", "#364252", "#465568", 0],
+    vert:     ["#112B24", "#1A3D33", "#234D41", "#2F5E50", 0],
+    bordeaux: ["#3A101D", "#4E1A2B", "#612338", "#74304A", 0],
+    violet:   ["#22173B", "#322356", "#3E2D69", "#4E3C80", 0],
+    blanc:    ["#F2F3F6", "#FFFFFF", "#EDEFF4", "#D8DCE5", 1],
+    perle:    ["#E4E6EA", "#F8F9FA", "#E6E8EC", "#CDD1D8", 1],
+    creme:    ["#F3ECDB", "#FFFCF5", "#F2E9D5", "#E0D3B6", 1],
+    sable:    ["#E8D9BC", "#FAF3E4", "#EDDFC3", "#D6C29C", 1]
+  };
+  var k; try { k = localStorage.getItem("st_bg"); } catch (e) {}
+  var t = T[k]; if (!t || k === "bleu") return;
+  var r = document.documentElement.style, light = t[4] === 1;
+  r.setProperty("--bg1", t[0]); r.setProperty("--bg2", t[0]); r.setProperty("--carte", t[1]);
+  r.setProperty("--papier-2", t[2]); r.setProperty("--ligne", t[3]);
+  if (light) {
+    r.setProperty("--papier", "#1E2433"); r.setProperty("--encre", "#1E2433"); r.setProperty("--txt-rgb", "30,36,51");
+    r.setProperty("--muted", "#5E6577"); r.setProperty("--accent", "#B07A16"); r.setProperty("--accent-soft", "#B07A16"); r.setProperty("--laiton", "#B07A16");
+    document.documentElement.setAttribute("data-tone", "light");
+  }
+  var m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute("content", t[0]);
+})();
+</script>
 </head>
 <body>
 <div class="wrap">
