@@ -949,6 +949,23 @@
     .bg-picker { display: none; }
     .topbar.open .bg-picker { display: block; width: 100%; order: 7; padding: 12px 14px 6px; }
   }
+
+  /* ---- Bannière vers le générateur IA ---- */
+  .ai-banner { display: flex; align-items: center; gap: 16px; width: 100%; margin: 18px 0 4px; padding: 14px 18px; cursor: pointer; text-align: left;
+    font: inherit; color: var(--accent-ink); border: none; border-radius: 14px;
+    background: linear-gradient(110deg, var(--accent) 0%, var(--accent-soft) 55%, var(--accent) 100%); background-size: 200% 100%;
+    box-shadow: 0 8px 24px rgba(0,0,0,.18); transition: transform .15s, box-shadow .15s; animation: aiShine 6s ease-in-out infinite; }
+  .ai-banner:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(0,0,0,.25); }
+  @keyframes aiShine { 0%, 100% { background-position: 0% 0; } 50% { background-position: 100% 0; } }
+  .ai-banner-icon { font-size: 26px; flex: none; }
+  .ai-banner-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+  .ai-banner-text b { font: 800 18px 'Inter', sans-serif; letter-spacing: -.2px; }
+  .ai-banner-text > span { font-size: 13px; opacity: .8; }
+  .ai-banner-go { flex: none; font: 800 15px 'Inter', sans-serif; background: var(--accent-ink); color: var(--accent); padding: 10px 18px; border-radius: 10px; }
+  @media (max-width: 620px) { .ai-banner { gap: 12px; padding: 12px 14px; } .ai-banner-text b { font-size: 15.5px; } .ai-banner-go { padding: 8px 12px; font-size: 13.5px; } }
+  @media (prefers-reduced-motion: reduce) { .ai-banner { animation: none; } }
+  #aiGridSection.flash { animation: aiFlash 1.4s ease-out; }
+  @keyframes aiFlash { 0% { box-shadow: 0 0 0 0 rgba(224,176,74,.0); } 20% { box-shadow: 0 0 0 4px var(--accent); } 100% { box-shadow: 0 0 0 0 rgba(224,176,74,0); } }
   /* ---- Onglets déroulants ---- */
   #app > .fold-group { margin-top: 26px; display: grid; gap: 12px; }
   .fold-group > details.fold { margin: 0; }
@@ -1109,6 +1126,11 @@
     <div class="rail"><div class="balls" id="heroBalls"></div></div>
     <div class="hero-mult hidden" id="heroMult"></div>
     <div class="hero-meta" id="heroMeta"></div>
+    <button type="button" class="ai-banner" id="aiBanner">
+      <span class="ai-banner-icon">🤖</span>
+      <span class="ai-banner-text"><b>Générez votre grille avec l'IA</b><span>Analyse de l'historique complet · <span id="aiBannerGame">Keno</span></span></span>
+      <span class="ai-banner-go">Générer →</span>
+    </button>
     <div class="hero-mynums hidden" id="heroMyNums"></div>
   </section>
 
@@ -3142,6 +3164,7 @@ async function tryAutoLoad(gameKey) {
 async function switchGame(gameKey) {
   window.scrollTo({ top: 0, behavior: "instant" });
   currentGame = gameKey;
+  try { updateAiGridUi(); } catch { /* interface du générateur pas encore prête */ }
   pairsExpanded = false;
   rankExpanded = false;
   applyGameTheme(gameKey);
@@ -5051,6 +5074,17 @@ document.querySelectorAll(".bg-swatch").forEach(b => b.addEventListener("click",
 }));
 applyBgTheme(currentBg);
 
+
+/* ---------- Bannière : aller au générateur IA ---------- */
+$("#aiBanner").addEventListener("click", () => {
+  const sec = $("#aiGridSection");
+  const bar = window.innerWidth <= 900 ? $(".topbar").offsetHeight : 0;
+  const top = sec.getBoundingClientRect().top + window.scrollY - bar - 16;
+  window.scrollTo({ top, behavior: "smooth" });
+  sec.classList.remove("flash"); void sec.offsetWidth; sec.classList.add("flash");
+  setTimeout(() => $("#aiGridBtn").focus({ preventScroll: true }), 600);
+});
+
 /* ---------- Don en bitcoin ---------- */
 function openDonate(e) { if (e) e.preventDefault(); $("#donateBack").classList.remove("hidden"); $("#donateCopy").focus(); }
 function closeDonate() { $("#donateBack").classList.add("hidden"); $("#donateCopy").textContent = "Copier l'adresse"; }
@@ -5172,6 +5206,7 @@ function updateAiGridUi() {
   $("#aiProfileDesc").textContent = AI_PROFILE_DESC[aiProfile];
   const g = GAMES[currentGame] || {};
   $("#aiRunGame").textContent = g.label || "";
+  if ($("#aiBannerGame")) $("#aiBannerGame").textContent = g.label || "";
   $("#aiSizeWrap").style.display = currentGame === "keno" ? "" : "none";
   const fixed = { euromillions: " · 5 numéros + 2 étoiles", loto: " · 5 numéros + 1 n° chance", eurodreams: " · 6 numéros + 1 n° Dream" };
   $("#aiRunFixed").textContent = fixed[currentGame] || "";
